@@ -10,7 +10,7 @@
 <meta
 name="viewport"
 content="width=device-width, initial-scale=1.0"
->
+/>
 
 <title>Sistema de Inventário</title>
 
@@ -18,12 +18,12 @@ content="width=device-width, initial-scale=1.0"
 rel="icon"
 type="image/png"
 href="favicon.png"
->
+/>
 
 <link
 rel="stylesheet"
 href="style.css"
->
+/>
 
 <link
 rel="stylesheet"
@@ -34,92 +34,128 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 <body>
 
+<!-- BOTÃO MENU MOBILE -->
+
+<button
+class="mobile-menu-btn"
+onclick="toggleSidebar()"
+>
+
+<i class="fa fa-bars"></i>
+
+</button>
+
 <!-- SIDEBAR -->
 
-<div class="sidebar">
+<div
+class="sidebar"
+id="sidebar"
+>
 
-    <div class="logo">
-        INVENTÁRIO
-    </div>
+<div class="logo">
+    INVENTÁRIO
+</div>
 
-    <ul>
+<ul>
 
-        <!-- LOGIN -->
+    <!-- LOGIN -->
 
-        <li
-class="menu-item"
-onclick="abrirTela('loginTela', this)">
+    <li
+    id="menuLogin"
+    class="menu-item active"
+    onclick="abrirTela('loginTela', this)"
+    >
 
-    <i class="fa fa-user"></i>
-    Login
+        <i class="fa fa-user"></i>
+        Login
 
-</li>
+    </li>
 
-<li
-class="menu-item"
-onclick="logout()">
+    <!-- DASHBOARD -->
 
-    <i class="fa fa-right-from-bracket"></i>
-    Sair
+    <li
+    id="menuDashboard"
+    class="menu-item"
+    style="display:none;"
+    onclick="abrirTela('dashboardTela', this)"
+    >
 
-</li>
+        <i class="fa fa-chart-line"></i>
+        Dashboard
 
-        <!-- DASHBOARD -->
+    </li>
 
-        <li
-        class="menu-item"
-        onclick="abrirTela('dashboardTela', this)">
+    <!-- CADASTRO -->
 
-            <i class="fa fa-chart-line"></i>
-            Dashboard
+    <li
+    id="menuCadastro"
+    class="menu-item"
+    style="display:none;"
+    onclick="abrirTela('cadastroTela', this)"
+    >
 
-        </li>
+        <i class="fa fa-box"></i>
+        Cadastro
 
-        <!-- CADASTRO -->
+    </li>
 
-        <li
-        class="menu-item"
-        onclick="abrirTela('cadastroTela', this)">
+    <!-- MOVIMENTAÇÃO -->
 
-            <i class="fa fa-box"></i>
-            Cadastro
+    <li
+    id="menuMovimentacao"
+    class="menu-item"
+    style="display:none;"
+    onclick="abrirTela('movimentacaoTela', this)"
+    >
 
-        </li>
+        <i class="fa fa-right-left"></i>
+        Movimentações
 
-        <!-- MOVIMENTAÇÃO -->
+    </li>
 
-        <li
-        class="menu-item"
-        onclick="abrirTela('movimentacaoTela', this)">
+    <!-- ESTOQUE -->
 
-            <i class="fa fa-right-left"></i>
-            Movimentações
+    <li
+    id="menuEstoque"
+    class="menu-item"
+    style="display:none;"
+    onclick="abrirTela('estoqueTela', this)"
+    >
 
-        </li>
+        <i class="fa fa-warehouse"></i>
+        Estoque
 
-        <!-- ESTOQUE -->
+    </li>
 
-        <li
-        class="menu-item"
-        onclick="abrirTela('estoqueTela', this)">
+    <!-- HISTÓRICO -->
 
-            <i class="fa fa-warehouse"></i>
-            Estoque
+    <li
+    id="menuHistorico"
+    class="menu-item"
+    style="display:none;"
+    onclick="abrirTela('historicoTela', this)"
+    >
 
-        </li>
+        <i class="fa fa-clock-rotate-left"></i>
+        Histórico
 
-        <!-- HISTÓRICO -->
+    </li>
 
-        <li
-        class="menu-item"
-        onclick="abrirTela('historicoTela', this)">
+    <!-- SAIR -->
 
-            <i class="fa fa-clock-rotate-left"></i>
-            Histórico
+    <li
+    id="menuLogout"
+    class="menu-item"
+    style="display:none;"
+    onclick="logout()"
+    >
 
-        </li>
+        <i class="fa fa-right-from-bracket"></i>
+        Sair
 
-    </ul>
+    </li>
+
+</ul>
 
 </div>
 
@@ -152,13 +188,13 @@ class="tela activeTela"
 type="email"
 id="email"
 placeholder="Email"
->
+/>
 
 <input
 type="password"
 id="password"
 placeholder="Senha"
->
+/>
 
 </div>
 
@@ -176,8 +212,6 @@ Entrar
 id="dashboardTela"
 class="tela"
 >
-
-<!-- CARDS PRINCIPAIS -->
 
 <div class="dashboard">
 
@@ -215,97 +249,89 @@ class="tela"
 
 </div>
 
-<!-- DASHBOARD AVANÇADO -->
-
 <div class="dashboard-advanced">
 
-    <!-- RELATÓRIO -->
+<div class="card dashboard-table">
 
-    <div class="card dashboard-table">
+<h2>
+Quantidade por Item e Local
+</h2>
 
-        <h2>
-            Quantidade por Item e Local
-        </h2>
+<div class="table-area">
 
-        <div class="table-area">
+<table class="inventory-table">
 
-        <table class="inventory-table">
+<thead>
 
-            <thead>
+<tr>
 
-                <tr>
+<th>Item</th>
+<th>Local</th>
+<th>Quantidade</th>
 
-                    <th>Item</th>
+</tr>
 
-                    <th>Local</th>
+</thead>
 
-                    <th>Quantidade</th>
+<tbody id="dashboardLocais"></tbody>
 
-                </tr>
+</table>
 
-            </thead>
+</div>
 
-            <tbody id="dashboardLocais"></tbody>
+</div>
 
-        </table>
+<div class="dashboard-status-grid">
 
-        </div>
+<div class="status-card manutencao-card">
 
-    </div>
+<h3 id="dashManutencao">
+0
+</h3>
 
-    <!-- STATUS -->
+<p>
+Em Manutenção
+</p>
 
-    <div class="dashboard-status-grid">
+</div>
 
-        <div class="status-card manutencao-card">
+<div class="status-card extraviado-card">
 
-            <h3 id="dashManutencao">
-                0
-            </h3>
+<h3 id="dashExtraviado">
+0
+</h3>
 
-            <p>
-                Em Manutenção
-            </p>
+<p>
+Extraviados
+</p>
 
-        </div>
+</div>
 
-        <div class="status-card extraviado-card">
+<div class="status-card baixado-card">
 
-            <h3 id="dashExtraviado">
-                0
-            </h3>
+<h3 id="dashBaixado">
+0
+</h3>
 
-            <p>
-                Extraviados
-            </p>
+<p>
+Baixados
+</p>
 
-        </div>
+</div>
 
-        <div class="status-card baixado-card">
+<div class="status-card ativo-card">
 
-            <h3 id="dashBaixado">
-                0
-            </h3>
+<h3 id="dashAtivo">
+0
+</h3>
 
-            <p>
-                Baixados
-            </p>
+<p>
+Ativos
+</p>
 
-        </div>
+</div>
 
-        <div class="status-card ativo-card">
-
-            <h3 id="dashAtivo">
-                0
-            </h3>
-
-            <p>
-                Ativos
-            </p>
-
-        </div>
-
-    </div>
+</div>
 
 </div>
 
@@ -328,7 +354,7 @@ class="tela"
 type="text"
 id="nome"
 placeholder="Nome do Item"
->
+/>
 
 </div>
 
@@ -350,11 +376,8 @@ Selecione o Local
 <select id="status">
 
 <option>Ativo</option>
-
 <option>Em manutenção</option>
-
 <option>Baixado</option>
-
 <option>Extraviado</option>
 
 </select>
@@ -364,7 +387,7 @@ Selecione o Local
 <input
 type="file"
 id="foto"
->
+/>
 
 <button onclick="salvarItem()">
 Salvar Patrimônio
@@ -403,7 +426,7 @@ type="text"
 id="origemNome"
 placeholder="Local Atual"
 readonly
->
+/>
 
 </div>
 
@@ -424,11 +447,8 @@ Alterar Status (Opcional)
 </option>
 
 <option>Ativo</option>
-
 <option>Em manutenção</option>
-
 <option>Baixado</option>
-
 <option>Extraviado</option>
 
 </select>
@@ -464,7 +484,7 @@ type="text"
 id="busca"
 placeholder="Buscar patrimônio..."
 onkeyup="filtrarItens()"
->
+/>
 
 <button onclick="exportarExcel()">
 Exportar Excel
@@ -479,17 +499,11 @@ Exportar Excel
 <tr>
 
 <th>Foto</th>
-
 <th>Patrimônio</th>
-
 <th>Nome</th>
-
 <th>Descrição</th>
-
 <th>Local</th>
-
 <th>Status</th>
-
 <th>Ações</th>
 
 </tr>
@@ -526,13 +540,9 @@ class="tela"
 <tr>
 
 <th>Patrimônio</th>
-
 <th>Origem</th>
-
 <th>Destino</th>
-
 <th>Observação</th>
-
 <th>Data</th>
 
 </tr>

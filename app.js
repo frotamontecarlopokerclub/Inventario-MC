@@ -25,6 +25,7 @@ window.supabase.createClient(
 let itens = [];
 let movimentacoes = [];
 let usuarioLogado = null;
+let perfilUsuario = null;
 
 /* =========================
    LOCAIS FIXOS
@@ -90,13 +91,9 @@ async function login(){
 
         usuarioLogado = data.user;
 
-        alert(
-            'Login realizado com sucesso!'
-        );
-
-        liberarMenus();
-
         await verificarPerfil();
+
+        atualizarMenus();
 
         abrirTela(
             'dashboardTela',
@@ -107,13 +104,13 @@ async function login(){
 
         await carregarDashboard();
 
+        alert('Login realizado com sucesso!');
+
     }catch(err){
 
         console.log(err);
 
-        alert(
-            'Erro ao realizar login'
-        );
+        alert('Erro ao realizar login');
     }
 }
 
@@ -123,20 +120,30 @@ async function login(){
 
 async function logout(){
 
-    await supabaseClient.auth.signOut();
+    try{
 
-    usuarioLogado = null;
+        await supabaseClient.auth.signOut();
 
-    ocultarMenus();
+        usuarioLogado = null;
+        perfilUsuario = null;
 
-    abrirTela(
-        'loginTela',
-        document.querySelector(
-            '[onclick*="loginTela"]'
-        )
-    );
+        atualizarMenus();
 
-    alert('Logout realizado!');
+        abrirTela(
+            'loginTela',
+            document.querySelector(
+                '[onclick*="loginTela"]'
+            )
+        );
+
+        alert('Logout realizado!');
+
+    }catch(err){
+
+        console.log(err);
+
+        alert('Erro ao sair');
+    }
 }
 
 /* =========================
@@ -160,178 +167,131 @@ async function verificarPerfil(){
 
             console.log(error);
 
+            perfilUsuario = 'consulta';
+
             return;
         }
 
+        perfilUsuario =
+        data?.perfil?.toLowerCase() || 'consulta';
+
         console.log(
-            'PERFIL USUÁRIO:',
-            data?.perfil
+            'Perfil:',
+            perfilUsuario
         );
-
-        /* RESETA MENUS */
-
-        liberarMenus();
-
-        /* SE FOR CONSULTA */
-
-        if(
-            data?.perfil &&
-            data.perfil.toLowerCase() === 'consulta'
-        ){
-
-            bloquearModoConsulta();
-        }
 
     }catch(err){
 
         console.log(err);
+
+        perfilUsuario = 'consulta';
     }
 }
+
 /* =========================
-   LIBERAR MENUS
+   CONTROLE MENUS
 ========================= */
 
-function liberarMenus(){
-
-    const menus =
-    document.querySelectorAll(
-        '.menu-item'
-    );
-
-    menus.forEach(menu => {
-
-        menu.style.display = 'flex';
-    });
+function atualizarMenus(){
 
     const loginMenu =
     document.querySelector(
         '[onclick*="loginTela"]'
     );
 
-    if(loginMenu){
-
-        loginMenu.style.display = 'none';
-    }
-}
-
-/* =========================
-   OCULTAR MENUS
-========================= */
-
-function ocultarMenus(){
-
-    const menusBloquear = [
-
-        'cadastroTela',
-        'movimentacaoTela',
-        'estoqueTela',
-        'historicoTela',
-        'dashboardTela'
-
-    ];
-
-    menusBloquear.forEach(id => {
-
-        const menu =
-        document.querySelector(
-            `[onclick*="${id}"]`
-        );
-
-        if(menu){
-
-            menu.style.display = 'none';
-        }
-    });
-
-    const loginMenu =
+    const dashboardMenu =
     document.querySelector(
-        '[onclick*="loginTela"]'
+        '[onclick*="dashboardTela"]'
     );
 
-    if(loginMenu){
+    const cadastroMenu =
+    document.querySelector(
+        '[onclick*="cadastroTela"]'
+    );
 
+    const movimentacaoMenu =
+    document.querySelector(
+        '[onclick*="movimentacaoTela"]'
+    );
+
+    const estoqueMenu =
+    document.querySelector(
+        '[onclick*="estoqueTela"]'
+    );
+
+    const historicoMenu =
+    document.querySelector(
+        '[onclick*="historicoTela"]'
+    );
+
+    const logoutMenu =
+    document.querySelector(
+        '[onclick="logout()"]'
+    );
+
+    /* SEM LOGIN */
+
+    if(!usuarioLogado){
+
+        if(loginMenu)
         loginMenu.style.display = 'flex';
-    }
-}
 
-/* =========================
-   BLOQUEAR CONSULTA
-========================= */
+        if(logoutMenu)
+        logoutMenu.style.display = 'none';
 
-function bloquearModoConsulta(){
+        if(dashboardMenu)
+        dashboardMenu.style.display = 'none';
 
-    const cadastroMenu =
-    document.querySelector(
-        '[onclick*="cadastroTela"]'
-    );
+        if(cadastroMenu)
+        cadastroMenu.style.display = 'none';
 
-    const movimentacaoMenu =
-    document.querySelector(
-        '[onclick*="movimentacaoTela"]'
-    );
+        if(movimentacaoMenu)
+        movimentacaoMenu.style.display = 'none';
 
-    if(cadastroMenu){
+        if(estoqueMenu)
+        estoqueMenu.style.display = 'none';
 
-        cadastroMenu.style.display =
-        'none';
+        if(historicoMenu)
+        historicoMenu.style.display = 'none';
+
+        return;
     }
 
-    if(movimentacaoMenu){
+    /* COM LOGIN */
 
-        movimentacaoMenu.style.display =
-        'none';
+    if(loginMenu)
+    loginMenu.style.display = 'none';
+
+    if(logoutMenu)
+    logoutMenu.style.display = 'flex';
+
+    if(dashboardMenu)
+    dashboardMenu.style.display = 'flex';
+
+    if(estoqueMenu)
+    estoqueMenu.style.display = 'flex';
+
+    if(historicoMenu)
+    historicoMenu.style.display = 'flex';
+
+    /* PERFIL CONSULTA */
+
+    if(perfilUsuario === 'consulta'){
+
+        if(cadastroMenu)
+        cadastroMenu.style.display = 'none';
+
+        if(movimentacaoMenu)
+        movimentacaoMenu.style.display = 'none';
+
+    }else{
+
+        if(cadastroMenu)
+        cadastroMenu.style.display = 'flex';
+
+        if(movimentacaoMenu)
+        movimentacaoMenu.style.display = 'flex';
     }
-
-    const botoes =
-    document.querySelectorAll(
-        '.btn-delete, .btn-edit'
-    );
-
-    botoes.forEach(btn => {
-
-        btn.style.display =
-        'none';
-    });
-}
-
-/* =========================
-   LIBERAR MENUS
-========================= */
-
-function liberarMenus(){
-
-    const cadastroMenu =
-    document.querySelector(
-        '[onclick*="cadastroTela"]'
-    );
-
-    const movimentacaoMenu =
-    document.querySelector(
-        '[onclick*="movimentacaoTela"]'
-    );
-
-    if(cadastroMenu){
-
-        cadastroMenu.style.display =
-        'flex';
-    }
-
-    if(movimentacaoMenu){
-
-        movimentacaoMenu.style.display =
-        'flex';
-    }
-
-    const botoes =
-    document.querySelectorAll(
-        '.btn-delete, .btn-edit'
-    );
-
-    botoes.forEach(btn => {
-
-        btn.style.display =
-        'inline-block';
-    });
 }
 
 /* =========================
@@ -357,20 +317,16 @@ function carregarLocais(){
     LOCAIS.forEach(item => {
 
         local.innerHTML += `
-
-<option value="${item.id}">
-${item.nome}
-</option>
-
-`;
+        <option value="${item.id}">
+            ${item.nome}
+        </option>
+        `;
 
         destino.innerHTML += `
-
-<option value="${item.id}">
-${item.nome}
-</option>
-
-`;
+        <option value="${item.id}">
+            ${item.nome}
+        </option>
+        `;
     });
 
     const totalLocais =
@@ -419,6 +375,15 @@ function gerarNumeroPatrimonio(){
 ========================= */
 
 async function salvarItem(){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert(
+            'Usuário sem permissão!'
+        );
+
+        return;
+    }
 
     try{
 
@@ -573,12 +538,10 @@ async function carregarItens(){
         tabela.innerHTML = '';
 
         itemMov.innerHTML = `
-
-<option value="">
-Selecione o Patrimônio
-</option>
-
-`;
+        <option value="">
+        Selecione o Patrimônio
+        </option>
+        `;
 
         itens.forEach(item => {
 
@@ -591,7 +554,6 @@ Selecione o Patrimônio
             let classeStatus = '';
 
             if(item.status === 'Ativo'){
-
                 classeStatus = 'ativo';
             }
 
@@ -599,7 +561,6 @@ Selecione o Patrimônio
                 item.status ===
                 'Em manutenção'
             ){
-
                 classeStatus =
                 'manutencao';
             }
@@ -608,7 +569,6 @@ Selecione o Patrimônio
                 item.status ===
                 'Baixado'
             ){
-
                 classeStatus =
                 'baixado';
             }
@@ -617,7 +577,6 @@ Selecione o Patrimônio
                 item.status ===
                 'Extraviado'
             ){
-
                 classeStatus =
                 'extraviado';
             }
@@ -672,23 +631,25 @@ ${item.status}
 
 <div class="actions">
 
+${
+perfilUsuario !== 'consulta'
+? `
 <button
 class="btn-edit"
 onclick="editarItem(${item.id})"
 >
-
 Editar
-
 </button>
 
 <button
 class="btn-delete"
 onclick="excluirItem(${item.id})"
 >
-
 Excluir
-
 </button>
+`
+: '-'
+}
 
 </div>
 
@@ -735,6 +696,15 @@ ${item.patrimonio} - ${item.nome}
 
 async function editarItem(id){
 
+    if(perfilUsuario === 'consulta'){
+
+        alert(
+            'Usuário sem permissão!'
+        );
+
+        return;
+    }
+
     const item =
     itens.find(
         i => i.id == id
@@ -777,6 +747,15 @@ async function editarItem(id){
 ========================= */
 
 async function excluirItem(id){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert(
+            'Usuário sem permissão!'
+        );
+
+        return;
+    }
 
     const confirmar =
     confirm(
@@ -844,6 +823,15 @@ function preencherOrigemAutomaticamente(){
 ========================= */
 
 async function movimentarItem(){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert(
+            'Usuário sem permissão!'
+        );
+
+        return;
+    }
 
     try{
 
@@ -1411,7 +1399,7 @@ window.onload = async () => {
 
         carregarLocais();
 
-        ocultarMenus();
+        atualizarMenus();
 
         const { data } =
         await supabaseClient.auth
@@ -1422,9 +1410,9 @@ window.onload = async () => {
             usuarioLogado =
             data.session.user;
 
-            liberarMenus();
-
             await verificarPerfil();
+
+            atualizarMenus();
 
             abrirTela(
                 'dashboardTela',
@@ -1458,68 +1446,3 @@ window.onload = async () => {
         );
     }
 };
-/* =========================
-   LOGOUT
-========================= */
-
-async function logout(){
-
-    try{
-
-        await supabaseClient.auth.signOut();
-
-        usuarioLogado = null;
-
-        alert('Logout realizado!');
-
-        /* REMOVE TELAS */
-
-        document
-        .querySelectorAll('.tela')
-        .forEach(tela => {
-
-            tela.classList.remove(
-                'activeTela'
-            );
-
-        });
-
-        /* VOLTA LOGIN */
-
-        document
-        .getElementById('loginTela')
-        .classList.add('activeTela');
-
-        /* REMOVE MENU ATIVO */
-
-        document
-        .querySelectorAll('.menu-item')
-        .forEach(menu => {
-
-            menu.classList.remove(
-                'active'
-            );
-
-        });
-
-        /* ATIVA LOGIN */
-
-        const loginMenu =
-        document.querySelector(
-            '[onclick*="loginTela"]'
-        );
-
-        if(loginMenu){
-
-            loginMenu.classList.add(
-                'active'
-            );
-        }
-
-    }catch(err){
-
-        console.log(err);
-
-        alert('Erro ao sair');
-    }
-}
