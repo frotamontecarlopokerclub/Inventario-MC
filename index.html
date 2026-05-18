@@ -1,0 +1,533 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Sistema de Inventário</title>
+
+<link
+rel="stylesheet"
+href="style.css"
+>
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+/>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+    <div class="logo">
+        INVENTÁRIO
+    </div>
+
+    <ul>
+
+        <li
+        class="menu-item active"
+        onclick="abrirTela('dashboardTela', this)">
+
+            <i class="fa fa-chart-line"></i>
+            Dashboard
+
+        </li>
+
+        <li
+        class="menu-item"
+        onclick="abrirTela('cadastroTela', this)">
+
+            <i class="fa fa-box"></i>
+            Cadastro
+
+        </li>
+
+        <li
+        class="menu-item"
+        onclick="abrirTela('movimentacaoTela', this)">
+
+            <i class="fa fa-right-left"></i>
+            Movimentações
+
+        </li>
+
+        <li
+        class="menu-item"
+        onclick="abrirTela('estoqueTela', this)">
+
+            <i class="fa fa-warehouse"></i>
+            Estoque
+
+        </li>
+
+        <li
+        class="menu-item"
+        onclick="abrirTela('historicoTela', this)">
+
+            <i class="fa fa-clock-rotate-left"></i>
+            Histórico
+
+        </li>
+
+        <li
+        class="menu-item"
+        onclick="abrirTela('loginTela', this)">
+
+            <i class="fa fa-user"></i>
+            Login
+
+        </li>
+
+    </ul>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<header>
+
+    <h1>
+        Sistema de Inventário
+    </h1>
+
+</header>
+
+<!-- DASHBOARD -->
+
+<div
+id="dashboardTela"
+class="tela activeTela"
+>
+
+<!-- CARDS PRINCIPAIS -->
+
+<div class="dashboard">
+
+    <div class="dash-card">
+
+        <h3 id="totalItens">0</h3>
+
+        <p>Total de Patrimônios</p>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h3 id="totalLocais">0</h3>
+
+        <p>Locais</p>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h3 id="totalMov">0</h3>
+
+        <p>Movimentações</p>
+
+    </div>
+
+    <div class="dash-card">
+
+        <h3 id="totalBaixados">0</h3>
+
+        <p>Baixados</p>
+
+    </div>
+
+</div>
+
+<!-- DASHBOARD AVANÇADO -->
+
+<div class="dashboard-advanced">
+
+    <!-- RELATÓRIO ITEM/LOCAL -->
+
+    <div class="card dashboard-table">
+
+        <h2>
+            Quantidade por Item e Local
+        </h2>
+
+        <div class="table-area">
+
+        <table class="inventory-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Item</th>
+
+                    <th>Local</th>
+
+                    <th>Quantidade</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="dashboardLocais"></tbody>
+
+        </table>
+
+        </div>
+
+    </div>
+
+    <!-- STATUS -->
+
+    <div class="dashboard-status-grid">
+
+        <div class="status-card manutencao-card">
+
+            <h3 id="dashManutencao">
+                0
+            </h3>
+
+            <p>
+                Em Manutenção
+            </p>
+
+        </div>
+
+        <div class="status-card extraviado-card">
+
+            <h3 id="dashExtraviado">
+                0
+            </h3>
+
+            <p>
+                Extraviados
+            </p>
+
+        </div>
+
+        <div class="status-card baixado-card">
+
+            <h3 id="dashBaixado">
+                0
+            </h3>
+
+            <p>
+                Baixados
+            </p>
+
+        </div>
+
+        <div class="status-card ativo-card">
+
+            <h3 id="dashAtivo">
+                0
+            </h3>
+
+            <p>
+                Ativos
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- LOGIN -->
+
+<div
+id="loginTela"
+class="tela"
+>
+
+<div class="card">
+
+<h2>Login</h2>
+
+<div class="grid-2">
+
+<input
+type="email"
+id="email"
+placeholder="Email"
+>
+
+<input
+type="password"
+id="password"
+placeholder="Senha"
+>
+
+</div>
+
+<button onclick="login()">
+Entrar
+</button>
+
+</div>
+
+</div>
+
+<!-- CADASTRO -->
+
+<div
+id="cadastroTela"
+class="tela"
+>
+
+<div class="card">
+
+<h2>Cadastrar Patrimônio</h2>
+
+<div class="grid-2">
+
+<input
+type="text"
+id="nome"
+placeholder="Nome do Item"
+>
+
+</div>
+
+<textarea
+id="descricao"
+placeholder="Descrição"
+></textarea>
+
+<div class="grid-2">
+
+<select id="local">
+
+<option value="">
+Selecione o Local
+</option>
+
+</select>
+
+<select id="status">
+
+<option>Ativo</option>
+
+<option>Em manutenção</option>
+
+<option>Baixado</option>
+
+<option>Extraviado</option>
+
+</select>
+
+</div>
+
+<input
+type="file"
+id="foto"
+>
+
+<button onclick="salvarItem()">
+Salvar Patrimônio
+</button>
+
+</div>
+
+</div>
+
+<!-- MOVIMENTAÇÃO -->
+
+<div
+id="movimentacaoTela"
+class="tela"
+>
+
+<div class="card">
+
+<h2>Movimentar Patrimônio</h2>
+
+<div class="grid-2">
+
+<select
+id="itemMov"
+onchange="preencherOrigemAutomaticamente()"
+>
+
+<option value="">
+Selecione o Patrimônio
+</option>
+
+</select>
+
+<input
+type="text"
+id="origemNome"
+placeholder="Local Atual"
+readonly
+>
+
+</div>
+
+<div class="grid-2">
+
+<select id="destino">
+
+<option value="">
+Selecione o Destino
+</option>
+
+</select>
+
+<select id="statusMov">
+
+<option value="">
+Alterar Status (Opcional)
+</option>
+
+<option>Ativo</option>
+
+<option>Em manutenção</option>
+
+<option>Baixado</option>
+
+<option>Extraviado</option>
+
+</select>
+
+</div>
+
+<textarea
+id="observacaoMov"
+placeholder="Observação da movimentação..."
+></textarea>
+
+<button onclick="movimentarItem()">
+Movimentar Patrimônio
+</button>
+
+</div>
+
+</div>
+
+<!-- ESTOQUE -->
+
+<div
+id="estoqueTela"
+class="tela"
+>
+
+<div class="card">
+
+<h2>Patrimônios Cadastrados</h2>
+
+<input
+type="text"
+id="busca"
+placeholder="Buscar patrimônio..."
+onkeyup="filtrarItens()"
+>
+
+<button onclick="exportarExcel()">
+    Exportar Excel
+</button>
+
+<div class="table-area">
+
+<table class="inventory-table">
+
+<thead>
+
+<tr>
+
+<th>Foto</th>
+
+<th>Patrimônio</th>
+
+<th>Nome</th>
+
+<th>Descrição</th>
+
+<th>Local</th>
+
+<th>Status</th>
+
+<th>Ações</th>
+
+</tr>
+
+</thead>
+
+<tbody id="listaItens"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- HISTÓRICO -->
+
+<div
+id="historicoTela"
+class="tela"
+>
+
+<div class="card">
+
+<h2>Histórico de Movimentações</h2>
+
+<div class="table-area">
+
+<table class="inventory-table">
+
+<thead>
+
+<tr>
+
+<th>Patrimônio</th>
+
+<th>Origem</th>
+
+<th>Destino</th>
+
+<th>Observação</th>
+
+<th>Data</th>
+
+</tr>
+
+</thead>
+
+<tbody id="historico"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
