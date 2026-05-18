@@ -959,3 +959,127 @@ button:hover{
         font-size:16px;
     }
 }
+/* =========================================
+   RESPONSIVIDADE MOBILE
+========================================= */
+
+@media (max-width: 768px){
+
+    body{
+
+        flex-direction: column;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar{
+
+        width: 100%;
+        height: auto;
+
+        position: relative;
+
+        padding: 10px;
+    }
+
+    .sidebar .logo{
+
+        text-align: center;
+
+        margin-bottom: 15px;
+
+        font-size: 20px;
+    }
+
+    .sidebar ul{
+
+        display: flex;
+
+        overflow-x: auto;
+
+        gap: 10px;
+
+        padding-bottom: 5px;
+    }
+
+    .sidebar ul li{
+
+        min-width: max-content;
+
+        white-space: nowrap;
+
+        border-radius: 10px;
+
+        padding: 12px 16px;
+
+        font-size: 14px;
+    }
+
+    /* MAIN */
+
+    .main{
+
+        width: 100%;
+
+        padding: 15px;
+    }
+
+    header h1{
+
+        font-size: 22px;
+    }
+
+    /* DASHBOARD */
+
+    .dashboard{
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 10px;
+    }
+
+    .dashboard-advanced{
+
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-status-grid{
+
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* FORMULÁRIOS */
+
+    .grid-2{
+
+        grid-template-columns: 1fr !important;
+    }
+
+    input,
+    select,
+    textarea,
+    button{
+
+        width: 100%;
+    }
+
+    /* TABELAS */
+
+    .table-area{
+
+        overflow-x: auto;
+    }
+
+    .inventory-table{
+
+        min-width: 700px;
+    }
+
+    /* CARDS */
+
+    .card{
+
+        padding: 15px;
+    }
+
+}
