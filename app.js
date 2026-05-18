@@ -150,6 +150,10 @@ async function logout(){
    PERFIL
 ========================= */
 
+/* =========================
+   PERFIL
+========================= */
+
 async function verificarPerfil(){
 
     if(!usuarioLogado) return;
@@ -159,7 +163,7 @@ async function verificarPerfil(){
         const { data, error } =
         await supabaseClient
         .from('usuarios')
-        .select('*')
+        .select('perfil')
         .eq('id', usuarioLogado.id)
         .single();
 
@@ -173,12 +177,16 @@ async function verificarPerfil(){
         }
 
         perfilUsuario =
-        data?.perfil?.toLowerCase() || 'consulta';
+        String(data?.perfil || '')
+        .trim()
+        .toLowerCase();
 
         console.log(
-            'Perfil:',
+            'Perfil carregado:',
             perfilUsuario
         );
+
+        atualizarMenus();
 
     }catch(err){
 
@@ -187,6 +195,10 @@ async function verificarPerfil(){
         perfilUsuario = 'consulta';
     }
 }
+
+/* =========================
+   CONTROLE MENUS
+========================= */
 
 /* =========================
    CONTROLE MENUS
@@ -229,7 +241,9 @@ function atualizarMenus(){
         '[onclick="logout()"]'
     );
 
-    /* SEM LOGIN */
+    /* =========================
+       SEM LOGIN
+    ========================= */
 
     if(!usuarioLogado){
 
@@ -257,7 +271,9 @@ function atualizarMenus(){
         return;
     }
 
-    /* COM LOGIN */
+    /* =========================
+       LOGADO
+    ========================= */
 
     if(loginMenu)
     loginMenu.style.display = 'none';
@@ -274,7 +290,9 @@ function atualizarMenus(){
     if(historicoMenu)
     historicoMenu.style.display = 'flex';
 
-    /* PERFIL CONSULTA */
+    /* =========================
+       PERFIL CONSULTA
+    ========================= */
 
     if(perfilUsuario === 'consulta'){
 
@@ -284,13 +302,25 @@ function atualizarMenus(){
         if(movimentacaoMenu)
         movimentacaoMenu.style.display = 'none';
 
+        console.log(
+            'Modo CONSULTA ativado'
+        );
+
     }else{
+
+        /* =========================
+           PERFIL GESTOR
+        ========================= */
 
         if(cadastroMenu)
         cadastroMenu.style.display = 'flex';
 
         if(movimentacaoMenu)
         movimentacaoMenu.style.display = 'flex';
+
+        console.log(
+            'Modo GESTOR ativado'
+        );
     }
 }
 
