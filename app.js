@@ -151,22 +151,37 @@ async function logout(){
    PERFIL
 ========================= */
 
+/* =========================
+   PERFIL
+========================= */
+
 async function verificarPerfil(){
 
     if(!usuarioLogado) return;
 
     try{
 
+        const email =
+        usuarioLogado.email;
+
+        console.log(
+            'Verificando perfil do email:',
+            email
+        );
+
         const { data, error } =
         await supabaseClient
         .from('usuarios')
         .select('perfil')
-        .eq('id', usuarioLogado.id)
+        .eq('email', email)
         .single();
 
         if(error){
 
-            console.log(error);
+            console.log(
+                'Erro ao buscar perfil:',
+                error
+            );
 
             perfilUsuario = 'consulta';
 
@@ -401,6 +416,10 @@ function gerarNumeroPatrimonio(){
    SALVAR ITEM
 ========================= */
 
+/* =========================
+   SALVAR ITEM
+========================= */
+
 async function salvarItem(){
 
     if(perfilUsuario === 'consulta'){
@@ -437,6 +456,14 @@ async function salvarItem(){
             'status'
         ).value;
 
+        const fotoInput =
+        document.getElementById(
+            'foto'
+        );
+
+        const arquivo =
+        fotoInput.files[0];
+
         if(!nome){
 
             alert('Informe o nome');
@@ -453,6 +480,60 @@ async function salvarItem(){
             return;
         }
 
+        let foto_url = '';
+
+        /* =========================
+           UPLOAD FOTO
+        ========================= */
+
+        if(arquivo){
+
+            const extensao =
+            arquivo.name.split('.').pop();
+
+            const nomeArquivo =
+            `${Date.now()}.${extensao}`;
+
+            const {
+                error:uploadError
+            } =
+            await supabaseClient
+            .storage
+            .from('inventario')
+            .upload(
+                nomeArquivo,
+                arquivo
+            );
+
+            if(uploadError){
+
+                console.log(uploadError);
+
+                alert(
+                    'Erro ao enviar imagem'
+                );
+
+                return;
+            }
+
+            const {
+                data:urlData
+            } =
+            supabaseClient
+            .storage
+            .from('inventario')
+            .getPublicUrl(
+                nomeArquivo
+            );
+
+            foto_url =
+            urlData.publicUrl;
+        }
+
+        /* =========================
+           SALVAR ITEM
+        ========================= */
+
         const item = {
 
             patrimonio,
@@ -460,7 +541,7 @@ async function salvarItem(){
             descricao,
             local_id:Number(local_id),
             status,
-            foto_url:''
+            foto_url
 
         };
 
@@ -617,7 +698,7 @@ async function carregarItens(){
 <img
 src="${
 item.foto_url ||
-'https://via.placeholder.com/60'
+'https://placehold.co/60x60?text=IMG'
 }"
 
 style="
