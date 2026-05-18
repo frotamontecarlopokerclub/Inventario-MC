@@ -1368,6 +1368,10 @@ async function carregarDashboard(){
    MENU
 ========================= */
 
+/* =========================
+   MENU
+========================= */
+
 function abrirTela(
     idTela,
     elemento
@@ -1384,6 +1388,10 @@ function abrirTela(
 
         return;
     }
+
+    /* =========================
+       TROCAR TELAS
+    ========================= */
 
     const telas =
     document.querySelectorAll(
@@ -1407,6 +1415,10 @@ function abrirTela(
         );
     }
 
+    /* =========================
+       MENU ATIVO
+    ========================= */
+
     const menus =
     document.querySelectorAll(
         '.menu-item'
@@ -1425,8 +1437,26 @@ function abrirTela(
             'active'
         );
     }
-}
 
+    /* =========================
+       FECHAR MENU MOBILE
+    ========================= */
+
+    if(window.innerWidth <= 900){
+
+        const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+        if(sidebar){
+
+            sidebar.classList.remove(
+                'open'
+            );
+        }
+    }
+}
 /* =========================
    EXPORTAR EXCEL
 ========================= */
