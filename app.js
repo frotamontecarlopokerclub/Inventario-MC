@@ -698,7 +698,7 @@ async function carregarItens(){
 <img
 src="${
 item.foto_url ||
-'https://placehold.co/60x60?text=IMG'
+'https://placehold.co/60x60/png?text=IMG'
 }"
 
 style="

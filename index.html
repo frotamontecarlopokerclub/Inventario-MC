@@ -384,9 +384,13 @@ Selecione o Local
 
 </div>
 
+<!-- FOTO -->
+
 <input
 type="file"
 id="foto"
+accept="image/*"
+capture="environment"
 />
 
 <button onclick="salvarItem()">
@@ -564,6 +568,57 @@ class="tela"
 <!-- SUPABASE -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- MOBILE MENU -->
+
+<script>
+
+function toggleSidebar(){
+
+    const sidebar =
+    document.getElementById(
+        'sidebar'
+    );
+
+    sidebar.classList.toggle(
+        'open'
+    );
+}
+
+document.addEventListener(
+    'click',
+    function(event){
+
+        const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+        const menuBtn =
+        document.querySelector(
+            '.mobile-menu-btn'
+        );
+
+        const clicouDentro =
+        sidebar.contains(event.target);
+
+        const clicouBotao =
+        menuBtn.contains(event.target);
+
+        if(
+            window.innerWidth <= 900 &&
+            !clicouDentro &&
+            !clicouBotao
+        ){
+
+            sidebar.classList.remove(
+                'open'
+            );
+        }
+    }
+);
+
+</script>
 
 <!-- APP -->
 
