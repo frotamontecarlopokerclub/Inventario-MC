@@ -2,15 +2,18 @@
    SUPABASE
 ========================= */
 
-const SUPABASE_URL = 'https://sxmimxomehdhyifqsgqa.supabase.co';
+const SUPABASE_URL =
+'https://sxmimxomehdhyifqsgqa.supabase.co';
 
-const SUPABASE_KEY = 'sb_publishable_NbyYYTsRnSqu_TMpQvzS6A_rJuyzq9_';
+const SUPABASE_KEY =
+'sb_publishable_NbyYYTsRnSqu_TMpQvzS6A_rJuyzq9_';
 
 /* =========================
    CLIENTE SUPABASE
 ========================= */
 
-const supabaseClient = window.supabase.createClient(
+const supabaseClient =
+window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
@@ -68,7 +71,8 @@ async function login(){
     try{
 
         const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
+        await supabaseClient.auth
+        .signInWithPassword({
 
             email,
             password
@@ -86,11 +90,13 @@ async function login(){
 
         usuarioLogado = data.user;
 
-        alert('Login realizado com sucesso!');
+        alert(
+            'Login realizado com sucesso!'
+        );
+
+        liberarMenus();
 
         await verificarPerfil();
-
-        /* ABRIR DASHBOARD APÓS LOGIN */
 
         abrirTela(
             'dashboardTela',
@@ -105,8 +111,32 @@ async function login(){
 
         console.log(err);
 
-        alert('Erro ao realizar login');
+        alert(
+            'Erro ao realizar login'
+        );
     }
+}
+
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout(){
+
+    await supabaseClient.auth.signOut();
+
+    usuarioLogado = null;
+
+    ocultarMenus();
+
+    abrirTela(
+        'loginTela',
+        document.querySelector(
+            '[onclick*="loginTela"]'
+        )
+    );
+
+    alert('Logout realizado!');
 }
 
 /* =========================
@@ -141,6 +171,73 @@ async function verificarPerfil(){
     }catch(err){
 
         console.log(err);
+    }
+}
+
+/* =========================
+   LIBERAR MENUS
+========================= */
+
+function liberarMenus(){
+
+    const menus =
+    document.querySelectorAll(
+        '.menu-item'
+    );
+
+    menus.forEach(menu => {
+
+        menu.style.display = 'flex';
+    });
+
+    const loginMenu =
+    document.querySelector(
+        '[onclick*="loginTela"]'
+    );
+
+    if(loginMenu){
+
+        loginMenu.style.display = 'none';
+    }
+}
+
+/* =========================
+   OCULTAR MENUS
+========================= */
+
+function ocultarMenus(){
+
+    const menusBloquear = [
+
+        'cadastroTela',
+        'movimentacaoTela',
+        'estoqueTela',
+        'historicoTela',
+        'dashboardTela'
+
+    ];
+
+    menusBloquear.forEach(id => {
+
+        const menu =
+        document.querySelector(
+            `[onclick*="${id}"]`
+        );
+
+        if(menu){
+
+            menu.style.display = 'none';
+        }
+    });
+
+    const loginMenu =
+    document.querySelector(
+        '[onclick*="loginTela"]'
+    );
+
+    if(loginMenu){
+
+        loginMenu.style.display = 'flex';
     }
 }
 
@@ -204,20 +301,26 @@ function carregarLocais(){
     LOCAIS.forEach(item => {
 
         local.innerHTML += `
-        <option value="${item.id}">
-            ${item.nome}
-        </option>
-        `;
+
+<option value="${item.id}">
+${item.nome}
+</option>
+
+`;
 
         destino.innerHTML += `
-        <option value="${item.id}">
-            ${item.nome}
-        </option>
-        `;
+
+<option value="${item.id}">
+${item.nome}
+</option>
+
+`;
     });
 
     const totalLocais =
-    document.getElementById('totalLocais');
+    document.getElementById(
+        'totalLocais'
+    );
 
     if(totalLocais){
 
@@ -237,9 +340,12 @@ function gerarNumeroPatrimonio(){
         return '0001';
     }
 
-    const numeros = itens.map(item => {
+    const numeros =
+    itens.map(item => {
 
-        return parseInt(item.patrimonio) || 0;
+        return parseInt(
+            item.patrimonio
+        ) || 0;
     });
 
     const maiorNumero =
@@ -292,7 +398,9 @@ async function salvarItem(){
 
         if(!local_id){
 
-            alert('Selecione o local');
+            alert(
+                'Selecione o local'
+            );
 
             return;
         }
@@ -317,7 +425,9 @@ async function salvarItem(){
 
             console.log(error);
 
-            alert('Erro ao salvar patrimônio');
+            alert(
+                'Erro ao salvar patrimônio'
+            );
 
             return;
         }
@@ -344,11 +454,25 @@ async function salvarItem(){
 
 function limparFormulario(){
 
-    document.getElementById('nome').value = '';
-    document.getElementById('descricao').value = '';
-    document.getElementById('foto').value = '';
-    document.getElementById('local').value = '';
-    document.getElementById('status').value = 'Ativo';
+    document.getElementById(
+        'nome'
+    ).value = '';
+
+    document.getElementById(
+        'descricao'
+    ).value = '';
+
+    document.getElementById(
+        'foto'
+    ).value = '';
+
+    document.getElementById(
+        'local'
+    ).value = '';
+
+    document.getElementById(
+        'status'
+    ).value = 'Ativo';
 }
 
 /* =========================
@@ -363,7 +487,11 @@ async function carregarItens(){
         await supabaseClient
         .from('itens')
         .select('*')
-        .order('id', { ascending:false });
+        .order('id', {
+
+            ascending:false
+
+        });
 
         if(error){
 
@@ -389,34 +517,53 @@ async function carregarItens(){
         tabela.innerHTML = '';
 
         itemMov.innerHTML = `
-        <option value="">
-        Selecione o Patrimônio
-        </option>
-        `;
+
+<option value="">
+Selecione o Patrimônio
+</option>
+
+`;
 
         itens.forEach(item => {
 
             const local =
             LOCAIS.find(
-                l => l.id == item.local_id
+                l =>
+                l.id == item.local_id
             );
 
             let classeStatus = '';
 
             if(item.status === 'Ativo'){
+
                 classeStatus = 'ativo';
             }
 
-            if(item.status === 'Em manutenção'){
-                classeStatus = 'manutencao';
+            if(
+                item.status ===
+                'Em manutenção'
+            ){
+
+                classeStatus =
+                'manutencao';
             }
 
-            if(item.status === 'Baixado'){
-                classeStatus = 'baixado';
+            if(
+                item.status ===
+                'Baixado'
+            ){
+
+                classeStatus =
+                'baixado';
             }
 
-            if(item.status === 'Extraviado'){
-                classeStatus = 'extraviado';
+            if(
+                item.status ===
+                'Extraviado'
+            ){
+
+                classeStatus =
+                'extraviado';
             }
 
             tabela.innerHTML += `
@@ -424,8 +571,13 @@ async function carregarItens(){
 <tr>
 
 <td>
-<img 
-src="${item.foto_url || 'https://via.placeholder.com/60'}"
+
+<img
+src="${
+item.foto_url ||
+'https://via.placeholder.com/60'
+}"
+
 style="
 width:60px;
 height:60px;
@@ -433,15 +585,24 @@ object-fit:cover;
 border-radius:8px;
 "
 >
+
 </td>
 
-<td>${item.patrimonio}</td>
+<td>
+${item.patrimonio}
+</td>
 
-<td>${item.nome}</td>
+<td>
+${item.nome}
+</td>
 
-<td>${item.descricao || '-'}</td>
+<td>
+${item.descricao || '-'}
+</td>
 
-<td>${local?.nome || '-'}</td>
+<td>
+${local?.nome || '-'}
+</td>
 
 <td>
 
@@ -457,7 +618,8 @@ ${item.status}
 
 <button
 class="btn-edit"
-onclick="editarItem(${item.id})">
+onclick="editarItem(${item.id})"
+>
 
 Editar
 
@@ -465,7 +627,8 @@ Editar
 
 <button
 class="btn-delete"
-onclick="excluirItem(${item.id})">
+onclick="excluirItem(${item.id})"
+>
 
 Excluir
 
@@ -476,6 +639,7 @@ Excluir
 </td>
 
 </tr>
+
 `;
 
             itemMov.innerHTML += `
@@ -694,7 +858,9 @@ async function movimentarItem(){
             statusMov;
         }
 
-        const { error:updateError } =
+        const {
+            error:updateError
+        } =
         await supabaseClient
         .from('itens')
         .update(updateData)
@@ -704,12 +870,16 @@ async function movimentarItem(){
 
             console.log(updateError);
 
-            alert('Erro ao movimentar');
+            alert(
+                'Erro ao movimentar'
+            );
 
             return;
         }
 
-        const { error:movError } =
+        const {
+            error:movError
+        } =
         await supabaseClient
         .from('movimentacoes')
         .insert([{
@@ -718,8 +888,10 @@ async function movimentarItem(){
             origem_id,
             destino_id,
             observacao,
+
             usuario:
-            usuarioLogado?.email || 'Sistema'
+            usuarioLogado?.email
+            || 'Sistema'
 
         }]);
 
@@ -836,9 +1008,8 @@ ${mov.observacao || '-'}
 </td>
 
 <td>
-${new Date(
-mov.data
-).toLocaleString()}
+${new Date(mov.data)
+.toLocaleString()}
 </td>
 
 </tr>
@@ -894,36 +1065,64 @@ function filtrarItens(){
 
 function atualizarDashboardAvancado(){
 
+    const dashAtivo =
     document.getElementById(
         'dashAtivo'
-    ).innerText =
-    itens.filter(
-        item => item.status === 'Ativo'
-    ).length;
+    );
 
+    const dashManutencao =
     document.getElementById(
         'dashManutencao'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status === 'Em manutenção'
-    ).length;
+    );
 
+    const dashBaixado =
     document.getElementById(
         'dashBaixado'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status === 'Baixado'
-    ).length;
+    );
 
+    const dashExtraviado =
     document.getElementById(
         'dashExtraviado'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status === 'Extraviado'
-    ).length;
+    );
+
+    if(dashAtivo){
+
+        dashAtivo.innerText =
+        itens.filter(
+            item =>
+            item.status === 'Ativo'
+        ).length;
+    }
+
+    if(dashManutencao){
+
+        dashManutencao.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Em manutenção'
+        ).length;
+    }
+
+    if(dashBaixado){
+
+        dashBaixado.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Baixado'
+        ).length;
+    }
+
+    if(dashExtraviado){
+
+        dashExtraviado.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Extraviado'
+        ).length;
+    }
 }
 
 /* =========================
@@ -1022,8 +1221,6 @@ function abrirTela(
     elemento
 ){
 
-    /* BLOQUEIA ACESSO SEM LOGIN */
-
     if(
         !usuarioLogado &&
         idTela !== 'loginTela'
@@ -1048,10 +1245,15 @@ function abrirTela(
         );
     });
 
-    document
-    .getElementById(idTela)
-    .classList
-    .add('activeTela');
+    const telaSelecionada =
+    document.getElementById(idTela);
+
+    if(telaSelecionada){
+
+        telaSelecionada.classList.add(
+            'activeTela'
+        );
+    }
 
     const menus =
     document.querySelectorAll(
@@ -1153,15 +1355,18 @@ window.onload = async () => {
 
         carregarLocais();
 
-        /* VERIFICA SESSÃO */
+        ocultarMenus();
 
         const { data } =
-        await supabaseClient.auth.getSession();
+        await supabaseClient.auth
+        .getSession();
 
         if(data?.session){
 
             usuarioLogado =
             data.session.user;
+
+            liberarMenus();
 
             await verificarPerfil();
 
@@ -1176,43 +1381,12 @@ window.onload = async () => {
 
         }else{
 
-            /* ABRE LOGIN */
-
-            document
-            .querySelectorAll('.tela')
-            .forEach(tela => {
-
-                tela.classList.remove(
-                    'activeTela'
-                );
-
-            });
-
-            document
-            .getElementById('loginTela')
-            .classList.add('activeTela');
-
-            document
-            .querySelectorAll('.menu-item')
-            .forEach(menu => {
-
-                menu.classList.remove(
-                    'active'
-                );
-
-            });
-
-            const loginMenu =
-            document.querySelector(
-                '[onclick*="loginTela"]'
+            abrirTela(
+                'loginTela',
+                document.querySelector(
+                    '[onclick*="loginTela"]'
+                )
             );
-
-            if(loginMenu){
-
-                loginMenu.classList.add(
-                    'active'
-                );
-            }
         }
 
         console.log(

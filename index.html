@@ -15,6 +15,12 @@ content="width=device-width, initial-scale=1.0"
 <title>Sistema de Inventário</title>
 
 <link
+rel="icon"
+type="image/png"
+href="favicon.png"
+>
+
+<link
 rel="stylesheet"
 href="style.css"
 >
@@ -38,14 +44,29 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
     <ul>
 
+        <!-- LOGIN -->
+
         <li
         class="menu-item active"
+        onclick="abrirTela('loginTela', this)">
+
+            <i class="fa fa-user"></i>
+            Login
+
+        </li>
+
+        <!-- DASHBOARD -->
+
+        <li
+        class="menu-item"
         onclick="abrirTela('dashboardTela', this)">
 
             <i class="fa fa-chart-line"></i>
             Dashboard
 
         </li>
+
+        <!-- CADASTRO -->
 
         <li
         class="menu-item"
@@ -56,6 +77,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
         </li>
 
+        <!-- MOVIMENTAÇÃO -->
+
         <li
         class="menu-item"
         onclick="abrirTela('movimentacaoTela', this)">
@@ -64,6 +87,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
             Movimentações
 
         </li>
+
+        <!-- ESTOQUE -->
 
         <li
         class="menu-item"
@@ -74,21 +99,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
         </li>
 
+        <!-- HISTÓRICO -->
+
         <li
         class="menu-item"
         onclick="abrirTela('historicoTela', this)">
 
             <i class="fa fa-clock-rotate-left"></i>
             Histórico
-
-        </li>
-
-        <li
-        class="menu-item"
-        onclick="abrirTela('loginTela', this)">
-
-            <i class="fa fa-user"></i>
-            Login
 
         </li>
 
@@ -108,11 +126,46 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
 </header>
 
+<!-- LOGIN -->
+
+<div
+id="loginTela"
+class="tela activeTela"
+>
+
+<div class="card">
+
+<h2>Login</h2>
+
+<div class="grid-2">
+
+<input
+type="email"
+id="email"
+placeholder="Email"
+>
+
+<input
+type="password"
+id="password"
+placeholder="Senha"
+>
+
+</div>
+
+<button onclick="login()">
+Entrar
+</button>
+
+</div>
+
+</div>
+
 <!-- DASHBOARD -->
 
 <div
 id="dashboardTela"
-class="tela activeTela"
+class="tela"
 >
 
 <!-- CARDS PRINCIPAIS -->
@@ -157,7 +210,7 @@ class="tela activeTela"
 
 <div class="dashboard-advanced">
 
-    <!-- RELATÓRIO ITEM/LOCAL -->
+    <!-- RELATÓRIO -->
 
     <div class="card dashboard-table">
 
@@ -244,41 +297,6 @@ class="tela activeTela"
         </div>
 
     </div>
-
-</div>
-
-</div>
-
-<!-- LOGIN -->
-
-<div
-id="loginTela"
-class="tela"
->
-
-<div class="card">
-
-<h2>Login</h2>
-
-<div class="grid-2">
-
-<input
-type="email"
-id="email"
-placeholder="Email"
->
-
-<input
-type="password"
-id="password"
-placeholder="Senha"
->
-
-</div>
-
-<button onclick="login()">
-Entrar
-</button>
 
 </div>
 
@@ -440,7 +458,7 @@ onkeyup="filtrarItens()"
 >
 
 <button onclick="exportarExcel()">
-    Exportar Excel
+Exportar Excel
 </button>
 
 <div class="table-area">
@@ -524,7 +542,11 @@ class="tela"
 
 </div>
 
+<!-- SUPABASE -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- APP -->
 
 <script src="app.js"></script>
 
