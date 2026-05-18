@@ -163,7 +163,21 @@ async function verificarPerfil(){
             return;
         }
 
-        if(data?.perfil === 'consulta'){
+        console.log(
+            'PERFIL USUÁRIO:',
+            data?.perfil
+        );
+
+        /* RESETA MENUS */
+
+        liberarMenus();
+
+        /* SE FOR CONSULTA */
+
+        if(
+            data?.perfil &&
+            data.perfil.toLowerCase() === 'consulta'
+        ){
 
             bloquearModoConsulta();
         }
@@ -173,7 +187,6 @@ async function verificarPerfil(){
         console.log(err);
     }
 }
-
 /* =========================
    LIBERAR MENUS
 ========================= */
@@ -259,12 +272,14 @@ function bloquearModoConsulta(){
 
     if(cadastroMenu){
 
-        cadastroMenu.style.display = 'none';
+        cadastroMenu.style.display =
+        'none';
     }
 
     if(movimentacaoMenu){
 
-        movimentacaoMenu.style.display = 'none';
+        movimentacaoMenu.style.display =
+        'none';
     }
 
     const botoes =
@@ -274,7 +289,48 @@ function bloquearModoConsulta(){
 
     botoes.forEach(btn => {
 
-        btn.style.display = 'none';
+        btn.style.display =
+        'none';
+    });
+}
+
+/* =========================
+   LIBERAR MENUS
+========================= */
+
+function liberarMenus(){
+
+    const cadastroMenu =
+    document.querySelector(
+        '[onclick*="cadastroTela"]'
+    );
+
+    const movimentacaoMenu =
+    document.querySelector(
+        '[onclick*="movimentacaoTela"]'
+    );
+
+    if(cadastroMenu){
+
+        cadastroMenu.style.display =
+        'flex';
+    }
+
+    if(movimentacaoMenu){
+
+        movimentacaoMenu.style.display =
+        'flex';
+    }
+
+    const botoes =
+    document.querySelectorAll(
+        '.btn-delete, .btn-edit'
+    );
+
+    botoes.forEach(btn => {
+
+        btn.style.display =
+        'inline-block';
     });
 }
 
