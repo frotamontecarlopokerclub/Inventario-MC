@@ -146,9 +146,6 @@ async function logout(){
     }
 }
 
-/* =========================
-   PERFIL
-========================= */
 
 /* =========================
    PERFIL
@@ -1476,3 +1473,12 @@ window.onload = async () => {
         );
     }
 };
+function toggleSidebar(){
+
+    const sidebar =
+    document.getElementById('sidebar');
+
+    if(!sidebar) return;
+
+    sidebar.classList.toggle('open');
+}
