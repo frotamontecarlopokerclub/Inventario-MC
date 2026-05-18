@@ -1402,3 +1402,68 @@ window.onload = async () => {
         );
     }
 };
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout(){
+
+    try{
+
+        await supabaseClient.auth.signOut();
+
+        usuarioLogado = null;
+
+        alert('Logout realizado!');
+
+        /* REMOVE TELAS */
+
+        document
+        .querySelectorAll('.tela')
+        .forEach(tela => {
+
+            tela.classList.remove(
+                'activeTela'
+            );
+
+        });
+
+        /* VOLTA LOGIN */
+
+        document
+        .getElementById('loginTela')
+        .classList.add('activeTela');
+
+        /* REMOVE MENU ATIVO */
+
+        document
+        .querySelectorAll('.menu-item')
+        .forEach(menu => {
+
+            menu.classList.remove(
+                'active'
+            );
+
+        });
+
+        /* ATIVA LOGIN */
+
+        const loginMenu =
+        document.querySelector(
+            '[onclick*="loginTela"]'
+        );
+
+        if(loginMenu){
+
+            loginMenu.classList.add(
+                'active'
+            );
+        }
+
+    }catch(err){
+
+        console.log(err);
+
+        alert('Erro ao sair');
+    }
+}
