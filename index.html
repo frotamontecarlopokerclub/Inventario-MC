@@ -390,7 +390,6 @@ Selecione o Local
 type="file"
 id="foto"
 accept="image/*"
-capture="environment"
 />
 
 <button onclick="salvarItem()">
@@ -619,6 +618,22 @@ document.addEventListener(
 );
 
 </script>
+
+<!-- MODAL FOTO -->
+
+<div
+id="modalFoto"
+class="modal-foto"
+onclick="fecharModalFoto()"
+>
+
+<img
+id="imagemModal"
+src=""
+alt="Foto"
+/>
+
+</div>
 
 <!-- APP -->
 

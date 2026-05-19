@@ -701,11 +701,26 @@ item.foto_url ||
 'https://placehold.co/60x60/png?text=IMG'
 }"
 
+onclick="
+abrirModalFoto(
+'${item.foto_url}'
+)
+"
+
 style="
 width:60px;
 height:60px;
 object-fit:cover;
 border-radius:8px;
+cursor:pointer;
+border:2px solid #ddd;
+transition:0.2s;
+"
+onmouseover="
+this.style.transform='scale(1.08)'
+"
+onmouseout="
+this.style.transform='scale(1)'
 "
 >
 
@@ -1369,8 +1384,39 @@ async function carregarDashboard(){
 ========================= */
 
 /* =========================
-   MENU
+   MODAL FOTO
 ========================= */
+
+function abrirModalFoto(url){
+
+    const modal =
+    document.getElementById(
+        'modalFoto'
+    );
+
+    const imagem =
+    document.getElementById(
+        'imagemModal'
+    );
+
+    imagem.src = url;
+
+    modal.classList.add(
+        'active'
+    );
+}
+
+function fecharModalFoto(){
+
+    const modal =
+    document.getElementById(
+        'modalFoto'
+    );
+
+    modal.classList.remove(
+        'active'
+    );
+}
 
 function abrirTela(
     idTela,
