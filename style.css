@@ -850,6 +850,71 @@ button:hover{
 
     /* DASHBOARD */
 
+    /* =========================
+   FILTROS DASHBOARD
+========================= */
+
+.dashboard-topo{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:20px;
+
+    flex-wrap:wrap;
+}
+
+.dashboard-filtros{
+
+    display:flex;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+}
+
+.dashboard-filtros input{
+
+    width:250px;
+
+    margin-bottom:0;
+}
+
+.dashboard-filtros select{
+
+    width:220px;
+
+    margin-bottom:0;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+    .dashboard-topo{
+
+        flex-direction:column;
+
+        align-items:stretch;
+    }
+
+    .dashboard-filtros{
+
+        flex-direction:column;
+    }
+
+    .dashboard-filtros input,
+    .dashboard-filtros select{
+
+        width:100%;
+    }
+}
+
     .dashboard{
 
         grid-template-columns:1fr 1fr;

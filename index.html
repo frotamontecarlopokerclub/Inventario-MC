@@ -53,7 +53,7 @@ id="sidebar"
 >
 
 <div class="logo">
-    INVENTÁRIO
+    INVENTÁRIO CENTRAL
 </div>
 
 <ul>
@@ -166,7 +166,7 @@ id="sidebar"
 <header>
 
     <h1>
-        Sistema de Inventário
+        Sistema de Inventário Central
     </h1>
 
 </header>
@@ -253,9 +253,35 @@ class="tela"
 
 <div class="card dashboard-table">
 
-<h2>
-Quantidade por Item e Local
-</h2>
+<div class="dashboard-topo">
+
+    <h2>
+        Quantidade por Item e Local
+    </h2>
+
+    <div class="dashboard-filtros">
+
+        <input
+        type="text"
+        id="filtroDashboard"
+        placeholder="Pesquisar item ou local..."
+        onkeyup="filtrarDashboard()"
+        />
+
+        <select
+        id="filtroLocalDashboard"
+        onchange="filtrarDashboard()"
+        >
+
+            <option value="">
+                Todos os Locais
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
 
 <div class="table-area">
 

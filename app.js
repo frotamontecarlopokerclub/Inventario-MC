@@ -1292,6 +1292,50 @@ function atualizarDashboardAvancado(){
     }
 }
 
+function filtrarDashboard(){
+
+    const busca =
+    document
+    .getElementById("filtroDashboard")
+    .value
+    .toLowerCase();
+
+    const localFiltro =
+    document
+    .getElementById("filtroLocalDashboard")
+    .value
+    .toLowerCase();
+
+    const linhas =
+    document
+    .querySelectorAll("#dashboardLocais tr");
+
+    linhas.forEach(linha => {
+
+        const texto =
+        linha.innerText.toLowerCase();
+
+        const local =
+        linha.children[1]
+        ?.innerText
+        .toLowerCase();
+
+        const matchBusca =
+        texto.includes(busca);
+
+        const matchLocal =
+        !localFiltro ||
+        local === localFiltro;
+
+        linha.style.display =
+        matchBusca && matchLocal
+        ? ""
+        : "none";
+
+    });
+
+}
+
 /* =========================
    RELATÓRIO
 ========================= */
@@ -1377,6 +1421,60 @@ async function carregarDashboard(){
     atualizarDashboardAvancado();
 
     gerarRelatorioLocais();
+
+    carregarFiltroLocaisDashboard();
+}
+
+function carregarFiltroLocaisDashboard(){
+
+    const select =
+    document.getElementById(
+    "filtroLocalDashboard"
+    );
+
+    if(!select) return;
+
+    const linhas =
+    document.querySelectorAll(
+    "#dashboardLocais tr"
+    );
+
+    const locais = [];
+
+    linhas.forEach(linha => {
+
+        const local =
+        linha.children[1]
+        ?.innerText
+        .trim();
+
+        if(
+            local &&
+            !locais.includes(local)
+        ){
+            locais.push(local);
+        }
+
+    });
+
+    locais.sort();
+
+    select.innerHTML = `
+        <option value="">
+            Todos os Locais
+        </option>
+    `;
+
+    locais.forEach(local => {
+
+        select.innerHTML += `
+            <option value="${local.toLowerCase()}">
+                ${local}
+            </option>
+        `;
+
+    });
+
 }
 
 /* =========================
