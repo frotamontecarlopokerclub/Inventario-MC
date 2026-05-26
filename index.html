@@ -53,107 +53,107 @@ id="sidebar"
 >
 
 <div class="logo">
-    INVENTÁRIO CENTRAL
+INVENTÁRIO CENTRAL
 </div>
 
 <ul>
 
-    <!-- LOGIN -->
+<!-- LOGIN -->
 
-    <li
-    id="menuLogin"
-    class="menu-item active"
-    onclick="abrirTela('loginTela', this)"
-    >
+<li
+id="menuLogin"
+class="menu-item active"
+onclick="abrirTela('loginTela', this)"
+>
 
-        <i class="fa fa-user"></i>
-        Login
+<i class="fa fa-user"></i>
+Login
 
-    </li>
+</li>
 
-    <!-- DASHBOARD -->
+<!-- DASHBOARD -->
 
-    <li
-    id="menuDashboard"
-    class="menu-item"
-    style="display:none;"
-    onclick="abrirTela('dashboardTela', this)"
-    >
+<li
+id="menuDashboard"
+class="menu-item"
+style="display:none;"
+onclick="abrirTela('dashboardTela', this)"
+>
 
-        <i class="fa fa-chart-line"></i>
-        Dashboard
+<i class="fa fa-chart-line"></i>
+Dashboard
 
-    </li>
+</li>
 
-    <!-- CADASTRO -->
+<!-- CADASTRO -->
 
-    <li
-    id="menuCadastro"
-    class="menu-item"
-    style="display:none;"
-    onclick="abrirTela('cadastroTela', this)"
-    >
+<li
+id="menuCadastro"
+class="menu-item"
+style="display:none;"
+onclick="abrirTela('cadastroTela', this)"
+>
 
-        <i class="fa fa-box"></i>
-        Cadastro
+<i class="fa fa-box"></i>
+Cadastro
 
-    </li>
+</li>
 
-    <!-- MOVIMENTAÇÃO -->
+<!-- MOVIMENTAÇÃO -->
 
-    <li
-    id="menuMovimentacao"
-    class="menu-item"
-    style="display:none;"
-    onclick="abrirTela('movimentacaoTela', this)"
-    >
+<li
+id="menuMovimentacao"
+class="menu-item"
+style="display:none;"
+onclick="abrirTela('movimentacaoTela', this)"
+>
 
-        <i class="fa fa-right-left"></i>
-        Movimentações
+<i class="fa fa-right-left"></i>
+Movimentações
 
-    </li>
+</li>
 
-    <!-- ESTOQUE -->
+<!-- ESTOQUE -->
 
-    <li
-    id="menuEstoque"
-    class="menu-item"
-    style="display:none;"
-    onclick="abrirTela('estoqueTela', this)"
-    >
+<li
+id="menuEstoque"
+class="menu-item"
+style="display:none;"
+onclick="abrirTela('estoqueTela', this)"
+>
 
-        <i class="fa fa-warehouse"></i>
-        Estoque
+<i class="fa fa-warehouse"></i>
+Estoque
 
-    </li>
+</li>
 
-    <!-- HISTÓRICO -->
+<!-- HISTÓRICO -->
 
-    <li
-    id="menuHistorico"
-    class="menu-item"
-    style="display:none;"
-    onclick="abrirTela('historicoTela', this)"
-    >
+<li
+id="menuHistorico"
+class="menu-item"
+style="display:none;"
+onclick="abrirTela('historicoTela', this)"
+>
 
-        <i class="fa fa-clock-rotate-left"></i>
-        Histórico
+<i class="fa fa-clock-rotate-left"></i>
+Histórico
 
-    </li>
+</li>
 
-    <!-- SAIR -->
+<!-- SAIR -->
 
-    <li
-    id="menuLogout"
-    class="menu-item"
-    style="display:none;"
-    onclick="logout()"
-    >
+<li
+id="menuLogout"
+class="menu-item"
+style="display:none;"
+onclick="logout()"
+>
 
-        <i class="fa fa-right-from-bracket"></i>
-        Sair
+<i class="fa fa-right-from-bracket"></i>
+Sair
 
-    </li>
+</li>
 
 </ul>
 
@@ -165,9 +165,9 @@ id="sidebar"
 
 <header>
 
-    <h1>
-        Sistema de Inventário Central
-    </h1>
+<h1>
+Sistema de Inventário Central
+</h1>
 
 </header>
 
@@ -215,37 +215,37 @@ class="tela"
 
 <div class="dashboard">
 
-    <div class="dash-card">
+<div class="dash-card">
 
-        <h3 id="totalItens">0</h3>
+<h3 id="totalItens">0</h3>
 
-        <p>Total de Patrimônios</p>
+<p>Total de Patrimônios</p>
 
-    </div>
+</div>
 
-    <div class="dash-card">
+<div class="dash-card">
 
-        <h3 id="totalLocais">0</h3>
+<h3 id="totalLocais">0</h3>
 
-        <p>Locais</p>
+<p>Locais</p>
 
-    </div>
+</div>
 
-    <div class="dash-card">
+<div class="dash-card">
 
-        <h3 id="totalMov">0</h3>
+<h3 id="totalMov">0</h3>
 
-        <p>Movimentações</p>
+<p>Movimentações</p>
 
-    </div>
+</div>
 
-    <div class="dash-card">
+<div class="dash-card">
 
-        <h3 id="totalBaixados">0</h3>
+<h3 id="totalBaixados">0</h3>
 
-        <p>Baixados</p>
+<p>Baixados</p>
 
-    </div>
+</div>
 
 </div>
 
@@ -255,33 +255,33 @@ class="tela"
 
 <div class="dashboard-topo">
 
-    <h2>
-        Quantidade por Item e Local
-    </h2>
+<h2>
+Quantidade por Item e Local
+</h2>
 
-    <!-- FILTROS -->
+<!-- FILTROS -->
 
-    <div class="dashboard-filtros">
+<div class="dashboard-filtros">
 
-        <input
-        type="text"
-        id="filtroDashboard"
-        placeholder="Pesquisar item ou local..."
-        onkeyup="filtrarDashboard()"
-        />
+<input
+type="text"
+id="filtroDashboard"
+placeholder="Pesquisar item ou local..."
+onkeyup="filtrarDashboard()"
+/>
 
-        <select
-        id="filtroLocalDashboard"
-        onchange="filtrarDashboard()"
-        >
+<select
+id="filtroLocalDashboard"
+onchange="filtrarDashboard()"
+>
 
-            <option value="">
-                Todos os Locais
-            </option>
+<option value="">
+Todos os Locais
+</option>
 
-        </select>
+</select>
 
-    </div>
+</div>
 
 </div>
 
@@ -482,14 +482,14 @@ Selecione o Patrimônio
 
 <input
 type="text"
-id="origemNome"
+id="origemAtual"
 placeholder="Local Atual"
 readonly
 />
 
 </div>
 
-<!-- DESTINO + QUANTIDADE -->
+<!-- DESTINO -->
 
 <div class="grid-2">
 
@@ -500,20 +500,6 @@ Selecione o Destino
 </option>
 
 </select>
-
-<input
-type="number"
-id="quantidadeMov"
-placeholder="Quantidade"
-min="1"
-value="1"
-/>
-
-</div>
-
-<!-- STATUS -->
-
-<div class="grid-2">
 
 <select id="statusMov">
 
@@ -554,9 +540,17 @@ class="tela"
 
 <div class="card">
 
-<h2>Patrimônios Cadastrados</h2>
+<div class="estoque-topo">
 
-<div class="grid-2">
+<h2>
+Patrimônios Cadastrados
+</h2>
+
+<button onclick="exportarExcel()">
+Exportar Excel
+</button>
+
+</div>
 
 <input
 type="text"
@@ -564,12 +558,6 @@ id="busca"
 placeholder="Buscar patrimônio..."
 onkeyup="filtrarItens()"
 />
-
-<button onclick="exportarExcel()">
-Exportar Excel
-</button>
-
-</div>
 
 <div class="table-area">
 
@@ -581,7 +569,6 @@ Exportar Excel
 
 <th>Foto</th>
 <th>Patrimônio</th>
-<th>Tipo</th>
 <th>Nome</th>
 <th>Descrição</th>
 <th>Local</th>
@@ -643,69 +630,11 @@ class="tela"
 
 </div>
 
-<!-- SUPABASE -->
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<!-- MOBILE MENU -->
-
-<script>
-
-function toggleSidebar(){
-
-    const sidebar =
-    document.getElementById(
-        'sidebar'
-    );
-
-    sidebar.classList.toggle(
-        'open'
-    );
-}
-
-/* FECHAR MENU AO CLICAR FORA */
-
-document.addEventListener(
-    'click',
-    function(event){
-
-        const sidebar =
-        document.getElementById(
-            'sidebar'
-        );
-
-        const menuBtn =
-        document.querySelector(
-            '.mobile-menu-btn'
-        );
-
-        const clicouDentro =
-        sidebar.contains(event.target);
-
-        const clicouBotao =
-        menuBtn.contains(event.target);
-
-        if(
-            window.innerWidth <= 900 &&
-            !clicouDentro &&
-            !clicouBotao
-        ){
-
-            sidebar.classList.remove(
-                'open'
-            );
-        }
-    }
-);
-
-</script>
-
 <!-- MODAL FOTO -->
 
 <div
 id="modalFoto"
 class="modal-foto"
-onclick="fecharModalFoto()"
 >
 
 <img
@@ -715,6 +644,73 @@ alt="Foto"
 />
 
 </div>
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- MOBILE -->
+
+<script>
+
+function toggleSidebar(){
+
+const sidebar =
+document.getElementById(
+'sidebar'
+);
+
+if(!sidebar) return;
+
+sidebar.classList.toggle(
+'open'
+);
+}
+
+/* FECHAR MENU AO CLICAR FORA */
+
+document.addEventListener(
+'click',
+function(event){
+
+const sidebar =
+document.getElementById(
+'sidebar'
+);
+
+const menuBtn =
+document.querySelector(
+'.mobile-menu-btn'
+);
+
+if(
+!sidebar ||
+!menuBtn
+){
+
+return;
+}
+
+const clicouDentro =
+sidebar.contains(event.target);
+
+const clicouBotao =
+menuBtn.contains(event.target);
+
+if(
+window.innerWidth <= 900 &&
+!clicouDentro &&
+!clicouBotao
+){
+
+sidebar.classList.remove(
+'open'
+);
+}
+}
+);
+
+</script>
 
 <!-- APP -->
 

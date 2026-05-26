@@ -1782,3 +1782,179 @@ window.onload = async () => {
         );
     }
 };
+
+/* =========================
+   EVENTOS
+========================= */
+
+document.addEventListener(
+    'change',
+    function(e){
+
+        if(
+            e.target &&
+            e.target.id === 'itemMov'
+        ){
+
+            preencherOrigemAutomaticamente();
+        }
+    }
+);
+
+/* =========================
+   ENTER LOGIN
+========================= */
+
+document.addEventListener(
+    'keypress',
+    function(e){
+
+        if(
+            e.key === 'Enter'
+        ){
+
+            const telaLogin =
+            document.getElementById(
+                'loginTela'
+            );
+
+            if(
+                telaLogin &&
+                telaLogin.classList.contains(
+                    'activeTela'
+                )
+            ){
+
+                login();
+            }
+        }
+    }
+);
+
+/* =========================
+   AUTO REFRESH
+========================= */
+
+setInterval(async () => {
+
+    if(usuarioLogado){
+
+        await carregarItens();
+
+        atualizarDashboardAvancado();
+
+        gerarRelatorioLocais();
+    }
+
+}, 30000);
+
+/* =========================
+   INIT
+========================= */
+
+window.onload = async () => {
+
+    try{
+
+        carregarLocais();
+
+        carregarFiltroLocaisDashboard();
+
+        atualizarMenus();
+
+        const { data } =
+        await supabaseClient.auth
+        .getSession();
+
+        if(data?.session){
+
+            usuarioLogado =
+            data.session.user;
+
+            await verificarPerfil();
+
+            atualizarMenus();
+
+            abrirTela(
+                'dashboardTela',
+                document.getElementById(
+                    'menuDashboard'
+                )
+            );
+
+            await carregarDashboard();
+
+        }else{
+
+            abrirTela(
+                'loginTela',
+                document.getElementById(
+                    'menuLogin'
+                )
+            );
+        }
+
+        console.log(
+            'Sistema conectado ao Supabase!'
+        );
+
+    }catch(err){
+
+        console.log(err);
+
+        alert(
+            'Erro ao iniciar sistema'
+        );
+    }
+};
+
+/* =========================
+   ESC FECHA MODAL
+========================= */
+
+document.addEventListener(
+    'keydown',
+    function(e){
+
+        if(e.key === 'Escape'){
+
+            fecharModalFoto();
+        }
+    }
+);
+
+/* =========================
+   CLICK FORA MODAL
+========================= */
+
+const modal =
+document.getElementById(
+    'modalFoto'
+);
+
+if(modal){
+
+    modal.addEventListener(
+        'click',
+        function(e){
+
+            if(
+                e.target.id === 'modalFoto'
+            ){
+
+                fecharModalFoto();
+            }
+        }
+    );
+}
+
+/* =========================
+   LOG SISTEMA
+========================= */
+
+console.log(`
+======================================
+ SISTEMA DE INVENTÁRIO INICIADO
+ SUPABASE ONLINE
+======================================
+`);
