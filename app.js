@@ -1511,6 +1511,207 @@ function toggleSidebar(){
    INIT
 ========================= */
 
+/* =========================
+   PREENCHER ORIGEM
+========================= */
+
+function preencherOrigemAutomaticamente(){
+
+    const itemId =
+    document.getElementById('itemMov')
+    ?.value;
+
+    const origemInput =
+    document.getElementById('origemAtual');
+
+    if(!itemId || !origemInput){
+
+        return;
+    }
+
+    const item =
+    itens.find(
+        i => i.id == itemId
+    );
+
+    if(!item){
+
+        origemInput.value = '';
+
+        return;
+    }
+
+    const local =
+    LOCAIS.find(
+        l => l.id == item.local_id
+    );
+
+    origemInput.value =
+    local?.nome || '';
+}
+
+/* =========================
+   MOVIMENTAR ITEM
+========================= */
+
+async function movimentarItem(){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert('Usuário sem permissão!');
+
+        return;
+    }
+
+    try{
+
+        const item_id =
+        document.getElementById('itemMov')
+        ?.value;
+
+        const destino_id =
+        document.getElementById('destino')
+        ?.value;
+
+        const observacao =
+        document.getElementById('observacaoMov')
+        ?.value
+        ?.trim() || '';
+
+        if(!item_id){
+
+            alert(
+                'Selecione o patrimônio'
+            );
+
+            return;
+        }
+
+        if(!destino_id){
+
+            alert(
+                'Selecione o destino'
+            );
+
+            return;
+        }
+
+        const item =
+        itens.find(
+            i => i.id == item_id
+        );
+
+        if(!item){
+
+            alert(
+                'Item não encontrado'
+            );
+
+            return;
+        }
+
+        const origem_id =
+        item.local_id;
+
+        /* =========================
+           ATUALIZA ITEM
+        ========================= */
+
+        const {
+            error:updateError
+        } =
+        await supabaseClient
+        .from('itens')
+        .update({
+
+            local_id:Number(destino_id)
+
+        })
+        .eq('id', item_id);
+
+        if(updateError){
+
+            console.log(updateError);
+
+            alert(
+                'Erro ao movimentar item'
+            );
+
+            return;
+        }
+
+        /* =========================
+           SALVA HISTÓRICO
+        ========================= */
+
+        const {
+            error:movError
+        } =
+        await supabaseClient
+        .from('movimentacoes')
+        .insert([{
+
+            item_id:Number(item_id),
+
+            origem_id:Number(origem_id),
+
+            destino_id:Number(destino_id),
+
+            observacao,
+
+            data:new Date()
+
+        }]);
+
+        if(movError){
+
+            console.log(movError);
+        }
+
+        alert(
+            'Item movimentado com sucesso!'
+        );
+
+        document.getElementById(
+            'itemMov'
+        ).value = '';
+
+        document.getElementById(
+            'destino'
+        ).value = '';
+
+        const origemAtual =
+        document.getElementById(
+            'origemAtual'
+        );
+
+        if(origemAtual){
+
+            origemAtual.value = '';
+        }
+
+        const observacaoCampo =
+        document.getElementById(
+            'observacaoMov'
+        );
+
+        if(observacaoCampo){
+
+            observacaoCampo.value = '';
+        }
+
+        await carregarDashboard();
+
+    }catch(err){
+
+        console.log(err);
+
+        alert(
+            'Erro inesperado ao movimentar'
+        );
+    }
+}
+
 window.onload = async () => {
 
     try{
