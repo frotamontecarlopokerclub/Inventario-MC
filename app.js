@@ -171,7 +171,7 @@ async function verificarPerfil(){
         .from('usuarios')
         .select('perfil')
         .eq('email', usuarioLogado.email)
-        .single();
+        .maybeSingle();
 
         if(error){
 
@@ -183,7 +183,7 @@ async function verificarPerfil(){
         }
 
         perfilUsuario =
-        String(data?.perfil || '')
+        String(data?.perfil || 'consulta')
         .trim()
         .toLowerCase();
 
@@ -400,7 +400,7 @@ async function salvarItem(){
         .getElementById('foto');
 
         const arquivo =
-        fotoInput.files[0];
+        fotoInput?.files?.[0];
 
         if(!nome){
 
@@ -417,6 +417,10 @@ async function salvarItem(){
         }
 
         let foto_url = '';
+
+        /* =========================
+           UPLOAD FOTO
+        ========================= */
 
         if(arquivo){
 
@@ -467,6 +471,10 @@ async function salvarItem(){
             urlData.publicUrl;
         }
 
+        /* =========================
+           GERAR LOTE
+        ========================= */
+
         let maiorNumero =
         gerarNumeroPatrimonio();
 
@@ -495,6 +503,10 @@ async function salvarItem(){
             });
         }
 
+        /* =========================
+           INSERT
+        ========================= */
+
         const { error } =
         await supabaseClient
         .from('itens')
@@ -505,7 +517,7 @@ async function salvarItem(){
             console.log(error);
 
             alert(
-                'Erro ao salvar lote'
+                'Erro ao salvar patrimônio'
             );
 
             return;
@@ -533,25 +545,55 @@ async function salvarItem(){
 
 function limparFormulario(){
 
+    const nome =
     document.getElementById(
         'nome'
-    ).value = '';
+    );
 
+    if(nome){
+
+        nome.value = '';
+    }
+
+    const descricao =
     document.getElementById(
         'descricao'
-    ).value = '';
+    );
 
+    if(descricao){
+
+        descricao.value = '';
+    }
+
+    const foto =
     document.getElementById(
         'foto'
-    ).value = '';
+    );
 
+    if(foto){
+
+        foto.value = '';
+    }
+
+    const local =
     document.getElementById(
         'local'
-    ).value = '';
+    );
 
+    if(local){
+
+        local.value = '';
+    }
+
+    const status =
     document.getElementById(
         'status'
-    ).value = 'Ativo';
+    );
+
+    if(status){
+
+        status.value = 'Ativo';
+    }
 
     const quantidade =
     document.getElementById(
@@ -595,6 +637,10 @@ async function carregarItens(){
         if(error){
 
             console.log(error);
+
+            alert(
+                'Erro ao carregar itens'
+            );
 
             return;
         }
@@ -756,23 +802,123 @@ ${item.patrimonio} - ${item.nome}
             }
         });
 
+        const totalItens =
         document.getElementById(
             'totalItens'
-        ).innerText =
-        itens.length;
+        );
 
+        if(totalItens){
+
+            totalItens.innerText =
+            itens.length;
+        }
+
+        const totalBaixados =
         document.getElementById(
             'totalBaixados'
-        ).innerText =
-        itens.filter(
-            item =>
-            item.status === 'Baixado'
-        ).length;
+        );
+
+        if(totalBaixados){
+
+            totalBaixados.innerText =
+            itens.filter(
+                item =>
+                item.status === 'Baixado'
+            ).length;
+        }
 
     }catch(err){
 
         console.log(err);
     }
+}
+
+/* =========================
+   EDITAR ITEM
+========================= */
+
+async function editarItem(id){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert('Usuário sem permissão!');
+
+        return;
+    }
+
+    const item =
+    itens.find(
+        i => i.id == id
+    );
+
+    if(!item) return;
+
+    const novoNome =
+    prompt(
+        'Novo nome:',
+        item.nome
+    );
+
+    if(!novoNome) return;
+
+    const { error } =
+    await supabaseClient
+    .from('itens')
+    .update({
+
+        nome:novoNome
+
+    })
+    .eq('id', id);
+
+    if(error){
+
+        console.log(error);
+
+        alert('Erro ao editar');
+
+        return;
+    }
+
+    await carregarDashboard();
+}
+
+/* =========================
+   EXCLUIR ITEM
+========================= */
+
+async function excluirItem(id){
+
+    if(perfilUsuario === 'consulta'){
+
+        alert('Usuário sem permissão!');
+
+        return;
+    }
+
+    const confirmar =
+    confirm(
+        'Deseja excluir este patrimônio?'
+    );
+
+    if(!confirmar) return;
+
+    const { error } =
+    await supabaseClient
+    .from('itens')
+    .delete()
+    .eq('id', id);
+
+    if(error){
+
+        console.log(error);
+
+        alert('Erro ao excluir');
+
+        return;
+    }
+
+    await carregarDashboard();
 }
 
 /* =========================
@@ -858,10 +1004,16 @@ ${new Date(mov.data)
 `;
         });
 
+        const totalMov =
         document.getElementById(
             'totalMov'
-        ).innerText =
-        movimentacoes.length;
+        );
+
+        if(totalMov){
+
+            totalMov.innerText =
+            movimentacoes.length;
+        }
 
     }catch(err){
 
@@ -875,40 +1027,64 @@ ${new Date(mov.data)
 
 function atualizarDashboardAvancado(){
 
+    const dashAtivo =
     document.getElementById(
         'dashAtivo'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status === 'Ativo'
-    ).length;
+    );
 
+    if(dashAtivo){
+
+        dashAtivo.innerText =
+        itens.filter(
+            item =>
+            item.status === 'Ativo'
+        ).length;
+    }
+
+    const dashManutencao =
     document.getElementById(
         'dashManutencao'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status ===
-        'Em manutenção'
-    ).length;
+    );
 
+    if(dashManutencao){
+
+        dashManutencao.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Em manutenção'
+        ).length;
+    }
+
+    const dashBaixado =
     document.getElementById(
         'dashBaixado'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status ===
-        'Baixado'
-    ).length;
+    );
 
+    if(dashBaixado){
+
+        dashBaixado.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Baixado'
+        ).length;
+    }
+
+    const dashExtraviado =
     document.getElementById(
         'dashExtraviado'
-    ).innerText =
-    itens.filter(
-        item =>
-        item.status ===
-        'Extraviado'
-    ).length;
+    );
+
+    if(dashExtraviado){
+
+        dashExtraviado.innerText =
+        itens.filter(
+            item =>
+            item.status ===
+            'Extraviado'
+        ).length;
+    }
 }
 
 /* =========================
@@ -1099,8 +1275,8 @@ function filtrarItens(){
     document.getElementById(
         'busca'
     )
-    .value
-    .toLowerCase();
+    ?.value
+    .toLowerCase() || '';
 
     const linhas =
     document.querySelectorAll(
