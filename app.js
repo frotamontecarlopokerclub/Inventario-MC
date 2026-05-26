@@ -1517,21 +1517,38 @@ function toggleSidebar(){
 
 function preencherOrigemAutomaticamente(){
 
-    const itemId =
-    document.getElementById('itemMov')
-    ?.value;
+    const selectItem =
+    document.getElementById(
+        'itemMov'
+    );
 
     const origemInput =
-    document.getElementById('origemAtual');
+    document.getElementById(
+        'origemAtual'
+    );
 
-    if(!itemId || !origemInput){
+    if(!selectItem || !origemInput){
+
+        console.log(
+            'Campo itemMov ou origemAtual não encontrado'
+        );
+
+        return;
+    }
+
+    const itemId =
+    selectItem.value;
+
+    if(!itemId){
+
+        origemInput.value = '';
 
         return;
     }
 
     const item =
     itens.find(
-        i => i.id == itemId
+        i => String(i.id) === String(itemId)
     );
 
     if(!item){
@@ -1543,11 +1560,11 @@ function preencherOrigemAutomaticamente(){
 
     const local =
     LOCAIS.find(
-        l => l.id == item.local_id
+        l => String(l.id) === String(item.local_id)
     );
 
     origemInput.value =
-    local?.nome || '';
+    local?.nome || 'Local não encontrado';
 }
 
 /* =========================
