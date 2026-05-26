@@ -5,7 +5,7 @@
 
 <head>
 
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 
 <meta
 name="viewport"
@@ -259,6 +259,8 @@ class="tela"
         Quantidade por Item e Local
     </h2>
 
+    <!-- FILTROS -->
+
     <div class="dashboard-filtros">
 
         <input
@@ -374,6 +376,8 @@ class="tela"
 
 <h2>Cadastrar Patrimônio</h2>
 
+<!-- NOME + TIPO -->
+
 <div class="grid-2">
 
 <input
@@ -382,14 +386,32 @@ id="nome"
 placeholder="Nome do Item"
 />
 
+<input
+type="text"
+id="tipoItem"
+placeholder="Tipo / Categoria"
+/>
+
 </div>
+
+<!-- DESCRIÇÃO -->
 
 <textarea
 id="descricao"
 placeholder="Descrição"
 ></textarea>
 
+<!-- QUANTIDADE + LOCAL -->
+
 <div class="grid-2">
+
+<input
+type="number"
+id="quantidadeLote"
+placeholder="Quantidade"
+min="1"
+value="1"
+/>
 
 <select id="local">
 
@@ -398,6 +420,12 @@ Selecione o Local
 </option>
 
 </select>
+
+</div>
+
+<!-- STATUS -->
+
+<div class="grid-2">
 
 <select id="status">
 
@@ -437,6 +465,8 @@ class="tela"
 
 <h2>Movimentar Patrimônio</h2>
 
+<!-- ITEM + ORIGEM -->
+
 <div class="grid-2">
 
 <select
@@ -459,6 +489,8 @@ readonly
 
 </div>
 
+<!-- DESTINO + QUANTIDADE -->
+
 <div class="grid-2">
 
 <select id="destino">
@@ -468,6 +500,20 @@ Selecione o Destino
 </option>
 
 </select>
+
+<input
+type="number"
+id="quantidadeMov"
+placeholder="Quantidade"
+min="1"
+value="1"
+/>
+
+</div>
+
+<!-- STATUS -->
+
+<div class="grid-2">
 
 <select id="statusMov">
 
@@ -483,6 +529,8 @@ Alterar Status (Opcional)
 </select>
 
 </div>
+
+<!-- OBS -->
 
 <textarea
 id="observacaoMov"
@@ -508,6 +556,8 @@ class="tela"
 
 <h2>Patrimônios Cadastrados</h2>
 
+<div class="grid-2">
+
 <input
 type="text"
 id="busca"
@@ -519,6 +569,8 @@ onkeyup="filtrarItens()"
 Exportar Excel
 </button>
 
+</div>
+
 <div class="table-area">
 
 <table class="inventory-table">
@@ -529,6 +581,7 @@ Exportar Excel
 
 <th>Foto</th>
 <th>Patrimônio</th>
+<th>Tipo</th>
 <th>Nome</th>
 <th>Descrição</th>
 <th>Local</th>
@@ -609,6 +662,8 @@ function toggleSidebar(){
         'open'
     );
 }
+
+/* FECHAR MENU AO CLICAR FORA */
 
 document.addEventListener(
     'click',

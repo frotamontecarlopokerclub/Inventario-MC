@@ -64,10 +64,20 @@ const LOCAIS = [
 async function login(){
 
     const email =
-    document.getElementById('email').value;
+    document.getElementById('email')
+    .value
+    .trim();
 
     const password =
-    document.getElementById('password').value;
+    document.getElementById('password')
+    .value;
+
+    if(!email || !password){
+
+        alert('Informe email e senha');
+
+        return;
+    }
 
     try{
 
@@ -97,8 +107,8 @@ async function login(){
 
         abrirTela(
             'dashboardTela',
-            document.querySelector(
-                '[onclick*="dashboardTela"]'
+            document.getElementById(
+                'menuDashboard'
             )
         );
 
@@ -131,8 +141,8 @@ async function logout(){
 
         abrirTela(
             'loginTela',
-            document.querySelector(
-                '[onclick*="loginTela"]'
+            document.getElementById(
+                'menuLogin'
             )
         );
 
@@ -146,11 +156,6 @@ async function logout(){
     }
 }
 
-
-/* =========================
-   PERFIL
-========================= */
-
 /* =========================
    PERFIL
 ========================= */
@@ -161,27 +166,16 @@ async function verificarPerfil(){
 
     try{
 
-        const email =
-        usuarioLogado.email;
-
-        console.log(
-            'Verificando perfil do email:',
-            email
-        );
-
         const { data, error } =
         await supabaseClient
         .from('usuarios')
         .select('perfil')
-        .eq('email', email)
+        .eq('email', usuarioLogado.email)
         .single();
 
         if(error){
 
-            console.log(
-                'Erro ao buscar perfil:',
-                error
-            );
+            console.log(error);
 
             perfilUsuario = 'consulta';
 
@@ -192,13 +186,6 @@ async function verificarPerfil(){
         String(data?.perfil || '')
         .trim()
         .toLowerCase();
-
-        console.log(
-            'Perfil carregado:',
-            perfilUsuario
-        );
-
-        atualizarMenus();
 
     }catch(err){
 
@@ -212,127 +199,73 @@ async function verificarPerfil(){
    CONTROLE MENUS
 ========================= */
 
-/* =========================
-   CONTROLE MENUS
-========================= */
-
 function atualizarMenus(){
 
     const loginMenu =
-    document.querySelector(
-        '[onclick*="loginTela"]'
+    document.getElementById(
+        'menuLogin'
     );
 
     const dashboardMenu =
-    document.querySelector(
-        '[onclick*="dashboardTela"]'
+    document.getElementById(
+        'menuDashboard'
     );
 
     const cadastroMenu =
-    document.querySelector(
-        '[onclick*="cadastroTela"]'
+    document.getElementById(
+        'menuCadastro'
     );
 
     const movimentacaoMenu =
-    document.querySelector(
-        '[onclick*="movimentacaoTela"]'
+    document.getElementById(
+        'menuMovimentacao'
     );
 
     const estoqueMenu =
-    document.querySelector(
-        '[onclick*="estoqueTela"]'
+    document.getElementById(
+        'menuEstoque'
     );
 
     const historicoMenu =
-    document.querySelector(
-        '[onclick*="historicoTela"]'
+    document.getElementById(
+        'menuHistorico'
     );
 
     const logoutMenu =
-    document.querySelector(
-        '[onclick="logout()"]'
+    document.getElementById(
+        'menuLogout'
     );
-
-    /* =========================
-       SEM LOGIN
-    ========================= */
 
     if(!usuarioLogado){
 
-        if(loginMenu)
         loginMenu.style.display = 'flex';
 
-        if(logoutMenu)
-        logoutMenu.style.display = 'none';
-
-        if(dashboardMenu)
         dashboardMenu.style.display = 'none';
-
-        if(cadastroMenu)
         cadastroMenu.style.display = 'none';
-
-        if(movimentacaoMenu)
         movimentacaoMenu.style.display = 'none';
-
-        if(estoqueMenu)
         estoqueMenu.style.display = 'none';
-
-        if(historicoMenu)
         historicoMenu.style.display = 'none';
+        logoutMenu.style.display = 'none';
 
         return;
     }
 
-    /* =========================
-       LOGADO
-    ========================= */
-
-    if(loginMenu)
     loginMenu.style.display = 'none';
 
-    if(logoutMenu)
-    logoutMenu.style.display = 'flex';
-
-    if(dashboardMenu)
     dashboardMenu.style.display = 'flex';
-
-    if(estoqueMenu)
     estoqueMenu.style.display = 'flex';
-
-    if(historicoMenu)
     historicoMenu.style.display = 'flex';
-
-    /* =========================
-       PERFIL CONSULTA
-    ========================= */
+    logoutMenu.style.display = 'flex';
 
     if(perfilUsuario === 'consulta'){
 
-        if(cadastroMenu)
         cadastroMenu.style.display = 'none';
-
-        if(movimentacaoMenu)
         movimentacaoMenu.style.display = 'none';
-
-        console.log(
-            'Modo CONSULTA ativado'
-        );
 
     }else{
 
-        /* =========================
-           PERFIL GESTOR
-        ========================= */
-
-        if(cadastroMenu)
         cadastroMenu.style.display = 'flex';
-
-        if(movimentacaoMenu)
         movimentacaoMenu.style.display = 'flex';
-
-        console.log(
-            'Modo GESTOR ativado'
-        );
     }
 }
 
@@ -348,28 +281,35 @@ function carregarLocais(){
     const destino =
     document.getElementById('destino');
 
-    if(!local || !destino) return;
+    if(local){
 
-    local.innerHTML =
-    '<option value="">Selecione o Local</option>';
+        local.innerHTML =
+        '<option value="">Selecione o Local</option>';
 
-    destino.innerHTML =
-    '<option value="">Selecione o Destino</option>';
+        LOCAIS.forEach(item => {
 
-    LOCAIS.forEach(item => {
+            local.innerHTML += `
+            <option value="${item.id}">
+                ${item.nome}
+            </option>
+            `;
+        });
+    }
 
-        local.innerHTML += `
-        <option value="${item.id}">
-            ${item.nome}
-        </option>
-        `;
+    if(destino){
 
-        destino.innerHTML += `
-        <option value="${item.id}">
-            ${item.nome}
-        </option>
-        `;
-    });
+        destino.innerHTML =
+        '<option value="">Selecione o Destino</option>';
+
+        LOCAIS.forEach(item => {
+
+            destino.innerHTML += `
+            <option value="${item.id}">
+                ${item.nome}
+            </option>
+            `;
+        });
+    }
 
     const totalLocais =
     document.getElementById(
@@ -391,7 +331,7 @@ function gerarNumeroPatrimonio(){
 
     if(itens.length === 0){
 
-        return '0001';
+        return 0;
     }
 
     const numeros =
@@ -402,19 +342,8 @@ function gerarNumeroPatrimonio(){
         ) || 0;
     });
 
-    const maiorNumero =
-    Math.max(...numeros);
-
-    const proximo =
-    maiorNumero + 1;
-
-    return String(proximo)
-    .padStart(4,'0');
+    return Math.max(...numeros);
 }
-
-/* =========================
-   SALVAR ITEM
-========================= */
 
 /* =========================
    SALVAR ITEM
@@ -424,42 +353,51 @@ async function salvarItem(){
 
     if(perfilUsuario === 'consulta'){
 
-        alert(
-            'Usuário sem permissão!'
-        );
+        alert('Usuário sem permissão!');
 
         return;
     }
 
     try{
 
-        const patrimonio =
-        gerarNumeroPatrimonio();
-
         const nome =
-        document.getElementById(
-            'nome'
-        ).value.trim();
+        document
+        .getElementById('nome')
+        .value
+        .trim();
 
         const descricao =
-        document.getElementById(
-            'descricao'
-        ).value.trim();
+        document
+        .getElementById('descricao')
+        .value
+        .trim();
+
+        const tipo =
+        document
+        .getElementById('tipoItem')
+        ?.value
+        .trim() || nome;
+
+        const quantidade =
+        parseInt(
+            document
+            .getElementById('quantidadeLote')
+            ?.value || 1
+        );
 
         const local_id =
-        document.getElementById(
-            'local'
-        ).value;
+        document
+        .getElementById('local')
+        .value;
 
         const status =
-        document.getElementById(
-            'status'
-        ).value;
+        document
+        .getElementById('status')
+        .value;
 
         const fotoInput =
-        document.getElementById(
-            'foto'
-        );
+        document
+        .getElementById('foto');
 
         const arquivo =
         fotoInput.files[0];
@@ -473,23 +411,19 @@ async function salvarItem(){
 
         if(!local_id){
 
-            alert(
-                'Selecione o local'
-            );
+            alert('Selecione o local');
 
             return;
         }
 
         let foto_url = '';
 
-        /* =========================
-           UPLOAD FOTO
-        ========================= */
-
         if(arquivo){
 
             const extensao =
-            arquivo.name.split('.').pop();
+            arquivo.name
+            .split('.')
+            .pop();
 
             const nomeArquivo =
             `${Date.now()}.${extensao}`;
@@ -502,7 +436,10 @@ async function salvarItem(){
             .from('inventario')
             .upload(
                 nomeArquivo,
-                arquivo
+                arquivo,
+                {
+                    upsert:true
+                }
             );
 
             if(uploadError){
@@ -530,39 +467,52 @@ async function salvarItem(){
             urlData.publicUrl;
         }
 
-        /* =========================
-           SALVAR ITEM
-        ========================= */
+        let maiorNumero =
+        gerarNumeroPatrimonio();
 
-        const item = {
+        const lote = [];
 
-            patrimonio,
-            nome,
-            descricao,
-            local_id:Number(local_id),
-            status,
-            foto_url
+        for(let i = 1; i <= quantidade; i++){
 
-        };
+            maiorNumero++;
+
+            lote.push({
+
+                patrimonio:
+                String(maiorNumero)
+                .padStart(4,'0'),
+
+                nome,
+                tipo,
+                descricao,
+
+                local_id:
+                Number(local_id),
+
+                status,
+
+                foto_url
+            });
+        }
 
         const { error } =
         await supabaseClient
         .from('itens')
-        .insert([item]);
+        .insert(lote);
 
         if(error){
 
             console.log(error);
 
             alert(
-                'Erro ao salvar patrimônio'
+                'Erro ao salvar lote'
             );
 
             return;
         }
 
         alert(
-            `Patrimônio ${patrimonio} cadastrado!`
+            `${quantidade} patrimônios cadastrados!`
         );
 
         limparFormulario();
@@ -602,6 +552,26 @@ function limparFormulario(){
     document.getElementById(
         'status'
     ).value = 'Ativo';
+
+    const quantidade =
+    document.getElementById(
+        'quantidadeLote'
+    );
+
+    if(quantidade){
+
+        quantidade.value = 1;
+    }
+
+    const tipo =
+    document.getElementById(
+        'tipoItem'
+    );
+
+    if(tipo){
+
+        tipo.value = '';
+    }
 }
 
 /* =========================
@@ -641,55 +611,52 @@ async function carregarItens(){
             'itemMov'
         );
 
-        if(!tabela || !itemMov) return;
+        if(tabela){
 
-        tabela.innerHTML = '';
+            tabela.innerHTML = '';
+        }
 
-        itemMov.innerHTML = `
-        <option value="">
-        Selecione o Patrimônio
-        </option>
-        `;
+        if(itemMov){
+
+            itemMov.innerHTML = `
+            <option value="">
+            Selecione o Patrimônio
+            </option>
+            `;
+        }
 
         itens.forEach(item => {
 
             const local =
             LOCAIS.find(
-                l =>
-                l.id == item.local_id
+                l => l.id == item.local_id
             );
 
             let classeStatus = '';
 
             if(item.status === 'Ativo'){
+
                 classeStatus = 'ativo';
             }
 
-            if(
-                item.status ===
-                'Em manutenção'
-            ){
-                classeStatus =
-                'manutencao';
+            if(item.status === 'Em manutenção'){
+
+                classeStatus = 'manutencao';
             }
 
-            if(
-                item.status ===
-                'Baixado'
-            ){
-                classeStatus =
-                'baixado';
+            if(item.status === 'Baixado'){
+
+                classeStatus = 'baixado';
             }
 
-            if(
-                item.status ===
-                'Extraviado'
-            ){
-                classeStatus =
-                'extraviado';
+            if(item.status === 'Extraviado'){
+
+                classeStatus = 'extraviado';
             }
 
-            tabela.innerHTML += `
+            if(tabela){
+
+                tabela.innerHTML += `
 
 <tr>
 
@@ -703,7 +670,7 @@ item.foto_url ||
 
 onclick="
 abrirModalFoto(
-'${item.foto_url}'
+'${item.foto_url || ''}'
 )
 "
 
@@ -714,14 +681,8 @@ object-fit:cover;
 border-radius:8px;
 cursor:pointer;
 border:2px solid #ddd;
-transition:0.2s;
 "
-onmouseover="
-this.style.transform='scale(1.08)'
-"
-onmouseout="
-this.style.transform='scale(1)'
-"
+
 >
 
 </td>
@@ -781,14 +742,18 @@ Excluir
 </tr>
 
 `;
+            }
 
-            itemMov.innerHTML += `
+            if(itemMov){
+
+                itemMov.innerHTML += `
 
 <option value="${item.id}">
 ${item.patrimonio} - ${item.nome}
 </option>
 
 `;
+            }
         });
 
         document.getElementById(
@@ -796,308 +761,17 @@ ${item.patrimonio} - ${item.nome}
         ).innerText =
         itens.length;
 
-        const baixados =
-        itens.filter(
-            item =>
-            item.status === 'Baixado'
-        );
-
         document.getElementById(
             'totalBaixados'
         ).innerText =
-        baixados.length;
+        itens.filter(
+            item =>
+            item.status === 'Baixado'
+        ).length;
 
     }catch(err){
 
         console.log(err);
-    }
-}
-
-/* =========================
-   EDITAR ITEM
-========================= */
-
-async function editarItem(id){
-
-    if(perfilUsuario === 'consulta'){
-
-        alert(
-            'Usuário sem permissão!'
-        );
-
-        return;
-    }
-
-    const item =
-    itens.find(
-        i => i.id == id
-    );
-
-    if(!item) return;
-
-    const novoNome =
-    prompt(
-        'Novo nome:',
-        item.nome
-    );
-
-    if(!novoNome) return;
-
-    const { error } =
-    await supabaseClient
-    .from('itens')
-    .update({
-
-        nome:novoNome
-
-    })
-    .eq('id', id);
-
-    if(error){
-
-        console.log(error);
-
-        alert('Erro ao editar');
-
-        return;
-    }
-
-    await carregarDashboard();
-}
-
-/* =========================
-   EXCLUIR ITEM
-========================= */
-
-async function excluirItem(id){
-
-    if(perfilUsuario === 'consulta'){
-
-        alert(
-            'Usuário sem permissão!'
-        );
-
-        return;
-    }
-
-    const confirmar =
-    confirm(
-        'Deseja excluir este patrimônio?'
-    );
-
-    if(!confirmar) return;
-
-    const { error } =
-    await supabaseClient
-    .from('itens')
-    .delete()
-    .eq('id', id);
-
-    if(error){
-
-        console.log(error);
-
-        alert('Erro ao excluir');
-
-        return;
-    }
-
-    await carregarDashboard();
-}
-
-/* =========================
-   PREENCHER ORIGEM
-========================= */
-
-function preencherOrigemAutomaticamente(){
-
-    const item_id =
-    document.getElementById(
-        'itemMov'
-    ).value;
-
-    const item =
-    itens.find(
-        i => i.id == item_id
-    );
-
-    if(!item){
-
-        document.getElementById(
-            'origemNome'
-        ).value = '';
-
-        return;
-    }
-
-    const local =
-    LOCAIS.find(
-        l => l.id == item.local_id
-    );
-
-    document.getElementById(
-        'origemNome'
-    ).value =
-    local?.nome || '';
-}
-
-/* =========================
-   MOVIMENTAR ITEM
-========================= */
-
-async function movimentarItem(){
-
-    if(perfilUsuario === 'consulta'){
-
-        alert(
-            'Usuário sem permissão!'
-        );
-
-        return;
-    }
-
-    try{
-
-        const item_id =
-        document.getElementById(
-            'itemMov'
-        ).value;
-
-        const destino_id =
-        document.getElementById(
-            'destino'
-        ).value;
-
-        const statusMov =
-        document.getElementById(
-            'statusMov'
-        ).value;
-
-        const observacao =
-        document.getElementById(
-            'observacaoMov'
-        ).value;
-
-        if(!item_id){
-
-            alert(
-                'Selecione o patrimônio'
-            );
-
-            return;
-        }
-
-        if(!destino_id){
-
-            alert(
-                'Selecione o destino'
-            );
-
-            return;
-        }
-
-        const item =
-        itens.find(
-            i => i.id == item_id
-        );
-
-        if(!item){
-
-            alert(
-                'Item não encontrado'
-            );
-
-            return;
-        }
-
-        const origem_id =
-        item.local_id;
-
-        const updateData = {
-
-            local_id:Number(destino_id)
-
-        };
-
-        if(statusMov){
-
-            updateData.status =
-            statusMov;
-        }
-
-        const {
-            error:updateError
-        } =
-        await supabaseClient
-        .from('itens')
-        .update(updateData)
-        .eq('id', item_id);
-
-        if(updateError){
-
-            console.log(updateError);
-
-            alert(
-                'Erro ao movimentar'
-            );
-
-            return;
-        }
-
-        const {
-            error:movError
-        } =
-        await supabaseClient
-        .from('movimentacoes')
-        .insert([{
-
-            item_id,
-            origem_id,
-            destino_id,
-            observacao,
-
-            usuario:
-            usuarioLogado?.email
-            || 'Sistema'
-
-        }]);
-
-        if(movError){
-
-            console.log(movError);
-        }
-
-        alert(
-            'Patrimônio movimentado!'
-        );
-
-        document.getElementById(
-            'observacaoMov'
-        ).value = '';
-
-        document.getElementById(
-            'origemNome'
-        ).value = '';
-
-        document.getElementById(
-            'itemMov'
-        ).value = '';
-
-        document.getElementById(
-            'destino'
-        ).value = '';
-
-        document.getElementById(
-            'statusMov'
-        ).value = '';
-
-        await carregarDashboard();
-
-    }catch(err){
-
-        console.log(err);
-
-        alert('Erro inesperado');
     }
 }
 
@@ -1196,7 +870,227 @@ ${new Date(mov.data)
 }
 
 /* =========================
-   FILTRAR
+   DASHBOARD STATUS
+========================= */
+
+function atualizarDashboardAvancado(){
+
+    document.getElementById(
+        'dashAtivo'
+    ).innerText =
+    itens.filter(
+        item =>
+        item.status === 'Ativo'
+    ).length;
+
+    document.getElementById(
+        'dashManutencao'
+    ).innerText =
+    itens.filter(
+        item =>
+        item.status ===
+        'Em manutenção'
+    ).length;
+
+    document.getElementById(
+        'dashBaixado'
+    ).innerText =
+    itens.filter(
+        item =>
+        item.status ===
+        'Baixado'
+    ).length;
+
+    document.getElementById(
+        'dashExtraviado'
+    ).innerText =
+    itens.filter(
+        item =>
+        item.status ===
+        'Extraviado'
+    ).length;
+}
+
+/* =========================
+   RELATÓRIO AGRUPADO
+========================= */
+
+function gerarRelatorioLocais(){
+
+    const tabela =
+    document.getElementById(
+        'dashboardLocais'
+    );
+
+    if(!tabela) return;
+
+    tabela.innerHTML = '';
+
+    const agrupado = {};
+
+    itens.forEach(item => {
+
+        const local =
+        LOCAIS.find(
+            l => l.id == item.local_id
+        );
+
+        const nomeLocal =
+        local?.nome || 'SEM LOCAL';
+
+        const tipo =
+        item.tipo || item.nome;
+
+        const chave =
+        `${tipo}||${nomeLocal}`;
+
+        if(!agrupado[chave]){
+
+            agrupado[chave] = {
+
+                item:tipo,
+                local:nomeLocal,
+                quantidade:0
+            };
+        }
+
+        agrupado[chave]
+        .quantidade++;
+    });
+
+    Object.values(agrupado)
+
+    .sort((a,b) => {
+
+        return a.local
+        .localeCompare(b.local);
+
+    })
+
+    .forEach(registro => {
+
+        tabela.innerHTML += `
+
+<tr>
+
+<td>
+${registro.item}
+</td>
+
+<td data-local="${registro.local.toLowerCase()}">
+${registro.local}
+</td>
+
+<td>
+${registro.quantidade}
+</td>
+
+</tr>
+
+`;
+    });
+}
+
+/* =========================
+   FILTRAR DASHBOARD
+========================= */
+
+function filtrarDashboard(){
+
+    const busca =
+    document
+    .getElementById(
+        'filtroDashboard'
+    )
+    ?.value
+    .toLowerCase()
+    .trim() || '';
+
+    const localFiltro =
+    document
+    .getElementById(
+        'filtroLocalDashboard'
+    )
+    ?.value
+    .toLowerCase()
+    .trim() || '';
+
+    const linhas =
+    document.querySelectorAll(
+        '#dashboardLocais tr'
+    );
+
+    linhas.forEach(linha => {
+
+        const item =
+        linha.children[0]
+        ?.innerText
+        .toLowerCase() || '';
+
+        const local =
+        linha.children[1]
+        ?.dataset
+        ?.local || '';
+
+        const textoCompleto =
+        `${item} ${local}`;
+
+        const matchBusca =
+        textoCompleto.includes(busca);
+
+        const matchLocal =
+        !localFiltro ||
+        local === localFiltro;
+
+        linha.style.display =
+        (matchBusca && matchLocal)
+        ? ''
+        : 'none';
+
+    });
+}
+
+/* =========================
+   FILTRO LOCAIS DASHBOARD
+========================= */
+
+function carregarFiltroLocaisDashboard(){
+
+    const select =
+    document.getElementById(
+        'filtroLocalDashboard'
+    );
+
+    if(!select) return;
+
+    select.innerHTML = `
+    <option value="">
+    Todos os Locais
+    </option>
+    `;
+
+    LOCAIS
+    .sort((a,b) => {
+
+        return a.nome.localeCompare(
+            b.nome
+        );
+
+    })
+    .forEach(local => {
+
+        select.innerHTML += `
+
+<option value="${local.nome.toLowerCase()}">
+${local.nome}
+</option>
+
+`;
+    });
+}
+
+/* =========================
+   FILTRAR ITENS
 ========================= */
 
 function filtrarItens(){
@@ -1230,193 +1124,13 @@ function filtrarItens(){
    DASHBOARD
 ========================= */
 
-function atualizarDashboardAvancado(){
-
-    const dashAtivo =
-    document.getElementById(
-        'dashAtivo'
-    );
-
-    const dashManutencao =
-    document.getElementById(
-        'dashManutencao'
-    );
-
-    const dashBaixado =
-    document.getElementById(
-        'dashBaixado'
-    );
-
-    const dashExtraviado =
-    document.getElementById(
-        'dashExtraviado'
-    );
-
-    if(dashAtivo){
-
-        dashAtivo.innerText =
-        itens.filter(
-            item =>
-            item.status === 'Ativo'
-        ).length;
-    }
-
-    if(dashManutencao){
-
-        dashManutencao.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Em manutenção'
-        ).length;
-    }
-
-    if(dashBaixado){
-
-        dashBaixado.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Baixado'
-        ).length;
-    }
-
-    if(dashExtraviado){
-
-        dashExtraviado.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Extraviado'
-        ).length;
-    }
-}
-
-function filtrarDashboard(){
-
-    const busca =
-    document
-    .getElementById("filtroDashboard")
-    .value
-    .toLowerCase();
-
-    const localFiltro =
-    document
-    .getElementById("filtroLocalDashboard")
-    .value
-    .toLowerCase();
-
-    const linhas =
-    document
-    .querySelectorAll("#dashboardLocais tr");
-
-    linhas.forEach(linha => {
-
-        const texto =
-        linha.innerText.toLowerCase();
-
-        const local =
-        linha.children[1]
-        ?.innerText
-        .toLowerCase();
-
-        const matchBusca =
-        texto.includes(busca);
-
-        const matchLocal =
-        !localFiltro ||
-        local === localFiltro;
-
-        linha.style.display =
-        matchBusca && matchLocal
-        ? ""
-        : "none";
-
-    });
-
-}
-
-/* =========================
-   RELATÓRIO
-========================= */
-
-function gerarRelatorioLocais(){
-
-    const tabela =
-    document.getElementById(
-        'dashboardLocais'
-    );
-
-    if(!tabela) return;
-
-    tabela.innerHTML = '';
-
-    const agrupado = {};
-
-    itens.forEach(item => {
-
-        const local =
-        LOCAIS.find(
-            l => l.id == item.local_id
-        );
-
-        const nomeLocal =
-        local?.nome || 'SEM LOCAL';
-
-        const chave =
-        `${item.nome}||${nomeLocal}`;
-
-        if(!agrupado[chave]){
-
-            agrupado[chave] = {
-
-                item:item.nome,
-                local:nomeLocal,
-                quantidade:0
-
-            };
-        }
-
-        agrupado[chave]
-        .quantidade++;
-    });
-
-    Object.values(agrupado)
-    .forEach(registro => {
-
-        tabela.innerHTML += `
-
-<tr>
-
-<td>
-${registro.item}
-</td>
-
-<td>
-${registro.local}
-</td>
-
-<td>
-${registro.quantidade}
-</td>
-
-</tr>
-
-`;
-    });
-}
-
-/* =========================
-   DASHBOARD
-========================= */
-
 async function carregarDashboard(){
+
+    carregarLocais();
 
     await carregarItens();
 
     await carregarHistorico();
-
-    carregarLocais();
 
     atualizarDashboardAvancado();
 
@@ -1425,67 +1139,13 @@ async function carregarDashboard(){
     carregarFiltroLocaisDashboard();
 }
 
-function carregarFiltroLocaisDashboard(){
-
-    const select =
-    document.getElementById(
-    "filtroLocalDashboard"
-    );
-
-    if(!select) return;
-
-    const linhas =
-    document.querySelectorAll(
-    "#dashboardLocais tr"
-    );
-
-    const locais = [];
-
-    linhas.forEach(linha => {
-
-        const local =
-        linha.children[1]
-        ?.innerText
-        .trim();
-
-        if(
-            local &&
-            !locais.includes(local)
-        ){
-            locais.push(local);
-        }
-
-    });
-
-    locais.sort();
-
-    select.innerHTML = `
-        <option value="">
-            Todos os Locais
-        </option>
-    `;
-
-    locais.forEach(local => {
-
-        select.innerHTML += `
-            <option value="${local.toLowerCase()}">
-                ${local}
-            </option>
-        `;
-
-    });
-
-}
-
-/* =========================
-   MENU
-========================= */
-
 /* =========================
    MODAL FOTO
 ========================= */
 
 function abrirModalFoto(url){
+
+    if(!url) return;
 
     const modal =
     document.getElementById(
@@ -1506,15 +1166,17 @@ function abrirModalFoto(url){
 
 function fecharModalFoto(){
 
-    const modal =
-    document.getElementById(
+    document
+    .getElementById(
         'modalFoto'
-    );
-
-    modal.classList.remove(
-        'active'
-    );
+    )
+    .classList
+    .remove('active');
 }
+
+/* =========================
+   MENU
+========================= */
 
 function abrirTela(
     idTela,
@@ -1533,10 +1195,6 @@ function abrirTela(
         return;
     }
 
-    /* =========================
-       TROCAR TELAS
-    ========================= */
-
     const telas =
     document.querySelectorAll(
         '.tela'
@@ -1549,19 +1207,10 @@ function abrirTela(
         );
     });
 
-    const telaSelecionada =
-    document.getElementById(idTela);
-
-    if(telaSelecionada){
-
-        telaSelecionada.classList.add(
-            'activeTela'
-        );
-    }
-
-    /* =========================
-       MENU ATIVO
-    ========================= */
+    document
+    .getElementById(idTela)
+    .classList
+    .add('activeTela');
 
     const menus =
     document.querySelectorAll(
@@ -1582,25 +1231,15 @@ function abrirTela(
         );
     }
 
-    /* =========================
-       FECHAR MENU MOBILE
-    ========================= */
-
     if(window.innerWidth <= 900){
 
-        const sidebar =
-        document.getElementById(
-            'sidebar'
-        );
-
-        if(sidebar){
-
-            sidebar.classList.remove(
-                'open'
-            );
-        }
+        document
+        .getElementById('sidebar')
+        .classList
+        .remove('open');
     }
 }
+
 /* =========================
    EXPORTAR EXCEL
 ========================= */
@@ -1617,7 +1256,7 @@ function exportarExcel(){
     }
 
     let csv =
-    'PATRIMÔNIO;NOME;DESCRIÇÃO;LOCAL;STATUS\n';
+    'PATRIMÔNIO;TIPO;NOME;DESCRIÇÃO;LOCAL;STATUS\n';
 
     itens.forEach(item => {
 
@@ -1628,6 +1267,9 @@ function exportarExcel(){
 
         csv +=
         `${item.patrimonio};`;
+
+        csv +=
+        `${item.tipo || item.nome};`;
 
         csv +=
         `${item.nome};`;
@@ -1672,6 +1314,24 @@ function exportarExcel(){
 }
 
 /* =========================
+   MENU MOBILE
+========================= */
+
+function toggleSidebar(){
+
+    const sidebar =
+    document.getElementById(
+        'sidebar'
+    );
+
+    if(!sidebar) return;
+
+    sidebar.classList.toggle(
+        'open'
+    );
+}
+
+/* =========================
    INIT
 ========================= */
 
@@ -1698,8 +1358,8 @@ window.onload = async () => {
 
             abrirTela(
                 'dashboardTela',
-                document.querySelector(
-                    '[onclick*="dashboardTela"]'
+                document.getElementById(
+                    'menuDashboard'
                 )
             );
 
@@ -1709,8 +1369,8 @@ window.onload = async () => {
 
             abrirTela(
                 'loginTela',
-                document.querySelector(
-                    '[onclick*="loginTela"]'
+                document.getElementById(
+                    'menuLogin'
                 )
             );
         }
@@ -1728,12 +1388,3 @@ window.onload = async () => {
         );
     }
 };
-function toggleSidebar(){
-
-    const sidebar =
-    document.getElementById('sidebar');
-
-    if(!sidebar) return;
-
-    sidebar.classList.toggle('open');
-}
