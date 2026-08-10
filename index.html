@@ -1,721 +1,1692 @@
-<!-- index.html -->
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
 
-<meta charset="UTF-8" />
+    <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
-/>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>Sistema de Inventário</title>
+    <meta
+        name="theme-color"
+        content="#0f172a"
+    >
 
-<link
-rel="icon"
-type="image/png"
-href="favicon.png"
-/>
+    <title>Inventário Central</title>
 
-<link
-rel="stylesheet"
-href="style.css"
-/>
+    <link
+        rel="icon"
+        type="image/png"
+        href="favicon.png"
+    >
 
-<link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-/>
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
 </head>
 
 <body>
 
-<!-- BOTÃO MENU MOBILE -->
+<!-- =====================================================
+     OVERLAY MOBILE
+===================================================== -->
+
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+    onclick="toggleSidebar(false)"
+></div>
+
+
+<!-- =====================================================
+     BOTÃO MENU MOBILE
+===================================================== -->
 
 <button
-class="mobile-menu-btn"
-onclick="toggleSidebar()"
+    class="mobile-menu-btn"
+    id="mobileMenuBtn"
+    onclick="toggleSidebar()"
+    aria-label="Abrir menu"
 >
 
-<i class="fa fa-bars"></i>
+    <i class="fa-solid fa-bars"></i>
 
 </button>
 
-<!-- SIDEBAR -->
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside
+    class="sidebar"
+    id="sidebar"
+>
+
+    <!-- LOGO -->
+
+    <div class="sidebar-brand">
+
+        <div class="brand-icon">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+
+        <div class="brand-text">
+
+            <strong>
+                INVENTÁRIO
+            </strong>
+
+            <span>
+                CENTRAL
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATUS DO SISTEMA -->
+
+    <div class="system-status">
+
+        <span class="status-dot"></span>
+
+        <span>
+            Sistema operacional
+        </span>
+
+    </div>
+
+
+    <!-- MENU -->
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-title">
+            PRINCIPAL
+        </div>
+
+
+        <!-- LOGIN -->
+
+        <button
+            id="menuLogin"
+            class="menu-item active"
+            onclick="abrirTela('loginTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </span>
+
+            <span class="menu-label">
+                Login
+            </span>
+
+        </button>
+
+
+        <!-- DASHBOARD -->
+
+        <button
+            id="menuDashboard"
+            class="menu-item"
+            style="display:none;"
+            onclick="abrirTela('dashboardTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-chart-pie"></i>
+            </span>
+
+            <span class="menu-label">
+                Dashboard
+            </span>
+
+        </button>
+
+
+        <!-- CADASTRO -->
+
+        <button
+            id="menuCadastro"
+            class="menu-item"
+            style="display:none;"
+            onclick="abrirTela('cadastroTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-box-open"></i>
+            </span>
+
+            <span class="menu-label">
+                Cadastro
+            </span>
+
+        </button>
+
+
+        <!-- MOVIMENTAÇÃO -->
+
+        <button
+            id="menuMovimentacao"
+            class="menu-item"
+            style="display:none;"
+            onclick="abrirTela('movimentacaoTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </span>
+
+            <span class="menu-label">
+                Movimentações
+            </span>
+
+        </button>
+
+
+        <!-- ESTOQUE -->
+
+        <button
+            id="menuEstoque"
+            class="menu-item"
+            style="display:none;"
+            onclick="abrirTela('estoqueTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-warehouse"></i>
+            </span>
+
+            <span class="menu-label">
+                Estoque
+            </span>
+
+        </button>
+
+
+        <!-- HISTÓRICO -->
+
+        <button
+            id="menuHistorico"
+            class="menu-item"
+            style="display:none;"
+            onclick="abrirTela('historicoTela', this)"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </span>
+
+            <span class="menu-label">
+                Histórico
+            </span>
+
+        </button>
+
+    </nav>
+
+
+    <!-- RODAPÉ SIDEBAR -->
+
+    <div class="sidebar-footer">
+
+        <div
+            class="user-profile"
+            id="userProfile"
+        >
+
+            <div class="user-avatar">
+
+                <i class="fa-solid fa-user"></i>
+
+            </div>
+
+            <div class="user-info">
+
+                <strong id="usuarioNome">
+                    Visitante
+                </strong>
+
+                <span id="usuarioPerfil">
+                    Acesso restrito
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOGOUT -->
+
+        <button
+            id="menuLogout"
+            class="menu-item logout-item"
+            style="display:none;"
+            onclick="logout()"
+            type="button"
+        >
+
+            <span class="menu-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </span>
+
+            <span class="menu-label">
+                Sair
+            </span>
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     ÁREA PRINCIPAL
+===================================================== -->
+
+<main class="main">
+
+
+    <!-- =================================================
+         HEADER
+    ================================================= -->
+
+    <header class="topbar">
+
+        <div class="topbar-left">
+
+            <div>
+
+                <span
+                    class="breadcrumb"
+                    id="breadcrumb"
+                >
+                    Sistema
+                </span>
+
+                <h1 id="pageTitle">
+                    Inventário Central
+                </h1>
+
+            </div>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <div class="connection-indicator">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    Conectado
+                </span>
+
+            </div>
+
+            <div class="topbar-user">
+
+                <div class="topbar-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+
+                <div>
+
+                    <strong id="topbarUserName">
+                        Visitante
+                    </strong>
+
+                    <small id="topbarUserRole">
+                        Não autenticado
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         CONTEÚDO
+    ================================================= -->
+
+    <section class="content">
+
+
+        <!-- =================================================
+             LOGIN
+        ================================================= -->
+
+        <div
+            id="loginTela"
+            class="tela activeTela"
+        >
+
+            <div class="login-layout">
+
+                <div class="login-brand-panel">
+
+                    <div class="login-brand-icon">
+
+                        <i class="fa-solid fa-boxes-stacked"></i>
+
+                    </div>
+
+                    <span class="eyebrow">
+                        CONTROLE PATRIMONIAL
+                    </span>
+
+                    <h2>
+                        Inventário<br>
+                        Central
+                    </h2>
+
+                    <p>
+                        Controle, organização e rastreabilidade
+                        dos patrimônios em um único sistema.
+                    </p>
+
+                    <div class="login-features">
+
+                        <div>
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Dashboard operacional</span>
+                        </div>
+
+                        <div>
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            <span>Controle de estoque</span>
+                        </div>
+
+                        <div>
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span>Histórico de movimentações</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="login-card">
+
+                    <div class="login-card-header">
+
+                        <span class="login-icon">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                        </span>
+
+                        <div>
+
+                            <span class="eyebrow">
+                                ACESSO SEGURO
+                            </span>
+
+                            <h2>
+                                Entrar no sistema
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <p class="login-description">
+                        Informe suas credenciais para acessar
+                        o Inventário Central.
+                    </p>
+
+
+                    <form
+                        onsubmit="event.preventDefault(); login();"
+                    >
+
+                        <div class="field">
+
+                            <label for="email">
+                                E-mail
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-regular fa-envelope"></i>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    placeholder="seu@email.com"
+                                    autocomplete="email"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="password">
+                                Senha
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-lock"></i>
+
+                                <input
+                                    type="password"
+                                    id="password"
+                                    placeholder="Digite sua senha"
+                                    autocomplete="current-password"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            class="btn btn-primary btn-login"
+                            type="submit"
+                        >
+
+                            <span>
+                                Entrar no sistema
+                            </span>
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </form>
+
+
+                    <div class="login-footer">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        Ambiente protegido por autenticação
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DASHBOARD
+        ================================================= -->
+
+        <div
+            id="dashboardTela"
+            class="tela"
+        >
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        VISÃO GERAL
+                    </span>
+
+                    <h2>
+                        Dashboard
+                    </h2>
+
+                    <p>
+                        Acompanhe a situação atual do inventário.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- CARDS PRINCIPAIS -->
+
+            <div class="dashboard">
+
+                <div class="dash-card">
+
+                    <div class="dash-card-icon blue">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+
+                    <div class="dash-card-content">
+
+                        <span>
+                            Total de Patrimônios
+                        </span>
+
+                        <strong id="totalItens">
+                            0
+                        </strong>
+
+                    </div>
+
+                    <div class="dash-card-decoration">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dash-card">
+
+                    <div class="dash-card-icon purple">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+
+                    <div class="dash-card-content">
+
+                        <span>
+                            Locais
+                        </span>
+
+                        <strong id="totalLocais">
+                            0
+                        </strong>
+
+                    </div>
+
+                    <div class="dash-card-decoration">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dash-card">
+
+                    <div class="dash-card-icon orange">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </div>
+
+                    <div class="dash-card-content">
+
+                        <span>
+                            Movimentações
+                        </span>
+
+                        <strong id="totalMov">
+                            0
+                        </strong>
+
+                    </div>
+
+                    <div class="dash-card-decoration">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="dash-card">
+
+                    <div class="dash-card-icon red">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </div>
+
+                    <div class="dash-card-content">
+
+                        <span>
+                            Baixados
+                        </span>
+
+                        <strong id="totalBaixados">
+                            0
+                        </strong>
+
+                    </div>
+
+                    <div class="dash-card-decoration">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ÁREA AVANÇADA -->
+
+            <div class="dashboard-advanced">
+
+
+                <!-- QUANTIDADE POR LOCAL -->
+
+                <div class="card dashboard-table">
+
+                    <div class="card-header dashboard-topo">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                DISTRIBUIÇÃO
+                            </span>
+
+                            <h3>
+                                Quantidade por Item e Local
+                            </h3>
+
+                        </div>
+
+
+                        <div class="dashboard-filtros">
+
+                            <div class="input-wrapper compact">
+
+                                <i class="fa-solid fa-magnifying-glass"></i>
+
+                                <input
+                                    type="text"
+                                    id="filtroDashboard"
+                                    placeholder="Pesquisar..."
+                                    onkeyup="filtrarDashboard()"
+                                >
+
+                            </div>
+
+
+                            <div class="input-wrapper compact">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <select
+                                    id="filtroLocalDashboard"
+                                    onchange="filtrarDashboard()"
+                                >
+
+                                    <option value="">
+                                        Todos os Locais
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="table-area">
+
+                        <table class="inventory-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Item</th>
+                                    <th>Local</th>
+                                    <th>Quantidade</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="dashboardLocais"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div class="dashboard-status-grid">
+
+
+                    <div class="status-card manutencao-card">
+
+                        <div class="status-card-icon">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                        </div>
+
+                        <div>
+
+                            <strong id="dashManutencao">
+                                0
+                            </strong>
+
+                            <span>
+                                Em manutenção
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="status-card extraviado-card">
+
+                        <div class="status-card-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+
+                        <div>
+
+                            <strong id="dashExtraviado">
+                                0
+                            </strong>
+
+                            <span>
+                                Extraviados
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="status-card baixado-card">
+
+                        <div class="status-card-icon">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+
+                        <div>
+
+                            <strong id="dashBaixado">
+                                0
+                            </strong>
+
+                            <span>
+                                Baixados
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="status-card ativo-card">
+
+                        <div class="status-card-icon">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+
+                        <div>
+
+                            <strong id="dashAtivo">
+                                0
+                            </strong>
+
+                            <span>
+                                Ativos
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CADASTRO
+        ================================================= -->
+
+        <div
+            id="cadastroTela"
+            class="tela"
+        >
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        PATRIMÔNIO
+                    </span>
+
+                    <h2>
+                        Cadastrar Patrimônio
+                    </h2>
+
+                    <p>
+                        Adicione novos patrimônios ao inventário.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card form-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            NOVO CADASTRO
+                        </span>
+
+                        <h3>
+                            Informações do patrimônio
+                        </h3>
+
+                    </div>
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="form-section">
+
+                    <div class="section-title">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <span>
+                            Dados principais
+                        </span>
+
+                    </div>
+
+
+                    <div class="grid-2">
+
+                        <div class="field">
+
+                            <label for="nome">
+                                Nome do Item
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-box"></i>
+
+                                <input
+                                    type="text"
+                                    id="nome"
+                                    placeholder="Ex.: Computador"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="tipoItem">
+                                Tipo / Categoria
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-tags"></i>
+
+                                <input
+                                    type="text"
+                                    id="tipoItem"
+                                    placeholder="Ex.: Informática"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="descricao">
+                            Descrição
+                        </label>
+
+                        <textarea
+                            id="descricao"
+                            placeholder="Informe características, detalhes ou observações do patrimônio..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-section">
+
+                    <div class="section-title">
+
+                        <i class="fa-solid fa-location-dot"></i>
+
+                        <span>
+                            Localização e quantidade
+                        </span>
+
+                    </div>
+
+
+                    <div class="grid-2">
+
+                        <div class="field">
+
+                            <label for="quantidadeLote">
+                                Quantidade
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-hashtag"></i>
+
+                                <input
+                                    type="number"
+                                    id="quantidadeLote"
+                                    min="1"
+                                    value="1"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="local">
+                                Local
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <select id="local">
+
+                                    <option value="">
+                                        Selecione o Local
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="status">
+                            Status
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fa-solid fa-circle-half-stroke"></i>
+
+                            <select id="status">
+
+                                <option>
+                                    Ativo
+                                </option>
+
+                                <option>
+                                    Em manutenção
+                                </option>
+
+                                <option>
+                                    Baixado
+                                </option>
+
+                                <option>
+                                    Extraviado
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-section">
+
+                    <div class="section-title">
+
+                        <i class="fa-solid fa-camera"></i>
+
+                        <span>
+                            Registro fotográfico
+                        </span>
+
+                    </div>
+
+
+                    <label
+                        class="upload-area"
+                        for="foto"
+                    >
+
+                        <div class="upload-icon">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Adicionar foto
+                            </strong>
+
+                            <span>
+                                Clique para selecionar uma imagem
+                            </span>
+
+                        </div>
+
+                        <input
+                            type="file"
+                            id="foto"
+                            accept="image/*"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        class="btn btn-secondary"
+                        type="button"
+                        onclick="limparFormulario()"
+                    >
+
+                        <i class="fa-solid fa-rotate-left"></i>
+
+                        Limpar
+
+                    </button>
+
+
+                    <button
+                        class="btn btn-primary"
+                        type="button"
+                        onclick="salvarItem()"
+                    >
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        Salvar Patrimônio
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MOVIMENTAÇÃO
+        ================================================= -->
+
+        <div
+            id="movimentacaoTela"
+            class="tela"
+        >
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        LOGÍSTICA
+                    </span>
+
+                    <h2>
+                        Movimentar Patrimônio
+                    </h2>
+
+                    <p>
+                        Registre a transferência de um patrimônio
+                        entre os locais.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card form-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            NOVA MOVIMENTAÇÃO
+                        </span>
+
+                        <h3>
+                            Transferência patrimonial
+                        </h3>
+
+                    </div>
+
+                    <div class="card-header-icon orange-icon">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="form-section">
+
+                    <div class="section-title">
+
+                        <i class="fa-solid fa-box"></i>
+
+                        <span>
+                            Patrimônio
+                        </span>
+
+                    </div>
+
+
+                    <div class="grid-2">
+
+                        <div class="field">
+
+                            <label for="itemMov">
+                                Patrimônio
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-box"></i>
+
+                                <select
+                                    id="itemMov"
+                                    onchange="preencherOrigemAutomaticamente()"
+                                >
+
+                                    <option value="">
+                                        Selecione o Patrimônio
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="origemAtual">
+                                Local Atual
+                            </label>
+
+                            <div class="input-wrapper readonly">
+
+                                <i class="fa-solid fa-location-crosshairs"></i>
+
+                                <input
+                                    type="text"
+                                    id="origemAtual"
+                                    placeholder="Será preenchido automaticamente"
+                                    readonly
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="movement-arrow">
+
+                    <div></div>
+
+                    <span>
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </span>
+
+                    <div></div>
+
+                </div>
+
+
+                <div class="form-section">
+
+                    <div class="section-title">
+
+                        <i class="fa-solid fa-location-arrow"></i>
+
+                        <span>
+                            Destino
+                        </span>
+
+                    </div>
+
+
+                    <div class="grid-2">
+
+                        <div class="field">
+
+                            <label for="destino">
+                                Novo Local
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                <select id="destino">
+
+                                    <option value="">
+                                        Selecione o Destino
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="field">
+
+                            <label for="statusMov">
+                                Alterar Status
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-circle-half-stroke"></i>
+
+                                <select id="statusMov">
+
+                                    <option value="">
+                                        Manter status atual
+                                    </option>
+
+                                    <option>
+                                        Ativo
+                                    </option>
+
+                                    <option>
+                                        Em manutenção
+                                    </option>
+
+                                    <option>
+                                        Baixado
+                                    </option>
+
+                                    <option>
+                                        Extraviado
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="observacaoMov">
+                            Observação
+                        </label>
+
+                        <textarea
+                            id="observacaoMov"
+                            placeholder="Descreva o motivo ou detalhes da movimentação..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        class="btn btn-secondary"
+                        type="button"
+                        onclick="limparMovimentacao()"
+                    >
+
+                        <i class="fa-solid fa-rotate-left"></i>
+
+                        Limpar
+
+                    </button>
+
+
+                    <button
+                        class="btn btn-primary orange-btn"
+                        type="button"
+                        onclick="movimentarItem()"
+                    >
+
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                        Movimentar Patrimônio
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ESTOQUE
+        ================================================= -->
+
+        <div
+            id="estoqueTela"
+            class="tela"
+        >
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        INVENTÁRIO
+                    </span>
+
+                    <h2>
+                        Patrimônios Cadastrados
+                    </h2>
+
+                    <p>
+                        Consulte e gerencie os patrimônios registrados.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="estoque-topo card-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            ESTOQUE
+                        </span>
+
+                        <h3>
+                            Lista de patrimônios
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        class="btn btn-primary"
+                        type="button"
+                        onclick="exportarExcel()"
+                    >
+
+                        <i class="fa-solid fa-file-export"></i>
+
+                        Exportar
+
+                    </button>
+
+                </div>
+
+
+                <div class="table-toolbar">
+
+                    <div class="input-wrapper search-large">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            type="text"
+                            id="busca"
+                            placeholder="Pesquisar por patrimônio, nome, local..."
+                            onkeyup="filtrarItens()"
+                        >
+
+                    </div>
+
+                    <div class="toolbar-info">
+
+                        <i class="fa-solid fa-database"></i>
+
+                        <span>
+                            Inventário atualizado
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-area">
+
+                    <table class="inventory-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Foto</th>
+                                <th>Patrimônio</th>
+                                <th>Tipo</th>
+                                <th>Nome</th>
+                                <th>Descrição</th>
+                                <th>Local</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="listaItens"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             HISTÓRICO
+        ================================================= -->
+
+        <div
+            id="historicoTela"
+            class="tela"
+        >
+
+            <div class="page-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        RASTREABILIDADE
+                    </span>
+
+                    <h2>
+                        Histórico de Movimentações
+                    </h2>
+
+                    <p>
+                        Consulte todas as transferências registradas.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            AUDITORIA
+                        </span>
+
+                        <h3>
+                            Registro de movimentações
+                        </h3>
+
+                    </div>
+
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+
+                </div>
+
+
+                <div class="table-area">
+
+                    <table class="inventory-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Patrimônio</th>
+                                <th>Origem</th>
+                                <th>Destino</th>
+                                <th>Observação</th>
+                                <th>Data</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="historico"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     MODAL FOTO
+===================================================== -->
 
 <div
-class="sidebar"
-id="sidebar"
+    id="modalFoto"
+    class="modal-foto"
+    onclick="fecharModalFoto()"
 >
 
-<div class="logo">
-INVENTÁRIO CENTRAL
-</div>
+    <div
+        class="modal-foto-content"
+        onclick="event.stopPropagation()"
+    >
 
-<ul>
+        <button
+            class="modal-close"
+            type="button"
+            onclick="fecharModalFoto()"
+        >
 
-<!-- LOGIN -->
+            <i class="fa-solid fa-xmark"></i>
 
-<li
-id="menuLogin"
-class="menu-item active"
-onclick="abrirTela('loginTela', this)"
->
+        </button>
 
-<i class="fa fa-user"></i>
-Login
+        <img
+            id="imagemModal"
+            src=""
+            alt="Foto do patrimônio"
+        >
 
-</li>
-
-<!-- DASHBOARD -->
-
-<li
-id="menuDashboard"
-class="menu-item"
-style="display:none;"
-onclick="abrirTela('dashboardTela', this)"
->
-
-<i class="fa fa-chart-line"></i>
-Dashboard
-
-</li>
-
-<!-- CADASTRO -->
-
-<li
-id="menuCadastro"
-class="menu-item"
-style="display:none;"
-onclick="abrirTela('cadastroTela', this)"
->
-
-<i class="fa fa-box"></i>
-Cadastro
-
-</li>
-
-<!-- MOVIMENTAÇÃO -->
-
-<li
-id="menuMovimentacao"
-class="menu-item"
-style="display:none;"
-onclick="abrirTela('movimentacaoTela', this)"
->
-
-<i class="fa fa-right-left"></i>
-Movimentações
-
-</li>
-
-<!-- ESTOQUE -->
-
-<li
-id="menuEstoque"
-class="menu-item"
-style="display:none;"
-onclick="abrirTela('estoqueTela', this)"
->
-
-<i class="fa fa-warehouse"></i>
-Estoque
-
-</li>
-
-<!-- HISTÓRICO -->
-
-<li
-id="menuHistorico"
-class="menu-item"
-style="display:none;"
-onclick="abrirTela('historicoTela', this)"
->
-
-<i class="fa fa-clock-rotate-left"></i>
-Histórico
-
-</li>
-
-<!-- SAIR -->
-
-<li
-id="menuLogout"
-class="menu-item"
-style="display:none;"
-onclick="logout()"
->
-
-<i class="fa fa-right-from-bracket"></i>
-Sair
-
-</li>
-
-</ul>
+    </div>
 
 </div>
 
-<!-- MAIN -->
 
-<div class="main">
-
-<header>
-
-<h1>
-Sistema de Inventário Central
-</h1>
-
-</header>
-
-<!-- LOGIN -->
-
-<div
-id="loginTela"
-class="tela activeTela"
->
-
-<div class="card">
-
-<h2>Login</h2>
-
-<div class="grid-2">
-
-<input
-type="email"
-id="email"
-placeholder="Email"
-/>
-
-<input
-type="password"
-id="password"
-placeholder="Senha"
-/>
-
-</div>
-
-<button onclick="login()">
-Entrar
-</button>
-
-</div>
-
-</div>
-
-<!-- DASHBOARD -->
-
-<div
-id="dashboardTela"
-class="tela"
->
-
-<div class="dashboard">
-
-<div class="dash-card">
-
-<h3 id="totalItens">0</h3>
-
-<p>Total de Patrimônios</p>
-
-</div>
-
-<div class="dash-card">
-
-<h3 id="totalLocais">0</h3>
-
-<p>Locais</p>
-
-</div>
-
-<div class="dash-card">
-
-<h3 id="totalMov">0</h3>
-
-<p>Movimentações</p>
-
-</div>
-
-<div class="dash-card">
-
-<h3 id="totalBaixados">0</h3>
-
-<p>Baixados</p>
-
-</div>
-
-</div>
-
-<div class="dashboard-advanced">
-
-<div class="card dashboard-table">
-
-<div class="dashboard-topo">
-
-<h2>
-Quantidade por Item e Local
-</h2>
-
-<!-- FILTROS -->
-
-<div class="dashboard-filtros">
-
-<input
-type="text"
-id="filtroDashboard"
-placeholder="Pesquisar item ou local..."
-onkeyup="filtrarDashboard()"
-/>
-
-<select
-id="filtroLocalDashboard"
-onchange="filtrarDashboard()"
->
-
-<option value="">
-Todos os Locais
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-<div class="table-area">
-
-<table class="inventory-table">
-
-<thead>
-
-<tr>
-
-<th>Item</th>
-<th>Local</th>
-<th>Quantidade</th>
-
-</tr>
-
-</thead>
-
-<tbody id="dashboardLocais"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<div class="dashboard-status-grid">
-
-<div class="status-card manutencao-card">
-
-<h3 id="dashManutencao">
-0
-</h3>
-
-<p>
-Em Manutenção
-</p>
-
-</div>
-
-<div class="status-card extraviado-card">
-
-<h3 id="dashExtraviado">
-0
-</h3>
-
-<p>
-Extraviados
-</p>
-
-</div>
-
-<div class="status-card baixado-card">
-
-<h3 id="dashBaixado">
-0
-</h3>
-
-<p>
-Baixados
-</p>
-
-</div>
-
-<div class="status-card ativo-card">
-
-<h3 id="dashAtivo">
-0
-</h3>
-
-<p>
-Ativos
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- CADASTRO -->
-
-<div
-id="cadastroTela"
-class="tela"
->
-
-<div class="card">
-
-<h2>Cadastrar Patrimônio</h2>
-
-<!-- NOME + TIPO -->
-
-<div class="grid-2">
-
-<input
-type="text"
-id="nome"
-placeholder="Nome do Item"
-/>
-
-<input
-type="text"
-id="tipoItem"
-placeholder="Tipo / Categoria"
-/>
-
-</div>
-
-<!-- DESCRIÇÃO -->
-
-<textarea
-id="descricao"
-placeholder="Descrição"
-></textarea>
-
-<!-- QUANTIDADE + LOCAL -->
-
-<div class="grid-2">
-
-<input
-type="number"
-id="quantidadeLote"
-placeholder="Quantidade"
-min="1"
-value="1"
-/>
-
-<select id="local">
-
-<option value="">
-Selecione o Local
-</option>
-
-</select>
-
-</div>
-
-<!-- STATUS -->
-
-<div class="grid-2">
-
-<select id="status">
-
-<option>Ativo</option>
-<option>Em manutenção</option>
-<option>Baixado</option>
-<option>Extraviado</option>
-
-</select>
-
-</div>
-
-<!-- FOTO -->
-
-<input
-type="file"
-id="foto"
-accept="image/*"
-/>
-
-<button onclick="salvarItem()">
-Salvar Patrimônio
-</button>
-
-</div>
-
-</div>
-
-<!-- MOVIMENTAÇÃO -->
-
-<div
-id="movimentacaoTela"
-class="tela"
->
-
-<div class="card">
-
-<h2>Movimentar Patrimônio</h2>
-
-<!-- ITEM + ORIGEM -->
-
-<div class="grid-2">
-
-<select
-id="itemMov"
-onchange="preencherOrigemAutomaticamente()"
->
-
-<option value="">
-Selecione o Patrimônio
-</option>
-
-</select>
-
-<input
-type="text"
-id="origemAtual"
-placeholder="Local Atual"
-readonly
-/>
-
-</div>
-
-<!-- DESTINO -->
-
-<div class="grid-2">
-
-<select id="destino">
-
-<option value="">
-Selecione o Destino
-</option>
-
-</select>
-
-<select id="statusMov">
-
-<option value="">
-Alterar Status (Opcional)
-</option>
-
-<option>Ativo</option>
-<option>Em manutenção</option>
-<option>Baixado</option>
-<option>Extraviado</option>
-
-</select>
-
-</div>
-
-<!-- OBS -->
-
-<textarea
-id="observacaoMov"
-placeholder="Observação da movimentação..."
-></textarea>
-
-<button onclick="movimentarItem()">
-Movimentar Patrimônio
-</button>
-
-</div>
-
-</div>
-
-<!-- ESTOQUE -->
-
-<div
-id="estoqueTela"
-class="tela"
->
-
-<div class="card">
-
-<div class="estoque-topo">
-
-<h2>
-Patrimônios Cadastrados
-</h2>
-
-<button onclick="exportarExcel()">
-Exportar Excel
-</button>
-
-</div>
-
-<input
-type="text"
-id="busca"
-placeholder="Buscar patrimônio..."
-onkeyup="filtrarItens()"
-/>
-
-<div class="table-area">
-
-<table class="inventory-table">
-
-<thead>
-
-<tr>
-
-<th>Foto</th>
-<th>Patrimônio</th>
-<th>Nome</th>
-<th>Descrição</th>
-<th>Local</th>
-<th>Status</th>
-<th>Ações</th>
-
-</tr>
-
-</thead>
-
-<tbody id="listaItens"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- HISTÓRICO -->
-
-<div
-id="historicoTela"
-class="tela"
->
-
-<div class="card">
-
-<h2>Histórico de Movimentações</h2>
-
-<div class="table-area">
-
-<table class="inventory-table">
-
-<thead>
-
-<tr>
-
-<th>Patrimônio</th>
-<th>Origem</th>
-<th>Destino</th>
-<th>Observação</th>
-<th>Data</th>
-
-</tr>
-
-</thead>
-
-<tbody id="historico"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- MODAL FOTO -->
-
-<div
-id="modalFoto"
-class="modal-foto"
->
-
-<img
-id="imagemModal"
-src=""
-alt="Foto"
-/>
-
-</div>
-
-<!-- SUPABASE -->
+<!-- =====================================================
+     SUPABASE
+===================================================== -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<!-- MOBILE -->
 
-<script>
-
-function toggleSidebar(){
-
-const sidebar =
-document.getElementById(
-'sidebar'
-);
-
-if(!sidebar) return;
-
-sidebar.classList.toggle(
-'open'
-);
-}
-
-/* FECHAR MENU AO CLICAR FORA */
-
-document.addEventListener(
-'click',
-function(event){
-
-const sidebar =
-document.getElementById(
-'sidebar'
-);
-
-const menuBtn =
-document.querySelector(
-'.mobile-menu-btn'
-);
-
-if(
-!sidebar ||
-!menuBtn
-){
-
-return;
-}
-
-const clicouDentro =
-sidebar.contains(event.target);
-
-const clicouBotao =
-menuBtn.contains(event.target);
-
-if(
-window.innerWidth <= 900 &&
-!clicouDentro &&
-!clicouBotao
-){
-
-sidebar.classList.remove(
-'open'
-);
-}
-}
-);
-
-</script>
-
-<!-- APP -->
+<!-- =====================================================
+     APP
+===================================================== -->
 
 <script src="app.js"></script>
 
-</body>
 
+</body>
 </html>

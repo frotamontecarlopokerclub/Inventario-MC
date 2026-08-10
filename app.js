@@ -1,109 +1,384 @@
-/* =========================
+/* =====================================================
+   SISTEMA DE INVENTÁRIO CENTRAL
+   APP.JS - VERSÃO COMPLETA
+===================================================== */
+
+
+/* =====================================================
    SUPABASE
-========================= */
+===================================================== */
 
 const SUPABASE_URL =
-'https://sxmimxomehdhyifqsgqa.supabase.co';
+    'https://sxmimxomehdhyifqsgqa.supabase.co';
 
 const SUPABASE_KEY =
-'sb_publishable_NbyYYTsRnSqu_TMpQvzS6A_rJuyzq9_';
+    'sb_publishable_NbyYYTsRnSqu_TMpQvzS6A_rJuyzq9_';
 
-/* =========================
+
+/* =====================================================
    CLIENTE SUPABASE
-========================= */
+===================================================== */
 
 const supabaseClient =
-window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
-/* =========================
+
+/* =====================================================
    VARIÁVEIS GLOBAIS
-========================= */
+===================================================== */
 
 let itens = [];
 let movimentacoes = [];
 let usuarioLogado = null;
 let perfilUsuario = null;
 
-/* =========================
+
+/* =====================================================
    LOCAIS FIXOS
-========================= */
+===================================================== */
 
 const LOCAIS = [
 
-    { id:1, nome:'CASA 1 CHEFIA' },
-    { id:2, nome:'CASA 2 CHEFIA' },
-    { id:3, nome:'CASA 3 CHEFIA' },
-    { id:4, nome:'CASA 1 DOS FUNCIONARIOS' },
-    { id:5, nome:'CASA 2 DOS FUNCIONARIOS' },
-    { id:6, nome:'CASA 3 DOS FUNCIONARIOS' },
-    { id:7, nome:'CASA 4 DOS FUNCIONARIOS' },
-    { id:8, nome:'CONSERTO' },
-    { id:9, nome:'CD1' },
-    { id:10, nome:'CD2' },
-    { id:11, nome:'CD3' },
-    { id:12, nome:'DORYO' },
-    { id:13, nome:'ESCRITÓRIO 1' },
-    { id:14, nome:'ESCRITÓRIO 2' },
-    { id:15, nome:'ESCRITÓRIO 3' },
-    { id:16, nome:'ESTACIONAMENTO 1' },
-    { id:17, nome:'ESTACIONAMENTO 2' },
-    { id:18, nome:'ESTACIONAMENTO 3' },
-    { id:19, nome:'M.C.' },
-    { id:20, nome:'M.G.' },
-    { id:21, nome:'DESCARTE/BAIXA TOTAL' }
+    { id: 1, nome: 'CASA 1 CHEFIA' },
+    { id: 2, nome: 'CASA 2 CHEFIA' },
+    { id: 3, nome: 'CASA 3 CHEFIA' },
+
+    { id: 4, nome: 'CASA 1 DOS FUNCIONARIOS' },
+    { id: 5, nome: 'CASA 2 DOS FUNCIONARIOS' },
+    { id: 6, nome: 'CASA 3 DOS FUNCIONARIOS' },
+    { id: 7, nome: 'CASA 4 DOS FUNCIONARIOS' },
+
+    { id: 8, nome: 'CONSERTO' },
+
+    { id: 9, nome: 'CD1' },
+    { id: 10, nome: 'CD2' },
+    { id: 11, nome: 'CD3' },
+
+    { id: 12, nome: 'DORYO' },
+
+    { id: 13, nome: 'ESCRITÓRIO 1' },
+    { id: 14, nome: 'ESCRITÓRIO 2' },
+    { id: 15, nome: 'ESCRITÓRIO 3' },
+
+    { id: 16, nome: 'ESTACIONAMENTO 1' },
+    { id: 17, nome: 'ESTACIONAMENTO 2' },
+    { id: 18, nome: 'ESTACIONAMENTO 3' },
+
+    { id: 19, nome: 'M.C.' },
+    { id: 20, nome: 'M.G.' },
+
+    { id: 21, nome: 'DESCARTE/BAIXA TOTAL' }
 
 ];
 
-/* =========================
-   LOGIN
-========================= */
 
-async function login(){
+/* =====================================================
+   UTILITÁRIOS
+===================================================== */
 
-    const email =
-    document.getElementById('email')
-    .value
-    .trim();
+function normalizarTexto(valor) {
 
-    const password =
-    document.getElementById('password')
-    .value;
+    return String(valor || '')
+        .trim()
+        .toLowerCase();
 
-    if(!email || !password){
+}
 
-        alert('Informe email e senha');
+
+function escaparHTML(valor) {
+
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+}
+
+
+function obterLocal(id) {
+
+    return LOCAIS.find(
+        local =>
+            String(local.id) === String(id)
+    );
+
+}
+
+
+function obterNomeLocal(id) {
+
+    return obterLocal(id)?.nome ||
+        'SEM LOCAL';
+
+}
+
+
+/* =====================================================
+   PERMISSÕES
+===================================================== */
+
+/*
+   CONSULTA
+   - Dashboard
+   - Estoque
+   - Histórico
+
+   GESTOR / ADMIN / ADMINISTRADOR
+   - Dashboard
+   - Cadastro
+   - Movimentação
+   - Estoque
+   - Histórico
+   - Editar
+   - Excluir
+*/
+
+
+function usuarioPodeGerenciar() {
+
+    if (!usuarioLogado)
+        return false;
+
+    const perfil =
+        normalizarTexto(
+            perfilUsuario
+        );
+
+    return [
+
+        'gestor',
+        'admin',
+        'administrador',
+        'administrador do sistema'
+
+    ].includes(perfil);
+
+}
+
+
+function exigirPermissaoGestor() {
+
+    if (!usuarioLogado) {
+
+        alert(
+            'Faça login primeiro!'
+        );
+
+        return false;
+    }
+
+    if (!usuarioPodeGerenciar()) {
+
+        alert(
+            'Seu usuário não possui permissão de Gestor.'
+        );
+
+        return false;
+    }
+
+    return true;
+
+}
+
+
+/* =====================================================
+   USUÁRIO NA INTERFACE
+===================================================== */
+
+function atualizarUsuarioInterface() {
+
+    const usuarioNome =
+        document.getElementById(
+            'usuarioNome'
+        );
+
+    const usuarioPerfil =
+        document.getElementById(
+            'usuarioPerfil'
+        );
+
+    const topbarUserName =
+        document.getElementById(
+            'topbarUserName'
+        );
+
+    const topbarUserRole =
+        document.getElementById(
+            'topbarUserRole'
+        );
+
+
+    if (!usuarioLogado) {
+
+        if (usuarioNome)
+            usuarioNome.innerText =
+                'Visitante';
+
+        if (usuarioPerfil)
+            usuarioPerfil.innerText =
+                'Acesso restrito';
+
+        if (topbarUserName)
+            topbarUserName.innerText =
+                'Visitante';
+
+        if (topbarUserRole)
+            topbarUserRole.innerText =
+                'Não autenticado';
 
         return;
     }
 
-    try{
 
-        const { data, error } =
-        await supabaseClient.auth
-        .signInWithPassword({
+    const email =
+        usuarioLogado.email ||
+        'Usuário';
 
-            email,
-            password
 
-        });
+    const nome =
+        email.includes('@')
+            ? email.split('@')[0]
+            : email;
 
-        if(error){
 
-            console.log(error);
+    const perfil =
+        usuarioPodeGerenciar()
+            ? 'Gestor'
+            : 'Consulta';
 
-            alert('Login inválido');
+
+    if (usuarioNome)
+        usuarioNome.innerText =
+            nome;
+
+
+    if (usuarioPerfil)
+        usuarioPerfil.innerText =
+            `Perfil: ${perfil}`;
+
+
+    if (topbarUserName)
+        topbarUserName.innerText =
+            nome;
+
+
+    if (topbarUserRole)
+        topbarUserRole.innerText =
+            `Perfil: ${perfil}`;
+
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+async function login() {
+
+    const emailInput =
+        document.getElementById(
+            'email'
+        );
+
+    const passwordInput =
+        document.getElementById(
+            'password'
+        );
+
+
+    if (!emailInput || !passwordInput) {
+
+        alert(
+            'Campos de login não encontrados.'
+        );
+
+        return;
+    }
+
+
+    const email =
+        emailInput.value
+            .trim();
+
+    const password =
+        passwordInput.value;
+
+
+    if (!email || !password) {
+
+        alert(
+            'Informe e-mail e senha.'
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .auth
+                .signInWithPassword({
+
+                    email,
+                    password
+
+                });
+
+
+        if (error) {
+
+            console.error(
+                'Erro de login:',
+                error
+            );
+
+            alert(
+                'Login inválido. Verifique seu e-mail e senha.'
+            );
 
             return;
         }
 
-        usuarioLogado = data.user;
+
+        usuarioLogado =
+            data.user;
+
 
         await verificarPerfil();
 
+
+        if (!perfilUsuario) {
+
+            await supabaseClient
+                .auth
+                .signOut();
+
+            usuarioLogado = null;
+
+            alert(
+                'Seu usuário está autenticado, porém não possui um perfil válido cadastrado na tabela usuarios.'
+            );
+
+            atualizarMenus();
+
+            return;
+        }
+
+
+        atualizarUsuarioInterface();
+
         atualizarMenus();
+
 
         abrirTela(
             'dashboardTela',
@@ -112,32 +387,58 @@ async function login(){
             )
         );
 
+
         await carregarDashboard();
 
-        alert('Login realizado com sucesso!');
 
-    }catch(err){
+        emailInput.value = '';
+        passwordInput.value = '';
 
-        console.log(err);
 
-        alert('Erro ao realizar login');
+        alert(
+            'Login realizado com sucesso!'
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            'Erro inesperado no login:',
+            err
+        );
+
+        alert(
+            'Erro ao realizar login.'
+        );
+
     }
+
 }
 
-/* =========================
+
+/* =====================================================
    LOGOUT
-========================= */
+===================================================== */
 
-async function logout(){
+async function logout() {
 
-    try{
+    try {
 
-        await supabaseClient.auth.signOut();
+        await supabaseClient
+            .auth
+            .signOut();
+
 
         usuarioLogado = null;
         perfilUsuario = null;
 
+        itens = [];
+        movimentacoes = [];
+
+
+        atualizarUsuarioInterface();
         atualizarMenus();
+
 
         abrirTela(
             'loginTela',
@@ -146,1223 +447,1795 @@ async function logout(){
             )
         );
 
-        alert('Logout realizado!');
 
-    }catch(err){
+        alert(
+            'Logout realizado com sucesso.'
+        );
 
-        console.log(err);
 
-        alert('Erro ao sair');
+    } catch (err) {
+
+        console.error(
+            'Erro ao sair:',
+            err
+        );
+
+        alert(
+            'Erro ao sair do sistema.'
+        );
+
     }
+
 }
 
-/* =========================
-   PERFIL
-========================= */
 
-async function verificarPerfil(){
+/* =====================================================
+   VERIFICAR PERFIL
+===================================================== */
 
-    if(!usuarioLogado) return;
+async function verificarPerfil() {
 
-    try{
+    perfilUsuario = null;
 
-        const { data, error } =
-        await supabaseClient
-        .from('usuarios')
-        .select('perfil')
-        .eq('email', usuarioLogado.email)
-        .maybeSingle();
+    if (!usuarioLogado)
+        return;
 
-        if(error){
 
-            console.log(error);
+    try {
 
-            perfilUsuario = 'consulta';
+        const email =
+            usuarioLogado.email;
+
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('usuarios')
+                .select('perfil')
+                .eq(
+                    'email',
+                    email
+                )
+                .maybeSingle();
+
+
+        if (error) {
+
+            console.error(
+                'Erro ao consultar perfil:',
+                error
+            );
+
+            perfilUsuario = null;
 
             return;
         }
 
+
+        if (!data) {
+
+            console.warn(
+                'Usuário sem perfil cadastrado:',
+                email
+            );
+
+            perfilUsuario = null;
+
+            return;
+        }
+
+
         perfilUsuario =
-        String(data?.perfil || 'consulta')
-        .trim()
-        .toLowerCase();
+            normalizarTexto(
+                data.perfil
+            );
 
-    }catch(err){
 
-        console.log(err);
+        console.log(
+            'Usuário:',
+            email
+        );
 
-        perfilUsuario = 'consulta';
+        console.log(
+            'Perfil:',
+            perfilUsuario
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            'Erro ao verificar perfil:',
+            err
+        );
+
+        perfilUsuario = null;
     }
+
 }
 
-/* =========================
-   CONTROLE MENUS
-========================= */
 
-function atualizarMenus(){
+/* =====================================================
+   CONTROLE DE MENUS
+===================================================== */
 
-    const loginMenu =
-    document.getElementById(
-        'menuLogin'
-    );
+function atualizarMenus() {
 
-    const dashboardMenu =
-    document.getElementById(
-        'menuDashboard'
-    );
+    const menuLogin =
+        document.getElementById(
+            'menuLogin'
+        );
 
-    const cadastroMenu =
-    document.getElementById(
-        'menuCadastro'
-    );
+    const menuDashboard =
+        document.getElementById(
+            'menuDashboard'
+        );
 
-    const movimentacaoMenu =
-    document.getElementById(
-        'menuMovimentacao'
-    );
+    const menuCadastro =
+        document.getElementById(
+            'menuCadastro'
+        );
 
-    const estoqueMenu =
-    document.getElementById(
-        'menuEstoque'
-    );
+    const menuMovimentacao =
+        document.getElementById(
+            'menuMovimentacao'
+        );
 
-    const historicoMenu =
-    document.getElementById(
-        'menuHistorico'
-    );
+    const menuEstoque =
+        document.getElementById(
+            'menuEstoque'
+        );
 
-    const logoutMenu =
-    document.getElementById(
-        'menuLogout'
-    );
+    const menuHistorico =
+        document.getElementById(
+            'menuHistorico'
+        );
 
-    if(!usuarioLogado){
+    const menuLogout =
+        document.getElementById(
+            'menuLogout'
+        );
 
-        loginMenu.style.display = 'flex';
 
-        dashboardMenu.style.display = 'none';
-        cadastroMenu.style.display = 'none';
-        movimentacaoMenu.style.display = 'none';
-        estoqueMenu.style.display = 'none';
-        historicoMenu.style.display = 'none';
-        logoutMenu.style.display = 'none';
+    if (!usuarioLogado) {
+
+        if (menuLogin)
+            menuLogin.style.display =
+                'flex';
+
+        if (menuDashboard)
+            menuDashboard.style.display =
+                'none';
+
+        if (menuCadastro)
+            menuCadastro.style.display =
+                'none';
+
+        if (menuMovimentacao)
+            menuMovimentacao.style.display =
+                'none';
+
+        if (menuEstoque)
+            menuEstoque.style.display =
+                'none';
+
+        if (menuHistorico)
+            menuHistorico.style.display =
+                'none';
+
+        if (menuLogout)
+            menuLogout.style.display =
+                'none';
+
+
+        atualizarUsuarioInterface();
 
         return;
     }
 
-    loginMenu.style.display = 'none';
 
-    dashboardMenu.style.display = 'flex';
-    estoqueMenu.style.display = 'flex';
-    historicoMenu.style.display = 'flex';
-    logoutMenu.style.display = 'flex';
+    if (menuLogin)
+        menuLogin.style.display =
+            'none';
 
-    if(perfilUsuario === 'consulta'){
 
-        cadastroMenu.style.display = 'none';
-        movimentacaoMenu.style.display = 'none';
+    if (menuDashboard)
+        menuDashboard.style.display =
+            'flex';
 
-    }else{
+    if (menuEstoque)
+        menuEstoque.style.display =
+            'flex';
 
-        cadastroMenu.style.display = 'flex';
-        movimentacaoMenu.style.display = 'flex';
+    if (menuHistorico)
+        menuHistorico.style.display =
+            'flex';
+
+    if (menuLogout)
+        menuLogout.style.display =
+            'flex';
+
+
+    /*
+       SOMENTE CONSULTA NÃO TEM
+       CADASTRO E MOVIMENTAÇÃO.
+    */
+
+    if (usuarioPodeGerenciar()) {
+
+        if (menuCadastro)
+            menuCadastro.style.display =
+                'flex';
+
+        if (menuMovimentacao)
+            menuMovimentacao.style.display =
+                'flex';
+
+    } else {
+
+        if (menuCadastro)
+            menuCadastro.style.display =
+                'none';
+
+        if (menuMovimentacao)
+            menuMovimentacao.style.display =
+                'none';
+
     }
+
+
+    atualizarUsuarioInterface();
+
 }
 
-/* =========================
-   CARREGAR LOCAIS
-========================= */
 
-function carregarLocais(){
+/* =====================================================
+   CARREGAR LOCAIS
+===================================================== */
+
+function carregarLocais() {
 
     const local =
-    document.getElementById('local');
+        document.getElementById(
+            'local'
+        );
 
     const destino =
-    document.getElementById('destino');
+        document.getElementById(
+            'destino'
+        );
 
-    if(local){
+
+    if (local) {
 
         local.innerHTML =
-        '<option value="">Selecione o Local</option>';
+            '<option value="">Selecione o Local</option>';
+
 
         LOCAIS.forEach(item => {
 
             local.innerHTML += `
-            <option value="${item.id}">
-                ${item.nome}
-            </option>
+                <option value="${item.id}">
+                    ${escaparHTML(item.nome)}
+                </option>
             `;
+
         });
+
     }
 
-    if(destino){
+
+    if (destino) {
 
         destino.innerHTML =
-        '<option value="">Selecione o Destino</option>';
+            '<option value="">Selecione o Destino</option>';
+
 
         LOCAIS.forEach(item => {
 
             destino.innerHTML += `
-            <option value="${item.id}">
-                ${item.nome}
-            </option>
+                <option value="${item.id}">
+                    ${escaparHTML(item.nome)}
+                </option>
             `;
+
         });
+
     }
+
 
     const totalLocais =
-    document.getElementById(
-        'totalLocais'
-    );
-
-    if(totalLocais){
-
-        totalLocais.innerText =
-        LOCAIS.length;
-    }
-}
-
-/* =========================
-   GERAR PATRIMÔNIO
-========================= */
-
-function gerarNumeroPatrimonio(){
-
-    if(itens.length === 0){
-
-        return 0;
-    }
-
-    const numeros =
-    itens.map(item => {
-
-        return parseInt(
-            item.patrimonio
-        ) || 0;
-    });
-
-    return Math.max(...numeros);
-}
-
-/* =========================
-   SALVAR ITEM
-========================= */
-
-async function salvarItem(){
-
-    if(perfilUsuario === 'consulta'){
-
-        alert('Usuário sem permissão!');
-
-        return;
-    }
-
-    try{
-
-        const nome =
-        document
-        .getElementById('nome')
-        .value
-        .trim();
-
-        const descricao =
-        document
-        .getElementById('descricao')
-        .value
-        .trim();
-
-        const tipo =
-        document
-        .getElementById('tipoItem')
-        ?.value
-        .trim() || nome;
-
-        const quantidade =
-        parseInt(
-            document
-            .getElementById('quantidadeLote')
-            ?.value || 1
+        document.getElementById(
+            'totalLocais'
         );
 
-        const local_id =
-        document
-        .getElementById('local')
-        .value;
 
-        const status =
-        document
-        .getElementById('status')
-        .value;
+    if (totalLocais)
+        totalLocais.innerText =
+            LOCAIS.length;
+
+}
+
+
+/* =====================================================
+   GERAR NÚMERO DE PATRIMÔNIO
+===================================================== */
+
+function gerarNumeroPatrimonio() {
+
+    if (!itens.length)
+        return 0;
+
+
+    const numeros =
+        itens.map(item => {
+
+            return parseInt(
+                item.patrimonio,
+                10
+            ) || 0;
+
+        });
+
+
+    return Math.max(
+        ...numeros
+    );
+
+}
+
+
+/* =====================================================
+   SALVAR ITEM
+===================================================== */
+
+async function salvarItem() {
+
+    if (!exigirPermissaoGestor())
+        return;
+
+
+    try {
+
+        const nomeElement =
+            document.getElementById(
+                'nome'
+            );
+
+        const descricaoElement =
+            document.getElementById(
+                'descricao'
+            );
+
+        const tipoElement =
+            document.getElementById(
+                'tipoItem'
+            );
+
+        const quantidadeElement =
+            document.getElementById(
+                'quantidadeLote'
+            );
+
+        const localElement =
+            document.getElementById(
+                'local'
+            );
+
+        const statusElement =
+            document.getElementById(
+                'status'
+            );
 
         const fotoInput =
-        document
-        .getElementById('foto');
+            document.getElementById(
+                'foto'
+            );
+
+
+        const nome =
+            nomeElement?.value
+                ?.trim() || '';
+
+
+        const descricao =
+            descricaoElement?.value
+                ?.trim() || '';
+
+
+        const tipo =
+            tipoElement?.value
+                ?.trim() ||
+            nome;
+
+
+        const quantidade =
+            parseInt(
+                quantidadeElement?.value ||
+                '1',
+                10
+            );
+
+
+        const local_id =
+            localElement?.value ||
+            '';
+
+
+        const status =
+            statusElement?.value ||
+            'Ativo';
+
 
         const arquivo =
-        fotoInput?.files?.[0];
+            fotoInput?.files?.[0];
 
-        if(!nome){
 
-            alert('Informe o nome');
+        if (!nome) {
+
+            alert(
+                'Informe o nome do patrimônio.'
+            );
+
+            nomeElement?.focus();
+
+            return;
+        }
+
+
+        if (!local_id) {
+
+            alert(
+                'Selecione o local.'
+            );
+
+            localElement?.focus();
 
             return;
         }
 
-        if(!local_id){
 
-            alert('Selecione o local');
+        if (
+            !Number.isInteger(
+                quantidade
+            ) ||
+            quantidade < 1
+        ) {
+
+            alert(
+                'A quantidade deve ser igual ou maior que 1.'
+            );
+
+            quantidadeElement?.focus();
 
             return;
         }
+
 
         let foto_url = '';
 
-        /* =========================
-           UPLOAD FOTO
-        ========================= */
 
-        if(arquivo){
+        /* =================================================
+           UPLOAD FOTO
+        ================================================= */
+
+        if (arquivo) {
 
             const extensao =
-            arquivo.name
-            .split('.')
-            .pop();
+                arquivo.name
+                    .split('.')
+                    .pop()
+                    ?.toLowerCase() ||
+                'jpg';
+
 
             const nomeArquivo =
-            `${Date.now()}.${extensao}`;
+                `${Date.now()}-${Math.random()
+                    .toString(36)
+                    .slice(2)}.${extensao}`;
+
 
             const {
-                error:uploadError
+                error: uploadError
             } =
-            await supabaseClient
-            .storage
-            .from('inventario')
-            .upload(
-                nomeArquivo,
-                arquivo,
-                {
-                    upsert:true
-                }
-            );
+                await supabaseClient
+                    .storage
+                    .from('inventario')
+                    .upload(
+                        nomeArquivo,
+                        arquivo,
+                        {
+                            upsert: true
+                        }
+                    );
 
-            if(uploadError){
 
-                console.log(uploadError);
+            if (uploadError) {
+
+                console.error(
+                    uploadError
+                );
 
                 alert(
-                    'Erro ao enviar imagem'
+                    'Erro ao enviar a imagem.'
                 );
 
                 return;
             }
 
+
             const {
-                data:urlData
+                data: urlData
             } =
-            supabaseClient
-            .storage
-            .from('inventario')
-            .getPublicUrl(
-                nomeArquivo
-            );
+                supabaseClient
+                    .storage
+                    .from('inventario')
+                    .getPublicUrl(
+                        nomeArquivo
+                    );
+
 
             foto_url =
-            urlData.publicUrl;
+                urlData?.publicUrl ||
+                '';
+
         }
 
-        /* =========================
+
+        /* =================================================
            GERAR LOTE
-        ========================= */
+        ================================================= */
 
         let maiorNumero =
-        gerarNumeroPatrimonio();
+            gerarNumeroPatrimonio();
+
 
         const lote = [];
 
-        for(let i = 1; i <= quantidade; i++){
+
+        for (
+            let i = 1;
+            i <= quantidade;
+            i++
+        ) {
 
             maiorNumero++;
+
 
             lote.push({
 
                 patrimonio:
-                String(maiorNumero)
-                .padStart(4,'0'),
+                    String(
+                        maiorNumero
+                    ).padStart(
+                        4,
+                        '0'
+                    ),
 
                 nome,
+
                 tipo,
+
                 descricao,
 
                 local_id:
-                Number(local_id),
+                    Number(local_id),
 
                 status,
 
                 foto_url
+
             });
+
         }
 
-        /* =========================
+
+        /* =================================================
            INSERT
-        ========================= */
+        ================================================= */
 
-        const { error } =
-        await supabaseClient
-        .from('itens')
-        .insert(lote);
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('itens')
+                .insert(
+                    lote
+                )
+                .select();
 
-        if(error){
 
-            console.log(error);
+        if (error) {
+
+            console.error(
+                'Erro ao inserir:',
+                error
+            );
 
             alert(
-                'Erro ao salvar patrimônio'
+                'Erro ao salvar patrimônio:\n' +
+                error.message
             );
 
             return;
         }
 
-        alert(
-            `${quantidade} patrimônios cadastrados!`
+
+        console.log(
+            'Patrimônios cadastrados:',
+            data
         );
+
+
+        alert(
+            `${quantidade} patrimônio(s) cadastrado(s) com sucesso!`
+        );
+
 
         limparFormulario();
 
+
         await carregarDashboard();
 
-    }catch(err){
 
-        console.log(err);
+        abrirTela(
+            'estoqueTela',
+            document.getElementById(
+                'menuEstoque'
+            )
+        );
 
-        alert('Erro inesperado');
+
+    } catch (err) {
+
+        console.error(
+            'Erro inesperado:',
+            err
+        );
+
+        alert(
+            'Erro inesperado ao cadastrar patrimônio.'
+        );
+
     }
+
 }
 
-/* =========================
+
+/* =====================================================
    LIMPAR FORMULÁRIO
-========================= */
+===================================================== */
 
-function limparFormulario(){
+function limparFormulario() {
 
-    const nome =
-    document.getElementById(
-        'nome'
-    );
+    const campos = [
 
-    if(nome){
-
-        nome.value = '';
-    }
-
-    const descricao =
-    document.getElementById(
-        'descricao'
-    );
-
-    if(descricao){
-
-        descricao.value = '';
-    }
-
-    const foto =
-    document.getElementById(
+        'nome',
+        'descricao',
         'foto'
-    );
 
-    if(foto){
+    ];
 
-        foto.value = '';
-    }
+
+    campos.forEach(id => {
+
+        const campo =
+            document.getElementById(
+                id
+            );
+
+        if (campo)
+            campo.value = '';
+
+    });
+
 
     const local =
-    document.getElementById(
-        'local'
-    );
+        document.getElementById(
+            'local'
+        );
 
-    if(local){
-
+    if (local)
         local.value = '';
-    }
+
 
     const status =
-    document.getElementById(
-        'status'
-    );
+        document.getElementById(
+            'status'
+        );
 
-    if(status){
+    if (status)
+        status.value =
+            'Ativo';
 
-        status.value = 'Ativo';
-    }
 
     const quantidade =
-    document.getElementById(
-        'quantidadeLote'
-    );
+        document.getElementById(
+            'quantidadeLote'
+        );
 
-    if(quantidade){
+    if (quantidade)
+        quantidade.value =
+            '1';
 
-        quantidade.value = 1;
-    }
 
     const tipo =
-    document.getElementById(
-        'tipoItem'
-    );
+        document.getElementById(
+            'tipoItem'
+        );
 
-    if(tipo){
-
+    if (tipo)
         tipo.value = '';
-    }
+
 }
 
-/* =========================
+
+/* =====================================================
    CARREGAR ITENS
-========================= */
+===================================================== */
 
-async function carregarItens(){
+async function carregarItens() {
 
-    try{
+    try {
 
-        const { data, error } =
-        await supabaseClient
-        .from('itens')
-        .select('*')
-        .order('id', {
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('itens')
+                .select('*')
+                .order(
+                    'id',
+                    {
+                        ascending: false
+                    }
+                );
 
-            ascending:false
 
-        });
+        if (error) {
 
-        if(error){
-
-            console.log(error);
+            console.error(
+                'Erro ao carregar itens:',
+                error
+            );
 
             alert(
-                'Erro ao carregar itens'
+                'Erro ao carregar patrimônios:\n' +
+                error.message
             );
 
             return;
         }
 
-        itens = data || [];
+
+        itens =
+            data || [];
+
 
         const tabela =
-        document.getElementById(
-            'listaItens'
-        );
+            document.getElementById(
+                'listaItens'
+            );
+
 
         const itemMov =
-        document.getElementById(
-            'itemMov'
-        );
+            document.getElementById(
+                'itemMov'
+            );
 
-        if(tabela){
 
+        if (tabela)
             tabela.innerHTML = '';
-        }
 
-        if(itemMov){
+
+        if (itemMov) {
 
             itemMov.innerHTML = `
-            <option value="">
-            Selecione o Patrimônio
-            </option>
+                <option value="">
+                    Selecione o Patrimônio
+                </option>
             `;
+
         }
+
 
         itens.forEach(item => {
 
             const local =
-            LOCAIS.find(
-                l => l.id == item.local_id
-            );
+                obterNomeLocal(
+                    item.local_id
+                );
 
-            let classeStatus = '';
 
-            if(item.status === 'Ativo'){
+            let classeStatus =
+                '';
 
-                classeStatus = 'ativo';
+
+            switch (
+                normalizarTexto(
+                    item.status
+                )
+            ) {
+
+                case 'ativo':
+                    classeStatus =
+                        'ativo';
+                    break;
+
+                case 'em manutenção':
+                    classeStatus =
+                        'manutencao';
+                    break;
+
+                case 'baixado':
+                    classeStatus =
+                        'baixado';
+                    break;
+
+                case 'extraviado':
+                    classeStatus =
+                        'extraviado';
+                    break;
+
             }
 
-            if(item.status === 'Em manutenção'){
 
-                classeStatus = 'manutencao';
-            }
+            if (tabela) {
 
-            if(item.status === 'Baixado'){
+                const foto =
+                    item.foto_url ||
+                    'https://placehold.co/80x80/png?text=IMG';
 
-                classeStatus = 'baixado';
-            }
-
-            if(item.status === 'Extraviado'){
-
-                classeStatus = 'extraviado';
-            }
-
-            if(tabela){
 
                 tabela.innerHTML += `
 
-<tr>
+                    <tr>
 
-<td>
+                        <td>
 
-<img
-src="${
-item.foto_url ||
-'https://placehold.co/60x60/png?text=IMG'
-}"
+                            <img
+                                src="${escaparHTML(foto)}"
+                                alt="Foto do patrimônio"
+                                onclick="abrirModalFoto('${escaparHTML(item.foto_url || '')}')"
+                                style="
+                                    width:60px;
+                                    height:60px;
+                                    object-fit:cover;
+                                    border-radius:8px;
+                                    cursor:pointer;
+                                "
+                            >
 
-onclick="
-abrirModalFoto(
-'${item.foto_url || ''}'
-)
-"
+                        </td>
 
-style="
-width:60px;
-height:60px;
-object-fit:cover;
-border-radius:8px;
-cursor:pointer;
-border:2px solid #ddd;
-"
+                        <td>
+                            <strong>
+                                ${escaparHTML(
+                                    item.patrimonio
+                                )}
+                            </strong>
+                        </td>
 
->
+                        <td>
+                            ${escaparHTML(
+                                item.tipo ||
+                                item.nome ||
+                                '-'
+                            )}
+                        </td>
 
-</td>
+                        <td>
+                            ${escaparHTML(
+                                item.nome ||
+                                '-'
+                            )}
+                        </td>
 
-<td>
-${item.patrimonio}
-</td>
+                        <td>
+                            ${escaparHTML(
+                                item.descricao ||
+                                '-'
+                            )}
+                        </td>
 
-<td>
-${item.nome}
-</td>
+                        <td>
+                            ${escaparHTML(
+                                local
+                            )}
+                        </td>
 
-<td>
-${item.descricao || '-'}
-</td>
+                        <td>
 
-<td>
-${local?.nome || '-'}
-</td>
+                            <span
+                                class="status ${classeStatus}"
+                            >
+                                ${escaparHTML(
+                                    item.status ||
+                                    '-'
+                                )}
+                            </span>
 
-<td>
+                        </td>
 
-<span class="status ${classeStatus}">
-${item.status}
-</span>
+                        <td>
 
-</td>
+                            <div class="actions">
 
-<td>
+                                ${
+                                    usuarioPodeGerenciar()
 
-<div class="actions">
+                                    ? `
 
-${
-perfilUsuario !== 'consulta'
-? `
-<button
-class="btn-edit"
-onclick="editarItem(${item.id})"
->
-Editar
-</button>
+                                        <button
+                                            class="btn-edit"
+                                            type="button"
+                                            onclick="editarItem(${item.id})"
+                                        >
+                                            <i class="fa-solid fa-pen"></i>
+                                            Editar
+                                        </button>
 
-<button
-class="btn-delete"
-onclick="excluirItem(${item.id})"
->
-Excluir
-</button>
-`
-: '-'
-}
+                                        <button
+                                            class="btn-delete"
+                                            type="button"
+                                            onclick="excluirItem(${item.id})"
+                                        >
+                                            <i class="fa-solid fa-trash"></i>
+                                            Excluir
+                                        </button>
 
-</div>
+                                      `
 
-</td>
+                                    : '-'
+                                }
 
-</tr>
+                            </div>
 
-`;
+                        </td>
+
+                    </tr>
+
+                `;
+
             }
 
-            if(itemMov){
+
+            if (itemMov) {
 
                 itemMov.innerHTML += `
 
-<option value="${item.id}">
-${item.patrimonio} - ${item.nome}
-</option>
+                    <option value="${item.id}">
+                        ${escaparHTML(
+                            item.patrimonio
+                        )}
+                        -
+                        ${escaparHTML(
+                            item.nome
+                        )}
+                    </option>
 
-`;
+                `;
+
             }
+
         });
+
 
         const totalItens =
-        document.getElementById(
-            'totalItens'
-        );
+            document.getElementById(
+                'totalItens'
+            );
 
-        if(totalItens){
 
+        if (totalItens)
             totalItens.innerText =
-            itens.length;
-        }
+                itens.length;
+
 
         const totalBaixados =
-        document.getElementById(
-            'totalBaixados'
-        );
+            document.getElementById(
+                'totalBaixados'
+            );
 
-        if(totalBaixados){
+
+        if (totalBaixados) {
 
             totalBaixados.innerText =
-            itens.filter(
-                item =>
-                item.status === 'Baixado'
-            ).length;
+                itens.filter(
+                    item =>
+                        normalizarTexto(
+                            item.status
+                        ) === 'baixado'
+                ).length;
+
         }
 
-    }catch(err){
 
-        console.log(err);
+    } catch (err) {
+
+        console.error(
+            'Erro inesperado ao carregar itens:',
+            err
+        );
+
     }
+
 }
 
-/* =========================
+
+/* =====================================================
    EDITAR ITEM
-========================= */
+===================================================== */
 
-async function editarItem(id){
+async function editarItem(id) {
 
-    if(perfilUsuario === 'consulta'){
-
-        alert('Usuário sem permissão!');
-
+    if (!exigirPermissaoGestor())
         return;
-    }
+
 
     const item =
-    itens.find(
-        i => i.id == id
-    );
+        itens.find(
+            i =>
+                String(i.id) ===
+                String(id)
+        );
 
-    if(!item) return;
+
+    if (!item) {
+
+        alert(
+            'Patrimônio não encontrado.'
+        );
+
+        return;
+    }
+
 
     const novoNome =
-    prompt(
-        'Novo nome:',
-        item.nome
-    );
+        prompt(
+            'Novo nome do patrimônio:',
+            item.nome || ''
+        );
 
-    if(!novoNome) return;
 
-    const { error } =
-    await supabaseClient
-    .from('itens')
-    .update({
+    if (
+        novoNome === null ||
+        !novoNome.trim()
+    )
+        return;
 
-        nome:novoNome
 
-    })
-    .eq('id', id);
+    const {
+        error
+    } =
+        await supabaseClient
+            .from('itens')
+            .update({
 
-    if(error){
+                nome:
+                    novoNome.trim()
 
-        console.log(error);
+            })
+            .eq(
+                'id',
+                id
+            );
 
-        alert('Erro ao editar');
+
+    if (error) {
+
+        console.error(
+            'Erro ao editar:',
+            error
+        );
+
+        alert(
+            'Erro ao editar patrimônio:\n' +
+            error.message
+        );
 
         return;
     }
+
 
     await carregarDashboard();
+
+
+    alert(
+        'Patrimônio atualizado com sucesso.'
+    );
+
 }
 
-/* =========================
+
+/* =====================================================
    EXCLUIR ITEM
-========================= */
+===================================================== */
 
-async function excluirItem(id){
+async function excluirItem(id) {
 
-    if(perfilUsuario === 'consulta'){
-
-        alert('Usuário sem permissão!');
-
+    if (!exigirPermissaoGestor())
         return;
-    }
+
+
+    const item =
+        itens.find(
+            i =>
+                String(i.id) ===
+                String(id)
+        );
+
 
     const confirmar =
-    confirm(
-        'Deseja excluir este patrimônio?'
-    );
+        confirm(
+            `Deseja excluir o patrimônio ${
+                item?.patrimonio || ''
+            }?`
+        );
 
-    if(!confirmar) return;
 
-    const { error } =
-    await supabaseClient
-    .from('itens')
-    .delete()
-    .eq('id', id);
+    if (!confirmar)
+        return;
 
-    if(error){
 
-        console.log(error);
+    const {
+        error
+    } =
+        await supabaseClient
+            .from('itens')
+            .delete()
+            .eq(
+                'id',
+                id
+            );
 
-        alert('Erro ao excluir');
+
+    if (error) {
+
+        console.error(
+            'Erro ao excluir:',
+            error
+        );
+
+        alert(
+            'Erro ao excluir patrimônio:\n' +
+            error.message
+        );
 
         return;
     }
 
+
     await carregarDashboard();
+
+
+    alert(
+        'Patrimônio excluído com sucesso.'
+    );
+
 }
 
-/* =========================
+
+/* =====================================================
    HISTÓRICO
-========================= */
+===================================================== */
 
-async function carregarHistorico(){
+async function carregarHistorico() {
 
-    try{
+    try {
 
-        const { data, error } =
-        await supabaseClient
-        .from('movimentacoes')
-        .select('*')
-        .order('data', {
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('movimentacoes')
+                .select('*')
+                .order(
+                    'data',
+                    {
+                        ascending: false
+                    }
+                );
 
-            ascending:false
 
-        });
+        if (error) {
 
-        if(error){
-
-            console.log(error);
+            console.error(
+                'Erro ao carregar histórico:',
+                error
+            );
 
             return;
         }
 
-        movimentacoes = data || [];
+
+        movimentacoes =
+            data || [];
+
 
         const tabela =
-        document.getElementById(
-            'historico'
-        );
+            document.getElementById(
+                'historico'
+            );
 
-        if(!tabela) return;
+
+        if (!tabela)
+            return;
+
 
         tabela.innerHTML = '';
+
 
         movimentacoes.forEach(mov => {
 
             const item =
-            itens.find(
-                i => i.id == mov.item_id
-            );
+                itens.find(
+                    i =>
+                        String(i.id) ===
+                        String(mov.item_id)
+                );
+
 
             const origem =
-            LOCAIS.find(
-                l => l.id == mov.origem_id
-            );
+                obterNomeLocal(
+                    mov.origem_id
+                );
+
 
             const destino =
-            LOCAIS.find(
-                l => l.id == mov.destino_id
-            );
+                obterNomeLocal(
+                    mov.destino_id
+                );
+
+
+            const dataFormatada =
+                mov.data
+                    ? new Date(
+                        mov.data
+                    ).toLocaleString(
+                        'pt-BR'
+                    )
+                    : '-';
+
 
             tabela.innerHTML += `
 
-<tr>
+                <tr>
 
-<td>
-${item?.patrimonio || '-'}
-</td>
+                    <td>
+                        <strong>
+                            ${escaparHTML(
+                                item?.patrimonio ||
+                                '-'
+                            )}
+                        </strong>
+                    </td>
 
-<td>
-${origem?.nome || '-'}
-</td>
+                    <td>
+                        ${escaparHTML(
+                            origem
+                        )}
+                    </td>
 
-<td>
-${destino?.nome || '-'}
-</td>
+                    <td>
+                        ${escaparHTML(
+                            destino
+                        )}
+                    </td>
 
-<td>
-${mov.observacao || '-'}
-</td>
+                    <td>
+                        ${escaparHTML(
+                            mov.observacao ||
+                            '-'
+                        )}
+                    </td>
 
-<td>
-${new Date(mov.data)
-.toLocaleString()}
-</td>
+                    <td>
+                        ${escaparHTML(
+                            dataFormatada
+                        )}
+                    </td>
 
-</tr>
+                </tr>
 
-`;
+            `;
+
         });
 
+
         const totalMov =
-        document.getElementById(
-            'totalMov'
+            document.getElementById(
+                'totalMov'
+            );
+
+
+        if (totalMov)
+            totalMov.innerText =
+                movimentacoes.length;
+
+
+    } catch (err) {
+
+        console.error(
+            'Erro no histórico:',
+            err
         );
 
-        if(totalMov){
-
-            totalMov.innerText =
-            movimentacoes.length;
-        }
-
-    }catch(err){
-
-        console.log(err);
     }
+
 }
 
-/* =========================
-   DASHBOARD STATUS
-========================= */
 
-function atualizarDashboardAvancado(){
+/* =====================================================
+   DASHBOARD STATUS
+===================================================== */
+
+function atualizarDashboardAvancado() {
+
+    const ativo =
+        itens.filter(
+            item =>
+                normalizarTexto(
+                    item.status
+                ) === 'ativo'
+        ).length;
+
+
+    const manutencao =
+        itens.filter(
+            item =>
+                normalizarTexto(
+                    item.status
+                ) ===
+                'em manutenção'
+        ).length;
+
+
+    const baixado =
+        itens.filter(
+            item =>
+                normalizarTexto(
+                    item.status
+                ) === 'baixado'
+        ).length;
+
+
+    const extraviado =
+        itens.filter(
+            item =>
+                normalizarTexto(
+                    item.status
+                ) === 'extraviado'
+        ).length;
+
 
     const dashAtivo =
-    document.getElementById(
-        'dashAtivo'
-    );
-
-    if(dashAtivo){
-
-        dashAtivo.innerText =
-        itens.filter(
-            item =>
-            item.status === 'Ativo'
-        ).length;
-    }
+        document.getElementById(
+            'dashAtivo'
+        );
 
     const dashManutencao =
-    document.getElementById(
-        'dashManutencao'
-    );
-
-    if(dashManutencao){
-
-        dashManutencao.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Em manutenção'
-        ).length;
-    }
+        document.getElementById(
+            'dashManutencao'
+        );
 
     const dashBaixado =
-    document.getElementById(
-        'dashBaixado'
-    );
-
-    if(dashBaixado){
-
-        dashBaixado.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Baixado'
-        ).length;
-    }
+        document.getElementById(
+            'dashBaixado'
+        );
 
     const dashExtraviado =
-    document.getElementById(
-        'dashExtraviado'
-    );
+        document.getElementById(
+            'dashExtraviado'
+        );
 
-    if(dashExtraviado){
 
+    if (dashAtivo)
+        dashAtivo.innerText =
+            ativo;
+
+
+    if (dashManutencao)
+        dashManutencao.innerText =
+            manutencao;
+
+
+    if (dashBaixado)
+        dashBaixado.innerText =
+            baixado;
+
+
+    if (dashExtraviado)
         dashExtraviado.innerText =
-        itens.filter(
-            item =>
-            item.status ===
-            'Extraviado'
-        ).length;
-    }
+            extraviado;
+
 }
 
-/* =========================
-   RELATÓRIO AGRUPADO
-========================= */
 
-function gerarRelatorioLocais(){
+/* =====================================================
+   RELATÓRIO POR LOCAL
+===================================================== */
+
+function gerarRelatorioLocais() {
 
     const tabela =
-    document.getElementById(
-        'dashboardLocais'
-    );
+        document.getElementById(
+            'dashboardLocais'
+        );
 
-    if(!tabela) return;
+
+    if (!tabela)
+        return;
+
 
     tabela.innerHTML = '';
 
+
     const agrupado = {};
+
 
     itens.forEach(item => {
 
-        const local =
-        LOCAIS.find(
-            l => l.id == item.local_id
-        );
-
         const nomeLocal =
-        local?.nome || 'SEM LOCAL';
+            obterNomeLocal(
+                item.local_id
+            );
+
 
         const tipo =
-        item.tipo || item.nome;
+            item.tipo ||
+            item.nome ||
+            'SEM TIPO';
+
 
         const chave =
-        `${tipo}||${nomeLocal}`;
+            `${tipo}||${nomeLocal}`;
 
-        if(!agrupado[chave]){
+
+        if (!agrupado[chave]) {
 
             agrupado[chave] = {
 
-                item:tipo,
-                local:nomeLocal,
-                quantidade:0
+                item: tipo,
+
+                local: nomeLocal,
+
+                quantidade: 0
+
             };
+
         }
 
+
         agrupado[chave]
-        .quantidade++;
+            .quantidade++;
+
     });
+
 
     Object.values(agrupado)
 
-    .sort((a,b) => {
+        .sort(
+            (a, b) =>
+                a.local.localeCompare(
+                    b.local,
+                    'pt-BR'
+                )
+        )
 
-        return a.local
-        .localeCompare(b.local);
+        .forEach(registro => {
 
-    })
+            tabela.innerHTML += `
 
-    .forEach(registro => {
+                <tr>
 
-        tabela.innerHTML += `
+                    <td>
+                        ${escaparHTML(
+                            registro.item
+                        )}
+                    </td>
 
-<tr>
+                    <td
+                        data-local="${escaparHTML(
+                            normalizarTexto(
+                                registro.local
+                            )
+                        )}"
+                    >
+                        ${escaparHTML(
+                            registro.local
+                        )}
+                    </td>
 
-<td>
-${registro.item}
-</td>
+                    <td>
+                        <strong>
+                            ${registro.quantidade}
+                        </strong>
+                    </td>
 
-<td data-local="${registro.local.toLowerCase()}">
-${registro.local}
-</td>
+                </tr>
 
-<td>
-${registro.quantidade}
-</td>
+            `;
 
-</tr>
+        });
 
-`;
-    });
 }
 
-/* =========================
-   FILTRAR DASHBOARD
-========================= */
 
-function filtrarDashboard(){
+/* =====================================================
+   FILTRAR DASHBOARD
+===================================================== */
+
+function filtrarDashboard() {
 
     const busca =
-    document
-    .getElementById(
-        'filtroDashboard'
-    )
-    ?.value
-    .toLowerCase()
-    .trim() || '';
+        normalizarTexto(
+            document.getElementById(
+                'filtroDashboard'
+            )?.value
+        );
+
 
     const localFiltro =
-    document
-    .getElementById(
-        'filtroLocalDashboard'
-    )
-    ?.value
-    .toLowerCase()
-    .trim() || '';
+        normalizarTexto(
+            document.getElementById(
+                'filtroLocalDashboard'
+            )?.value
+        );
+
 
     const linhas =
-    document.querySelectorAll(
-        '#dashboardLocais tr'
-    );
+        document.querySelectorAll(
+            '#dashboardLocais tr'
+        );
+
 
     linhas.forEach(linha => {
 
         const item =
-        linha.children[0]
-        ?.innerText
-        .toLowerCase() || '';
+            normalizarTexto(
+                linha.children[0]
+                    ?.innerText
+            );
+
 
         const local =
-        linha.children[1]
-        ?.dataset
-        ?.local || '';
+            normalizarTexto(
+                linha.children[1]
+                    ?.dataset
+                    ?.local
+            );
 
-        const textoCompleto =
-        `${item} ${local}`;
+
+        const texto =
+            `${item} ${local}`;
+
 
         const matchBusca =
-        textoCompleto.includes(busca);
+            texto.includes(
+                busca
+            );
+
 
         const matchLocal =
-        !localFiltro ||
-        local === localFiltro;
+            !localFiltro ||
+            local === localFiltro;
+
 
         linha.style.display =
-        (matchBusca && matchLocal)
-        ? ''
-        : 'none';
+            matchBusca &&
+            matchLocal
+                ? ''
+                : 'none';
 
     });
+
 }
 
-/* =========================
-   FILTRO LOCAIS DASHBOARD
-========================= */
 
-function carregarFiltroLocaisDashboard(){
+/* =====================================================
+   FILTRO DE LOCAIS
+===================================================== */
+
+function carregarFiltroLocaisDashboard() {
 
     const select =
-    document.getElementById(
-        'filtroLocalDashboard'
-    );
-
-    if(!select) return;
-
-    select.innerHTML = `
-    <option value="">
-    Todos os Locais
-    </option>
-    `;
-
-    LOCAIS
-    .sort((a,b) => {
-
-        return a.nome.localeCompare(
-            b.nome
+        document.getElementById(
+            'filtroLocalDashboard'
         );
 
-    })
-    .forEach(local => {
 
-        select.innerHTML += `
+    if (!select)
+        return;
 
-<option value="${local.nome.toLowerCase()}">
-${local.nome}
-</option>
 
-`;
-    });
+    select.innerHTML = `
+
+        <option value="">
+            Todos os Locais
+        </option>
+
+    `;
+
+
+    [...LOCAIS]
+
+        .sort(
+            (a, b) =>
+                a.nome.localeCompare(
+                    b.nome,
+                    'pt-BR'
+                )
+        )
+
+        .forEach(local => {
+
+            select.innerHTML += `
+
+                <option
+                    value="${escaparHTML(
+                        normalizarTexto(
+                            local.nome
+                        )
+                    )}"
+                >
+                    ${escaparHTML(
+                        local.nome
+                    )}
+                </option>
+
+            `;
+
+        });
+
 }
 
-/* =========================
-   FILTRAR ITENS
-========================= */
 
-function filtrarItens(){
+/* =====================================================
+   FILTRAR ESTOQUE
+===================================================== */
+
+function filtrarItens() {
 
     const termo =
-    document.getElementById(
-        'busca'
-    )
-    ?.value
-    .toLowerCase() || '';
+        normalizarTexto(
+            document.getElementById(
+                'busca'
+            )?.value
+        );
+
 
     const linhas =
-    document.querySelectorAll(
-        '#listaItens tr'
-    );
+        document.querySelectorAll(
+            '#listaItens tr'
+        );
+
 
     linhas.forEach(linha => {
 
         const texto =
-        linha.innerText
-        .toLowerCase();
+            normalizarTexto(
+                linha.innerText
+            );
+
 
         linha.style.display =
-        texto.includes(termo)
-        ? ''
-        : 'none';
+            texto.includes(
+                termo
+            )
+                ? ''
+                : 'none';
+
     });
+
 }
 
-/* =========================
-   DASHBOARD
-========================= */
 
-async function carregarDashboard(){
+/* =====================================================
+   DASHBOARD COMPLETO
+===================================================== */
+
+async function carregarDashboard() {
 
     carregarLocais();
+
+    carregarFiltroLocaisDashboard();
+
 
     await carregarItens();
 
     await carregarHistorico();
 
+
     atualizarDashboardAvancado();
 
     gerarRelatorioLocais();
 
-    carregarFiltroLocaisDashboard();
+    filtrarDashboard();
+
 }
 
-/* =========================
+
+/* =====================================================
    MODAL FOTO
-========================= */
+===================================================== */
 
-function abrirModalFoto(url){
+function abrirModalFoto(url) {
 
-    if(!url) return;
+    if (!url)
+        return;
+
 
     const modal =
-    document.getElementById(
-        'modalFoto'
-    );
+        document.getElementById(
+            'modalFoto'
+        );
+
 
     const imagem =
-    document.getElementById(
-        'imagemModal'
-    );
+        document.getElementById(
+            'imagemModal'
+        );
+
+
+    if (!modal || !imagem)
+        return;
+
 
     imagem.src = url;
+
 
     modal.classList.add(
         'active'
     );
+
 }
 
-function fecharModalFoto(){
 
-    document
-    .getElementById(
-        'modalFoto'
-    )
-    .classList
-    .remove('active');
+function fecharModalFoto() {
+
+    const modal =
+        document.getElementById(
+            'modalFoto'
+        );
+
+
+    if (modal)
+        modal.classList.remove(
+            'active'
+        );
+
+
+    const imagem =
+        document.getElementById(
+            'imagemModal'
+        );
+
+
+    if (imagem)
+        imagem.src = '';
+
 }
 
-/* =========================
-   MENU
-========================= */
+
+/* =====================================================
+   ABRIR TELA
+===================================================== */
 
 function abrirTela(
     idTela,
     elemento
-){
+) {
 
-    if(
+    if (
         !usuarioLogado &&
         idTela !== 'loginTela'
-    ){
+    ) {
 
         alert(
             'Faça login primeiro!'
@@ -1371,590 +2244,1082 @@ function abrirTela(
         return;
     }
 
-    const telas =
-    document.querySelectorAll(
-        '.tela'
-    );
 
-    telas.forEach(tela => {
+    /*
+       Impede Consulta de abrir
+       telas administrativas manualmente.
+    */
 
-        tela.classList.remove(
-            'activeTela'
-        );
-    });
-
-    document
-    .getElementById(idTela)
-    .classList
-    .add('activeTela');
-
-    const menus =
-    document.querySelectorAll(
-        '.menu-item'
-    );
-
-    menus.forEach(menu => {
-
-        menu.classList.remove(
-            'active'
-        );
-    });
-
-    if(elemento){
-
-        elemento.classList.add(
-            'active'
-        );
-    }
-
-    if(window.innerWidth <= 900){
-
-        document
-        .getElementById('sidebar')
-        .classList
-        .remove('open');
-    }
-}
-
-/* =========================
-   EXPORTAR EXCEL
-========================= */
-
-function exportarExcel(){
-
-    if(itens.length === 0){
+    if (
+        usuarioLogado &&
+        !usuarioPodeGerenciar() &&
+        (
+            idTela === 'cadastroTela' ||
+            idTela === 'movimentacaoTela'
+        )
+    ) {
 
         alert(
-            'Nenhum patrimônio cadastrado!'
+            'Seu perfil é somente Consulta.'
         );
 
         return;
     }
 
-    let csv =
-    'PATRIMÔNIO;TIPO;NOME;DESCRIÇÃO;LOCAL;STATUS\n';
+
+    const tela =
+        document.getElementById(
+            idTela
+        );
+
+
+    if (!tela)
+        return;
+
+
+    document
+        .querySelectorAll(
+            '.tela'
+        )
+        .forEach(item => {
+
+            item.classList.remove(
+                'activeTela'
+            );
+
+        });
+
+
+    tela.classList.add(
+        'activeTela'
+    );
+
+
+    document
+        .querySelectorAll(
+            '.menu-item'
+        )
+        .forEach(menu => {
+
+            menu.classList.remove(
+                'active'
+            );
+
+        });
+
+
+    if (elemento)
+        elemento.classList.add(
+            'active'
+        );
+
+
+    atualizarTituloTela(
+        idTela
+    );
+
+
+    if (
+        window.innerWidth <=
+        900
+    ) {
+
+        toggleSidebar(
+            false
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   TÍTULO DAS TELAS
+===================================================== */
+
+function atualizarTituloTela(
+    idTela
+) {
+
+    const pageTitle =
+        document.getElementById(
+            'pageTitle'
+        );
+
+
+    const breadcrumb =
+        document.getElementById(
+            'breadcrumb'
+        );
+
+
+    const titulos = {
+
+        loginTela: {
+
+            titulo:
+                'Acesso ao sistema',
+
+            breadcrumb:
+                'Autenticação'
+
+        },
+
+        dashboardTela: {
+
+            titulo:
+                'Dashboard',
+
+            breadcrumb:
+                'Visão geral'
+
+        },
+
+        cadastroTela: {
+
+            titulo:
+                'Cadastrar Patrimônio',
+
+            breadcrumb:
+                'Patrimônio'
+
+        },
+
+        movimentacaoTela: {
+
+            titulo:
+                'Movimentações',
+
+            breadcrumb:
+                'Logística'
+
+        },
+
+        estoqueTela: {
+
+            titulo:
+                'Estoque',
+
+            breadcrumb:
+                'Inventário'
+
+        },
+
+        historicoTela: {
+
+            titulo:
+                'Histórico',
+
+            breadcrumb:
+                'Rastreabilidade'
+
+        }
+
+    };
+
+
+    const dados =
+        titulos[idTela] ||
+        titulos.dashboardTela;
+
+
+    if (pageTitle)
+        pageTitle.innerText =
+            dados.titulo;
+
+
+    if (breadcrumb)
+        breadcrumb.innerText =
+            dados.breadcrumb;
+
+}
+
+
+/* =====================================================
+   EXPORTAR CSV / EXCEL
+===================================================== */
+
+function exportarExcel() {
+
+    if (!itens.length) {
+
+        alert(
+            'Nenhum patrimônio cadastrado.'
+        );
+
+        return;
+    }
+
+
+    const linhas = [];
+
+
+    linhas.push([
+
+        'PATRIMÔNIO',
+        'TIPO',
+        'NOME',
+        'DESCRIÇÃO',
+        'LOCAL',
+        'STATUS'
+
+    ]);
+
 
     itens.forEach(item => {
 
-        const local =
-        LOCAIS.find(
-            l => l.id == item.local_id
-        );
+        linhas.push([
 
-        csv +=
-        `${item.patrimonio};`;
+            item.patrimonio || '',
 
-        csv +=
-        `${item.tipo || item.nome};`;
+            item.tipo ||
+            item.nome ||
+            '',
 
-        csv +=
-        `${item.nome};`;
+            item.nome || '',
 
-        csv +=
-        `${item.descricao || '-'};`;
+            item.descricao || '',
 
-        csv +=
-        `${local?.nome || '-'};`;
+            obterNomeLocal(
+                item.local_id
+            ),
 
-        csv +=
-        `${item.status}\n`;
+            item.status || ''
+
+        ]);
+
     });
 
+
+    const csv =
+        linhas
+            .map(linha =>
+
+                linha
+                    .map(valor =>
+
+                        `"${String(
+                            valor ?? ''
+                        ).replace(
+                            /"/g,
+                            '""'
+                        )}"`
+
+                    )
+                    .join(';')
+
+            )
+            .join('\n');
+
+
     const blob =
-    new Blob(
-        [csv],
-        {
+        new Blob(
+            [
+                '\ufeff' + csv
+            ],
+            {
+                type:
+                    'text/csv;charset=utf-8;'
+            }
+        );
 
-            type:
-            'text/csv;charset=utf-8;'
-
-        }
-    );
 
     const link =
-    document.createElement('a');
+        document.createElement(
+            'a'
+        );
+
 
     const url =
-    URL.createObjectURL(blob);
+        URL.createObjectURL(
+            blob
+        );
+
 
     link.href = url;
 
     link.download =
-    'inventario.csv';
+        'inventario.csv';
 
-    document.body.appendChild(link);
+
+    document.body.appendChild(
+        link
+    );
+
 
     link.click();
 
-    document.body.removeChild(link);
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
 }
 
-/* =========================
-   MENU MOBILE
-========================= */
 
-function toggleSidebar(){
+/* =====================================================
+   MENU MOBILE
+===================================================== */
+
+function toggleSidebar(
+    forceState
+) {
 
     const sidebar =
-    document.getElementById(
-        'sidebar'
-    );
+        document.getElementById(
+            'sidebar'
+        );
 
-    if(!sidebar) return;
+
+    const overlay =
+        document.getElementById(
+            'sidebarOverlay'
+        );
+
+
+    if (!sidebar)
+        return;
+
+
+    let abrir;
+
+
+    if (
+        typeof forceState ===
+        'boolean'
+    ) {
+
+        abrir =
+            forceState;
+
+    } else {
+
+        abrir =
+            !sidebar.classList.contains(
+                'open'
+            );
+
+    }
+
 
     sidebar.classList.toggle(
-        'open'
-    );
-}
-
-/* =========================
-   INIT
-========================= */
-
-/* =========================
-   PREENCHER ORIGEM
-========================= */
-
-function preencherOrigemAutomaticamente(){
-
-    const selectItem =
-    document.getElementById(
-        'itemMov'
+        'open',
+        abrir
     );
 
-    const origemInput =
-    document.getElementById(
-        'origemAtual'
-    );
 
-    if(!selectItem || !origemInput){
+    if (overlay) {
 
-        console.log(
-            'Campo itemMov ou origemAtual não encontrado'
+        overlay.classList.toggle(
+            'active',
+            abrir
         );
 
-        return;
     }
 
-    const itemId =
-    selectItem.value;
+}
 
-    if(!itemId){
 
-        origemInput.value = '';
+/* =====================================================
+   LIMPAR MOVIMENTAÇÃO
+===================================================== */
 
-        return;
-    }
+function limparMovimentacao() {
 
     const item =
-    itens.find(
-        i => String(i.id) === String(itemId)
-    );
-
-    if(!item){
-
-        origemInput.value = '';
-
-        return;
-    }
-
-    const local =
-    LOCAIS.find(
-        l => String(l.id) === String(item.local_id)
-    );
-
-    origemInput.value =
-    local?.nome || 'Local não encontrado';
-}
-
-/* =========================
-   MOVIMENTAR ITEM
-========================= */
-
-async function movimentarItem(){
-
-    if(perfilUsuario === 'consulta'){
-
-        alert('Usuário sem permissão!');
-
-        return;
-    }
-
-    try{
-
-        const item_id =
-        document.getElementById('itemMov')
-        ?.value;
-
-        const destino_id =
-        document.getElementById('destino')
-        ?.value;
-
-        const observacao =
-        document.getElementById('observacaoMov')
-        ?.value
-        ?.trim() || '';
-
-        if(!item_id){
-
-            alert(
-                'Selecione o patrimônio'
-            );
-
-            return;
-        }
-
-        if(!destino_id){
-
-            alert(
-                'Selecione o destino'
-            );
-
-            return;
-        }
-
-        const item =
-        itens.find(
-            i => i.id == item_id
-        );
-
-        if(!item){
-
-            alert(
-                'Item não encontrado'
-            );
-
-            return;
-        }
-
-        const origem_id =
-        item.local_id;
-
-        /* =========================
-           ATUALIZA ITEM
-        ========================= */
-
-        const {
-            error:updateError
-        } =
-        await supabaseClient
-        .from('itens')
-        .update({
-
-            local_id:Number(destino_id)
-
-        })
-        .eq('id', item_id);
-
-        if(updateError){
-
-            console.log(updateError);
-
-            alert(
-                'Erro ao movimentar item'
-            );
-
-            return;
-        }
-
-        /* =========================
-           SALVA HISTÓRICO
-        ========================= */
-
-        const {
-            error:movError
-        } =
-        await supabaseClient
-        .from('movimentacoes')
-        .insert([{
-
-            item_id:Number(item_id),
-
-            origem_id:Number(origem_id),
-
-            destino_id:Number(destino_id),
-
-            observacao,
-
-            data:new Date()
-
-        }]);
-
-        if(movError){
-
-            console.log(movError);
-        }
-
-        alert(
-            'Item movimentado com sucesso!'
-        );
-
         document.getElementById(
             'itemMov'
-        ).value = '';
-
-        document.getElementById(
-            'destino'
-        ).value = '';
-
-        const origemAtual =
-        document.getElementById(
-            'origemAtual'
         );
 
-        if(origemAtual){
 
-            origemAtual.value = '';
-        }
+    const origem =
+        document.getElementById(
+            'origemAtual'
+        ) ||
+        document.getElementById(
+            'origemNome'
+        );
 
-        const observacaoCampo =
+
+    const destino =
+        document.getElementById(
+            'destino'
+        );
+
+
+    const status =
+        document.getElementById(
+            'statusMov'
+        );
+
+
+    const observacao =
         document.getElementById(
             'observacaoMov'
         );
 
-        if(observacaoCampo){
 
-            observacaoCampo.value = '';
+    if (item)
+        item.value = '';
+
+
+    if (origem)
+        origem.value = '';
+
+
+    if (destino)
+        destino.value = '';
+
+
+    if (status)
+        status.value = '';
+
+
+    if (observacao)
+        observacao.value = '';
+
+}
+
+
+/* =====================================================
+   PREENCHER ORIGEM
+===================================================== */
+
+function preencherOrigemAutomaticamente() {
+
+    const selectItem =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    const origemInput =
+        document.getElementById(
+            'origemAtual'
+        ) ||
+        document.getElementById(
+            'origemNome'
+        );
+
+
+    if (
+        !selectItem ||
+        !origemInput
+    ) {
+
+        console.warn(
+            'Campo de origem não encontrado.'
+        );
+
+        return;
+    }
+
+
+    const itemId =
+        selectItem.value;
+
+
+    if (!itemId) {
+
+        origemInput.value = '';
+
+        return;
+    }
+
+
+    const item =
+        itens.find(
+            i =>
+                String(i.id) ===
+                String(itemId)
+        );
+
+
+    if (!item) {
+
+        origemInput.value = '';
+
+        return;
+    }
+
+
+    origemInput.value =
+        obterNomeLocal(
+            item.local_id
+        );
+
+}
+
+
+/* =====================================================
+   MOVIMENTAR ITEM
+===================================================== */
+
+async function movimentarItem() {
+
+    if (!exigirPermissaoGestor())
+        return;
+
+
+    try {
+
+        const item_id =
+            document
+                .getElementById(
+                    'itemMov'
+                )
+                ?.value;
+
+
+        const destino_id =
+            document
+                .getElementById(
+                    'destino'
+                )
+                ?.value;
+
+
+        const statusMov =
+            document
+                .getElementById(
+                    'statusMov'
+                )
+                ?.value ||
+            '';
+
+
+        const observacao =
+            document
+                .getElementById(
+                    'observacaoMov'
+                )
+                ?.value
+                ?.trim() ||
+            '';
+
+
+        if (!item_id) {
+
+            alert(
+                'Selecione o patrimônio.'
+            );
+
+            return;
         }
+
+
+        if (!destino_id) {
+
+            alert(
+                'Selecione o destino.'
+            );
+
+            return;
+        }
+
+
+        const item =
+            itens.find(
+                i =>
+                    String(i.id) ===
+                    String(item_id)
+            );
+
+
+        if (!item) {
+
+            alert(
+                'Patrimônio não encontrado.'
+            );
+
+            return;
+        }
+
+
+        const origem_id =
+            Number(
+                item.local_id
+            );
+
+
+        const novoLocal =
+            Number(
+                destino_id
+            );
+
+
+        /*
+           Pode alterar o status
+           sem alterar o local.
+        */
+
+        if (
+            origem_id === novoLocal &&
+            !statusMov
+        ) {
+
+            alert(
+                'O patrimônio já está neste local.'
+            );
+
+            return;
+        }
+
+
+        /* =================================================
+           ATUALIZA PATRIMÔNIO
+        ================================================= */
+
+        const dadosAtualizacao = {
+
+            local_id:
+                novoLocal
+
+        };
+
+
+        if (statusMov) {
+
+            dadosAtualizacao.status =
+                statusMov;
+
+        }
+
+
+        const {
+            error: updateError
+        } =
+            await supabaseClient
+                .from('itens')
+                .update(
+                    dadosAtualizacao
+                )
+                .eq(
+                    'id',
+                    item_id
+                );
+
+
+        if (updateError) {
+
+            console.error(
+                'Erro ao atualizar patrimônio:',
+                updateError
+            );
+
+            alert(
+                'Erro ao movimentar patrimônio:\n' +
+                updateError.message
+            );
+
+            return;
+        }
+
+
+        /* =================================================
+           REGISTRAR HISTÓRICO
+        ================================================= */
+
+        const {
+            error: movError
+        } =
+            await supabaseClient
+                .from('movimentacoes')
+                .insert([{
+
+                    item_id:
+                        Number(
+                            item_id
+                        ),
+
+                    origem_id:
+                        origem_id,
+
+                    destino_id:
+                        novoLocal,
+
+                    observacao:
+                        observacao,
+
+                    data:
+                        new Date()
+                            .toISOString()
+
+                }]);
+
+
+        if (movError) {
+
+            console.error(
+                'Erro no histórico:',
+                movError
+            );
+
+            alert(
+                'O patrimônio foi movimentado, porém ocorreu um erro ao registrar o histórico:\n' +
+                movError.message
+            );
+
+        } else {
+
+            alert(
+                'Patrimônio movimentado com sucesso!'
+            );
+
+        }
+
+
+        limparMovimentacao();
+
 
         await carregarDashboard();
 
-    }catch(err){
 
-        console.log(err);
+    } catch (err) {
+
+        console.error(
+            'Erro inesperado:',
+            err
+        );
 
         alert(
-            'Erro inesperado ao movimentar'
+            'Erro inesperado ao movimentar patrimônio.'
         );
+
     }
+
 }
 
-window.onload = async () => {
 
-    try{
-
-        carregarLocais();
-
-        atualizarMenus();
-
-        const { data } =
-        await supabaseClient.auth
-        .getSession();
-
-        if(data?.session){
-
-            usuarioLogado =
-            data.session.user;
-
-            await verificarPerfil();
-
-            atualizarMenus();
-
-            abrirTela(
-                'dashboardTela',
-                document.getElementById(
-                    'menuDashboard'
-                )
-            );
-
-            await carregarDashboard();
-
-        }else{
-
-            abrirTela(
-                'loginTela',
-                document.getElementById(
-                    'menuLogin'
-                )
-            );
-        }
-
-        console.log(
-            'Sistema conectado ao Supabase!'
-        );
-
-    }catch(err){
-
-        console.log(err);
-
-        alert(
-            'Erro ao iniciar sistema'
-        );
-    }
-};
-
-/* =========================
-   EVENTOS
-========================= */
+/* =====================================================
+   FECHAR MENU AO CLICAR FORA
+===================================================== */
 
 document.addEventListener(
-    'change',
-    function(e){
+    'click',
+    function(event) {
 
-        if(
-            e.target &&
-            e.target.id === 'itemMov'
-        ){
+        if (
+            window.innerWidth >
+            900
+        )
+            return;
 
-            preencherOrigemAutomaticamente();
-        }
-    }
-);
 
-/* =========================
-   ENTER LOGIN
-========================= */
-
-document.addEventListener(
-    'keypress',
-    function(e){
-
-        if(
-            e.key === 'Enter'
-        ){
-
-            const telaLogin =
+        const sidebar =
             document.getElementById(
-                'loginTela'
+                'sidebar'
             );
 
-            if(
-                telaLogin &&
-                telaLogin.classList.contains(
-                    'activeTela'
-                )
-            ){
 
-                login();
-            }
+        const menuBtn =
+            document.getElementById(
+                'mobileMenuBtn'
+            ) ||
+            document.querySelector(
+                '.mobile-menu-btn'
+            );
+
+
+        if (!sidebar)
+            return;
+
+
+        const clicouDentro =
+            sidebar.contains(
+                event.target
+            );
+
+
+        const clicouBotao =
+            menuBtn?.contains(
+                event.target
+            );
+
+
+        if (
+            !clicouDentro &&
+            !clicouBotao
+        ) {
+
+            toggleSidebar(
+                false
+            );
+
         }
+
     }
 );
 
-/* =========================
-   AUTO REFRESH
-========================= */
 
-setInterval(async () => {
-
-    if(usuarioLogado){
-
-        await carregarItens();
-
-        atualizarDashboardAvancado();
-
-        gerarRelatorioLocais();
-    }
-
-}, 30000);
-
-/* =========================
-   INIT
-========================= */
-
-window.onload = async () => {
-
-    try{
-
-        carregarLocais();
-
-        carregarFiltroLocaisDashboard();
-
-        atualizarMenus();
-
-        const { data } =
-        await supabaseClient.auth
-        .getSession();
-
-        if(data?.session){
-
-            usuarioLogado =
-            data.session.user;
-
-            await verificarPerfil();
-
-            atualizarMenus();
-
-            abrirTela(
-                'dashboardTela',
-                document.getElementById(
-                    'menuDashboard'
-                )
-            );
-
-            await carregarDashboard();
-
-        }else{
-
-            abrirTela(
-                'loginTela',
-                document.getElementById(
-                    'menuLogin'
-                )
-            );
-        }
-
-        console.log(
-            'Sistema conectado ao Supabase!'
-        );
-
-    }catch(err){
-
-        console.log(err);
-
-        alert(
-            'Erro ao iniciar sistema'
-        );
-    }
-};
-
-/* =========================
-   ESC FECHA MODAL
-========================= */
+/* =====================================================
+   ESC
+===================================================== */
 
 document.addEventListener(
     'keydown',
-    function(e){
+    function(event) {
 
-        if(e.key === 'Escape'){
+        if (
+            event.key ===
+            'Escape'
+        ) {
 
             fecharModalFoto();
+
+            toggleSidebar(
+                false
+            );
+
         }
+
     }
 );
 
-/* =========================
-   CLICK FORA MODAL
-========================= */
 
-const modal =
-document.getElementById(
-    'modalFoto'
+/* =====================================================
+   INIT
+===================================================== */
+
+window.addEventListener(
+    'load',
+    async function() {
+
+        try {
+
+            console.log(
+                'Inicializando Sistema de Inventário...'
+            );
+
+
+            carregarLocais();
+
+            carregarFiltroLocaisDashboard();
+
+            atualizarMenus();
+
+            atualizarUsuarioInterface();
+
+            atualizarTituloTela(
+                'loginTela'
+            );
+
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .auth
+                    .getSession();
+
+
+            if (error) {
+
+                console.error(
+                    'Erro ao verificar sessão:',
+                    error
+                );
+
+                abrirTela(
+                    'loginTela',
+                    document.getElementById(
+                        'menuLogin'
+                    )
+                );
+
+                return;
+            }
+
+
+            if (
+                data?.session
+            ) {
+
+                usuarioLogado =
+                    data.session.user;
+
+
+                await verificarPerfil();
+
+
+                if (!perfilUsuario) {
+
+                    await supabaseClient
+                        .auth
+                        .signOut();
+
+                    usuarioLogado = null;
+
+                    atualizarMenus();
+
+                    abrirTela(
+                        'loginTela',
+                        document.getElementById(
+                            'menuLogin'
+                        )
+                    );
+
+                    alert(
+                        'Usuário autenticado, porém sem perfil cadastrado na tabela usuarios.'
+                    );
+
+                    return;
+                }
+
+
+                console.log(
+                    'Usuário:',
+                    usuarioLogado.email
+                );
+
+
+                console.log(
+                    'Perfil:',
+                    perfilUsuario
+                );
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+
+                abrirTela(
+                    'dashboardTela',
+                    document.getElementById(
+                        'menuDashboard'
+                    )
+                );
+
+
+                await carregarDashboard();
+
+
+            } else {
+
+                usuarioLogado = null;
+
+                perfilUsuario = null;
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+
+                abrirTela(
+                    'loginTela',
+                    document.getElementById(
+                        'menuLogin'
+                    )
+                );
+
+            }
+
+
+            console.log(
+                '======================================'
+            );
+
+            console.log(
+                ' SISTEMA DE INVENTÁRIO INICIADO'
+            );
+
+            console.log(
+                ' SUPABASE ONLINE'
+            );
+
+            console.log(
+                '======================================'
+            );
+
+
+        } catch (err) {
+
+            console.error(
+                'Erro ao iniciar sistema:',
+                err
+            );
+
+            alert(
+                'Erro ao iniciar o sistema. Verifique o console do navegador.'
+            );
+
+        }
+
+    }
 );
 
-if(modal){
 
-    modal.addEventListener(
-        'click',
-        function(e){
+/* =====================================================
+   OBSERVAR AUTENTICAÇÃO
+===================================================== */
 
-            if(
-                e.target.id === 'modalFoto'
-            ){
+supabaseClient.auth.onAuthStateChange(
+    async function(
+        event,
+        session
+    ) {
 
-                fecharModalFoto();
-            }
+        console.log(
+            'Evento de autenticação:',
+            event
+        );
+
+
+        if (
+            event ===
+            'SIGNED_OUT'
+        ) {
+
+            usuarioLogado = null;
+
+            perfilUsuario = null;
+
+            itens = [];
+
+            movimentacoes = [];
+
+
+            atualizarMenus();
+
+            atualizarUsuarioInterface();
+
+
+            abrirTela(
+                'loginTela',
+                document.getElementById(
+                    'menuLogin'
+                )
+            );
+
+
+            return;
         }
-    );
-}
 
-/* =========================
-   LOG SISTEMA
-========================= */
 
-console.log(`
-======================================
- SISTEMA DE INVENTÁRIO INICIADO
- SUPABASE ONLINE
-======================================
-`);
+        if (
+            session?.user
+        ) {
+
+            usuarioLogado =
+                session.user;
+
+
+            await verificarPerfil();
+
+
+            atualizarMenus();
+
+            atualizarUsuarioInterface();
+
+        }
+
+    }
+);
