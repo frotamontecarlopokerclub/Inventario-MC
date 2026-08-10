@@ -17,17 +17,31 @@
 
     <title>Inventário Central Grupo Monte Carlo</title>
 
+    <!-- FAVICON -->
     <link
-    rel="icon"
-    type="image/png"
-    href="./favicon.png"
-/>
+        rel="icon"
+        type="image/png"
+        href="./favicon.png"
+    >
 
+    <link
+        rel="shortcut icon"
+        type="image/png"
+        href="./favicon.png"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="./favicon.png"
+    >
+
+    <!-- CSS -->
     <link
         rel="stylesheet"
         href="style.css"
     >
 
+    <!-- FONT AWESOME -->
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -57,6 +71,7 @@
     id="mobileMenuBtn"
     onclick="toggleSidebar()"
     aria-label="Abrir menu"
+    type="button"
 >
 
     <i class="fa-solid fa-bars"></i>
@@ -73,12 +88,16 @@
     id="sidebar"
 >
 
-    <!-- LOGO -->
+    <!-- =================================================
+         MARCA
+    ================================================== -->
 
     <div class="sidebar-brand">
 
         <div class="brand-icon">
+
             <i class="fa-solid fa-boxes-stacked"></i>
+
         </div>
 
         <div class="brand-text">
@@ -91,12 +110,18 @@
                 CENTRAL
             </span>
 
+            <small>
+                GRUPO MONTE CARLO
+            </small>
+
         </div>
 
     </div>
 
 
-    <!-- STATUS DO SISTEMA -->
+    <!-- =================================================
+         STATUS DO SISTEMA
+    ================================================== -->
 
     <div class="system-status">
 
@@ -109,7 +134,9 @@
     </div>
 
 
-    <!-- MENU -->
+    <!-- =================================================
+         MENU
+    ================================================== -->
 
     <nav class="sidebar-nav">
 
@@ -128,7 +155,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-right-to-bracket"></i>
+
             </span>
 
             <span class="menu-label">
@@ -149,7 +178,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-chart-pie"></i>
+
             </span>
 
             <span class="menu-label">
@@ -170,7 +201,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-box-open"></i>
+
             </span>
 
             <span class="menu-label">
@@ -191,7 +224,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
             </span>
 
             <span class="menu-label">
@@ -212,7 +247,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-warehouse"></i>
+
             </span>
 
             <span class="menu-label">
@@ -233,7 +270,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-clock-rotate-left"></i>
+
             </span>
 
             <span class="menu-label">
@@ -245,7 +284,9 @@
     </nav>
 
 
-    <!-- RODAPÉ SIDEBAR -->
+    <!-- =================================================
+         RODAPÉ SIDEBAR
+    ================================================== -->
 
     <div class="sidebar-footer">
 
@@ -286,7 +327,9 @@
         >
 
             <span class="menu-icon">
+
                 <i class="fa-solid fa-right-from-bracket"></i>
+
             </span>
 
             <span class="menu-label">
@@ -309,7 +352,7 @@
 
     <!-- =================================================
          HEADER
-    ================================================= -->
+    ================================================== -->
 
     <header class="topbar">
 
@@ -345,10 +388,13 @@
 
             </div>
 
+
             <div class="topbar-user">
 
                 <div class="topbar-avatar">
+
                     <i class="fa-solid fa-user"></i>
+
                 </div>
 
                 <div>
@@ -372,14 +418,14 @@
 
     <!-- =================================================
          CONTEÚDO
-    ================================================= -->
+    ================================================== -->
 
     <section class="content">
 
 
         <!-- =================================================
              LOGIN
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="loginTela"
@@ -387,6 +433,9 @@
         >
 
             <div class="login-layout">
+
+
+                <!-- PAINEL DA MARCA -->
 
                 <div class="login-brand-panel">
 
@@ -396,41 +445,69 @@
 
                     </div>
 
+
                     <span class="eyebrow">
                         CONTROLE PATRIMONIAL
                     </span>
+
 
                     <h2>
                         Inventário<br>
                         Central
                     </h2>
 
+
+                    <div class="login-brand-company">
+                        Grupo Monte Carlo
+                    </div>
+
+
                     <p>
                         Controle, organização e rastreabilidade
                         dos patrimônios em um único sistema.
                     </p>
 
+
                     <div class="login-features">
 
                         <div>
+
                             <i class="fa-solid fa-chart-line"></i>
-                            <span>Dashboard operacional</span>
+
+                            <span>
+                                Dashboard operacional
+                            </span>
+
                         </div>
 
+
                         <div>
+
                             <i class="fa-solid fa-boxes-stacked"></i>
-                            <span>Controle de estoque</span>
+
+                            <span>
+                                Controle de estoque
+                            </span>
+
                         </div>
 
+
                         <div>
+
                             <i class="fa-solid fa-clock-rotate-left"></i>
-                            <span>Histórico de movimentações</span>
+
+                            <span>
+                                Histórico de movimentações
+                            </span>
+
                         </div>
 
                     </div>
 
                 </div>
 
+
+                <!-- CARD LOGIN -->
 
                 <div class="login-card">
 
@@ -458,8 +535,10 @@
 
 
                     <p class="login-description">
+
                         Informe suas credenciais para acessar
-                        o Inventário Central.
+                        o Inventário Central Grupo Monte Carlo.
+
                     </p>
 
 
@@ -482,6 +561,7 @@
                                     id="email"
                                     placeholder="seu@email.com"
                                     autocomplete="email"
+                                    required
                                 >
 
                             </div>
@@ -504,6 +584,7 @@
                                     id="password"
                                     placeholder="Digite sua senha"
                                     autocomplete="current-password"
+                                    required
                                 >
 
                             </div>
@@ -544,7 +625,7 @@
 
         <!-- =================================================
              DASHBOARD
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="dashboardTela"
@@ -576,10 +657,15 @@
 
             <div class="dashboard">
 
+
+                <!-- TOTAL PATRIMÔNIOS -->
+
                 <div class="dash-card">
 
                     <div class="dash-card-icon blue">
+
                         <i class="fa-solid fa-boxes-stacked"></i>
+
                     </div>
 
                     <div class="dash-card-content">
@@ -595,16 +681,22 @@
                     </div>
 
                     <div class="dash-card-decoration">
+
                         <i class="fa-solid fa-boxes-stacked"></i>
+
                     </div>
 
                 </div>
 
 
+                <!-- LOCAIS -->
+
                 <div class="dash-card">
 
                     <div class="dash-card-icon purple">
+
                         <i class="fa-solid fa-location-dot"></i>
+
                     </div>
 
                     <div class="dash-card-content">
@@ -620,16 +712,22 @@
                     </div>
 
                     <div class="dash-card-decoration">
+
                         <i class="fa-solid fa-location-dot"></i>
+
                     </div>
 
                 </div>
 
 
+                <!-- MOVIMENTAÇÕES -->
+
                 <div class="dash-card">
 
                     <div class="dash-card-icon orange">
+
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
                     </div>
 
                     <div class="dash-card-content">
@@ -645,16 +743,22 @@
                     </div>
 
                     <div class="dash-card-decoration">
+
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
                     </div>
 
                 </div>
 
 
+                <!-- BAIXADOS -->
+
                 <div class="dash-card">
 
                     <div class="dash-card-icon red">
+
                         <i class="fa-solid fa-box-archive"></i>
+
                     </div>
 
                     <div class="dash-card-content">
@@ -670,7 +774,9 @@
                     </div>
 
                     <div class="dash-card-decoration">
+
                         <i class="fa-solid fa-box-archive"></i>
+
                     </div>
 
                 </div>
@@ -748,15 +854,25 @@
 
                                 <tr>
 
-                                    <th>Item</th>
-                                    <th>Local</th>
-                                    <th>Quantidade</th>
+                                    <th>
+                                        Item
+                                    </th>
+
+                                    <th>
+                                        Local
+                                    </th>
+
+                                    <th>
+                                        Quantidade
+                                    </th>
 
                                 </tr>
 
                             </thead>
 
-                            <tbody id="dashboardLocais"></tbody>
+                            <tbody
+                                id="dashboardLocais"
+                            ></tbody>
 
                         </table>
 
@@ -770,10 +886,14 @@
                 <div class="dashboard-status-grid">
 
 
+                    <!-- MANUTENÇÃO -->
+
                     <div class="status-card manutencao-card">
 
                         <div class="status-card-icon">
+
                             <i class="fa-solid fa-screwdriver-wrench"></i>
+
                         </div>
 
                         <div>
@@ -791,10 +911,14 @@
                     </div>
 
 
+                    <!-- EXTRAVIADOS -->
+
                     <div class="status-card extraviado-card">
 
                         <div class="status-card-icon">
+
                             <i class="fa-solid fa-triangle-exclamation"></i>
+
                         </div>
 
                         <div>
@@ -812,10 +936,14 @@
                     </div>
 
 
+                    <!-- BAIXADOS -->
+
                     <div class="status-card baixado-card">
 
                         <div class="status-card-icon">
+
                             <i class="fa-solid fa-box-archive"></i>
+
                         </div>
 
                         <div>
@@ -833,10 +961,14 @@
                     </div>
 
 
+                    <!-- ATIVOS -->
+
                     <div class="status-card ativo-card">
 
                         <div class="status-card-icon">
+
                             <i class="fa-solid fa-circle-check"></i>
+
                         </div>
 
                         <div>
@@ -853,7 +985,6 @@
 
                     </div>
 
-
                 </div>
 
             </div>
@@ -863,7 +994,7 @@
 
         <!-- =================================================
              CADASTRO
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="cadastroTela"
@@ -893,6 +1024,9 @@
 
             <div class="card form-card">
 
+
+                <!-- CABEÇALHO -->
+
                 <div class="card-header">
 
                     <div>
@@ -908,11 +1042,15 @@
                     </div>
 
                     <div class="card-header-icon">
+
                         <i class="fa-solid fa-box-open"></i>
+
                     </div>
 
                 </div>
 
+
+                <!-- DADOS PRINCIPAIS -->
 
                 <div class="form-section">
 
@@ -988,6 +1126,8 @@
 
                 </div>
 
+
+                <!-- LOCALIZAÇÃO -->
 
                 <div class="form-section">
 
@@ -1088,6 +1228,8 @@
                 </div>
 
 
+                <!-- FOTO -->
+
                 <div class="form-section">
 
                     <div class="section-title">
@@ -1107,7 +1249,9 @@
                     >
 
                         <div class="upload-icon">
+
                             <i class="fa-solid fa-cloud-arrow-up"></i>
+
                         </div>
 
                         <div>
@@ -1132,6 +1276,8 @@
 
                 </div>
 
+
+                <!-- AÇÕES -->
 
                 <div class="form-actions">
 
@@ -1169,7 +1315,7 @@
 
         <!-- =================================================
              MOVIMENTAÇÃO
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="movimentacaoTela"
@@ -1200,6 +1346,9 @@
 
             <div class="card form-card">
 
+
+                <!-- CABEÇALHO -->
+
                 <div class="card-header">
 
                     <div>
@@ -1215,11 +1364,15 @@
                     </div>
 
                     <div class="card-header-icon orange-icon">
+
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
                     </div>
 
                 </div>
 
+
+                <!-- PATRIMÔNIO -->
 
                 <div class="form-section">
 
@@ -1288,18 +1441,24 @@
                 </div>
 
 
+                <!-- SETA -->
+
                 <div class="movement-arrow">
 
                     <div></div>
 
                     <span>
+
                         <i class="fa-solid fa-arrow-down"></i>
+
                     </span>
 
                     <div></div>
 
                 </div>
 
+
+                <!-- DESTINO -->
 
                 <div class="form-section">
 
@@ -1396,6 +1555,8 @@
                 </div>
 
 
+                <!-- AÇÕES -->
+
                 <div class="form-actions">
 
                     <button
@@ -1432,7 +1593,7 @@
 
         <!-- =================================================
              ESTOQUE
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="estoqueTela"
@@ -1461,6 +1622,9 @@
 
 
             <div class="card">
+
+
+                <!-- CABEÇALHO -->
 
                 <div class="estoque-topo card-header">
 
@@ -1492,6 +1656,8 @@
                 </div>
 
 
+                <!-- BUSCA -->
+
                 <div class="table-toolbar">
 
                     <div class="input-wrapper search-large">
@@ -1507,6 +1673,7 @@
 
                     </div>
 
+
                     <div class="toolbar-info">
 
                         <i class="fa-solid fa-database"></i>
@@ -1520,6 +1687,8 @@
                 </div>
 
 
+                <!-- TABELA -->
+
                 <div class="table-area">
 
                     <table class="inventory-table">
@@ -1528,20 +1697,45 @@
 
                             <tr>
 
-                                <th>Foto</th>
-                                <th>Patrimônio</th>
-                                <th>Tipo</th>
-                                <th>Nome</th>
-                                <th>Descrição</th>
-                                <th>Local</th>
-                                <th>Status</th>
-                                <th>Ações</th>
+                                <th>
+                                    Foto
+                                </th>
+
+                                <th>
+                                    Patrimônio
+                                </th>
+
+                                <th>
+                                    Tipo
+                                </th>
+
+                                <th>
+                                    Nome
+                                </th>
+
+                                <th>
+                                    Descrição
+                                </th>
+
+                                <th>
+                                    Local
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Ações
+                                </th>
 
                             </tr>
 
                         </thead>
 
-                        <tbody id="listaItens"></tbody>
+                        <tbody
+                            id="listaItens"
+                        ></tbody>
 
                     </table>
 
@@ -1554,7 +1748,7 @@
 
         <!-- =================================================
              HISTÓRICO
-        ================================================= -->
+        ================================================== -->
 
         <div
             id="historicoTela"
@@ -1584,6 +1778,9 @@
 
             <div class="card">
 
+
+                <!-- CABEÇALHO -->
+
                 <div class="card-header">
 
                     <div>
@@ -1598,12 +1795,17 @@
 
                     </div>
 
+
                     <div class="card-header-icon">
+
                         <i class="fa-solid fa-clock-rotate-left"></i>
+
                     </div>
 
                 </div>
 
+
+                <!-- TABELA -->
 
                 <div class="table-area">
 
@@ -1613,17 +1815,33 @@
 
                             <tr>
 
-                                <th>Patrimônio</th>
-                                <th>Origem</th>
-                                <th>Destino</th>
-                                <th>Observação</th>
-                                <th>Data</th>
+                                <th>
+                                    Patrimônio
+                                </th>
+
+                                <th>
+                                    Origem
+                                </th>
+
+                                <th>
+                                    Destino
+                                </th>
+
+                                <th>
+                                    Observação
+                                </th>
+
+                                <th>
+                                    Data
+                                </th>
 
                             </tr>
 
                         </thead>
 
-                        <tbody id="historico"></tbody>
+                        <tbody
+                            id="historico"
+                        ></tbody>
 
                     </table>
 
@@ -1632,6 +1850,7 @@
             </div>
 
         </div>
+
 
     </section>
 
@@ -1657,11 +1876,13 @@
             class="modal-close"
             type="button"
             onclick="fecharModalFoto()"
+            aria-label="Fechar imagem"
         >
 
             <i class="fa-solid fa-xmark"></i>
 
         </button>
+
 
         <img
             id="imagemModal"
@@ -1678,7 +1899,9 @@
      SUPABASE
 ===================================================== -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"
+></script>
 
 
 <!-- =====================================================
@@ -1689,4 +1912,5 @@
 
 
 </body>
+
 </html>
