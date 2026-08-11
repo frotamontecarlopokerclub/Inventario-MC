@@ -563,6 +563,11 @@ async function verificarPerfil() {
 
 function atualizarMenus() {
 
+    document.body.classList.toggle(
+    'login-mode',
+    !usuarioLogado
+);
+
     const menuLogin =
         document.getElementById(
             'menuLogin'

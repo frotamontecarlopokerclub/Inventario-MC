@@ -187,6 +187,8 @@ button:disabled {
     width: 42px;
     height: 42px;
 
+    min-width: 42px;
+
     border-radius: 11px;
 
     display: flex;
@@ -205,6 +207,23 @@ button:disabled {
         0 8px 20px rgba(37, 99, 235, .25);
 
     font-size: 18px;
+
+    overflow: hidden;
+
+}
+
+/* =====================================================
+   LOGO GRUPO MONTE CARLO
+===================================================== */
+
+.brand-icon img {
+
+    width: 32px;
+    height: 32px;
+
+    object-fit: contain;
+
+    display: block;
 
 }
 
@@ -2648,5 +2667,75 @@ textarea:focus {
             30px 20px;
 
     }
+
+}
+/* =========================================================
+   LOGO GRUPO MONTE CARLO - TELA DE LOGIN
+========================================================= */
+
+.login-brand-icon {
+
+    width: 74px;
+    height: 74px;
+
+    border-radius: 18px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #3b82f6
+        );
+
+    box-shadow:
+        0 12px 28px rgba(37, 99, 235, .28);
+
+    overflow: hidden;
+
+    flex-shrink: 0;
+
+}
+
+.login-brand-icon img {
+
+    width: 52px;
+    height: 52px;
+
+    object-fit: contain;
+
+    display: block;
+
+}
+/* =========================================================
+   MODO LOGIN
+   A SIDEBAR SÓ APARECE APÓS A AUTENTICAÇÃO
+========================================================= */
+
+body.login-mode .sidebar {
+
+    display: none !important;
+
+}
+
+body.login-mode .main {
+
+    margin-left: 0 !important;
+
+}
+
+body.login-mode .mobile-menu-btn {
+
+    display: none !important;
+
+}
+
+body.login-mode .sidebar-overlay {
+
+    display: none !important;
 
 }
