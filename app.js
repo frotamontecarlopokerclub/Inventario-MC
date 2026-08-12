@@ -2,18 +2,53 @@
    CONFIGURAÇÃO SUPABASE
 ===================================================== */
 
+/* =====================================================
+   SUPABASE
+===================================================== */
+
 const SUPABASE_URL =
-    'COLOQUE_AQUI_SUA_SUPABASE_URL';
+    'https://sxmimxomehdhyifqsgqa.supabase.co';
 
-const SUPABASE_ANON_KEY =
-    'COLOQUE_AQUI_SUA_SUPABASE_ANON_KEY';
+const SUPABASE_KEY =
+    'sb_publishable_NbyYYTsRnSqu_TMpQvzS6A_rJuyzq9_';
 
 
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
+/* =====================================================
+   CLIENTE SUPABASE
+===================================================== */
+
+if (
+    !window.supabase ||
+    typeof window.supabase.createClient !== 'function'
+) {
+
+    console.error(
+        'Biblioteca Supabase não carregada.'
     );
+
+} else {
+
+    window.supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+}
+
+
+/* =====================================================
+   VALIDAÇÃO DO CLIENTE SUPABASE
+===================================================== */
+
+if (!window.supabaseClient) {
+
+    console.error(
+        'Cliente Supabase não foi inicializado. ' +
+        'Verifique se o script do Supabase foi carregado antes do app.js.'
+    );
+
+}
 
 
 /* =====================================================
@@ -463,7 +498,7 @@ async function login() {
             data,
             error
         } =
-            await supabaseClient
+            await window.supabaseClient
                 .auth
                 .signInWithPassword({
 
@@ -495,7 +530,7 @@ async function login() {
 
         if (!perfilUsuario) {
 
-            await supabaseClient
+            await window.supabaseClient
                 .auth
                 .signOut();
 
@@ -546,7 +581,6 @@ async function login() {
 
 }
 
-
 /* =====================================================
    VERIFICAR PERFIL
 ===================================================== */
@@ -566,7 +600,7 @@ async function verificarPerfil() {
             data,
             error
         } =
-            await supabaseClient
+            await window.supabaseClient
                 .from('usuarios')
                 .select('perfil')
                 .eq(
@@ -599,7 +633,6 @@ async function verificarPerfil() {
     }
 
 }
-
 
 /* =====================================================
    LOGOUT
@@ -3733,6 +3766,71 @@ window.addEventListener(
 ===================================================== */
 
 supabaseClient
+    .auth
+    .onAuthStateChange(
+        async function(
+            event,
+            session
+        ) {
+
+            console.log(
+                'Evento de autenticação:',
+                event
+            );
+
+
+            if (
+                event ===
+                'SIGNED_OUT'
+            ) {
+
+                usuarioLogado = null;
+
+                perfilUsuario = null;
+
+                itens = [];
+
+                movimentacoes = [];
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+
+                abrirTela(
+                    'loginTela',
+                    document.getElementById(
+                        'menuLogin'
+                    )
+                );
+
+
+                return;
+
+            }
+
+
+            if (
+                session?.user
+            ) {
+
+                usuarioLogado =
+                    session.user;
+
+
+                await verificarPerfil();
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+            }
+
+        }
+    );
+    window.supabaseClient
     .auth
     .onAuthStateChange(
         async function(
