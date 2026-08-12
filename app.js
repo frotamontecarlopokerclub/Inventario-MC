@@ -67,37 +67,116 @@ let movimentacoes = [];
    LOCAIS FIXOS
 ===================================================== */
 
-const LOCAIS = [
+/* =====================================================
+   LOCAIS FIXOS - GRUPO MONTE CARLO
+===================================================== */
 
-    { id: 1, nome: 'CASA 1 CHEFIA' },
-    { id: 2, nome: 'CASA 2 CHEFIA' },
-    { id: 3, nome: 'CASA 3 CHEFIA' },
+let LOCAIS = [
 
-    { id: 4, nome: 'CASA 1 DOS FUNCIONARIOS' },
-    { id: 5, nome: 'CASA 2 DOS FUNCIONARIOS' },
-    { id: 6, nome: 'CASA 3 DOS FUNCIONARIOS' },
-    { id: 7, nome: 'CASA 4 DOS FUNCIONARIOS' },
+    {
+        id: 1,
+        nome: 'CASA 1 CHEFIA'
+    },
 
-    { id: 8, nome: 'CONSERTO' },
+    {
+        id: 2,
+        nome: 'CASA 2 CHEFIA'
+    },
 
-    { id: 9, nome: 'CD1' },
-    { id: 10, nome: 'CD2' },
-    { id: 11, nome: 'CD3' },
+    {
+        id: 3,
+        nome: 'CASA 3 CHEFIA'
+    },
 
-    { id: 12, nome: 'DORYO' },
+    {
+        id: 4,
+        nome: 'CASA 1 DOS FUNCIONARIOS'
+    },
 
-    { id: 13, nome: 'ESCRITÓRIO 1' },
-    { id: 14, nome: 'ESCRITÓRIO 2' },
-    { id: 15, nome: 'ESCRITÓRIO 3' },
+    {
+        id: 5,
+        nome: 'CASA 2 DOS FUNCIONARIOS'
+    },
 
-    { id: 16, nome: 'ESTACIONAMENTO 1' },
-    { id: 17, nome: 'ESTACIONAMENTO 2' },
-    { id: 18, nome: 'ESTACIONAMENTO 3' },
+    {
+        id: 6,
+        nome: 'CASA 3 DOS FUNCIONARIOS'
+    },
 
-    { id: 19, nome: 'M.C.' },
-    { id: 20, nome: 'M.G.' },
+    {
+        id: 7,
+        nome: 'CASA 4 DOS FUNCIONARIOS'
+    },
 
-    { id: 21, nome: 'DESCARTE/BAIXA TOTAL' }
+    {
+        id: 8,
+        nome: 'CONSERTO'
+    },
+
+    {
+        id: 9,
+        nome: 'CD1'
+    },
+
+    {
+        id: 10,
+        nome: 'CD2'
+    },
+
+    {
+        id: 11,
+        nome: 'CD3'
+    },
+
+    {
+        id: 12,
+        nome: 'DORYO'
+    },
+
+    {
+        id: 13,
+        nome: 'ESCRITÓRIO 1'
+    },
+
+    {
+        id: 14,
+        nome: 'ESCRITÓRIO 2'
+    },
+
+    {
+        id: 15,
+        nome: 'ESCRITÓRIO 3'
+    },
+
+    {
+        id: 16,
+        nome: 'ESTACIONAMENTO 1'
+    },
+
+    {
+        id: 17,
+        nome: 'ESTACIONAMENTO 2'
+    },
+
+    {
+        id: 18,
+        nome: 'ESTACIONAMENTO 3'
+    },
+
+    {
+        id: 19,
+        nome: 'M.C.'
+    },
+
+    {
+        id: 20,
+        nome: 'M.G.'
+    },
+
+    {
+        id: 21,
+        nome: 'DESCARTE/BAIXA TOTAL'
+    }
 
 ];
 
@@ -694,53 +773,34 @@ async function logout() {
    LOCAIS
 ===================================================== */
 
+a/* =====================================================
+   CARREGAR LOCAIS
+===================================================== */
+
 async function carregarLocaisBanco() {
 
-    try {
+    /*
+       Os locais são fixos do Grupo Monte Carlo.
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from('locais')
-                .select('*')
-                .order(
-                    'nome',
-                    {
-                        ascending: true
-                    }
-                );
+       Não fazemos mais consulta à tabela "locais"
+       do Supabase.
+    */
 
+    console.log(
+        'Locais fixos carregados:',
+        LOCAIS.length
+    );
 
-        if (error) {
+    carregarLocais();
 
-            console.error(
-                'Erro ao carregar locais:',
-                error
-            );
-
-            return;
-        }
-
-
-        LOCAIS =
-            data || [];
-
-
-        carregarLocais();
-
-        carregarFiltroLocaisDashboard();
-
-
-    } catch (err) {
-
-        console.error(err);
-
-    }
+    carregarFiltroLocaisDashboard();
 
 }
 
+
+/* =====================================================
+   PREENCHER LOCAIS
+===================================================== */
 
 function carregarLocais() {
 
@@ -755,45 +815,77 @@ function carregarLocais() {
         );
 
 
+    /* =================================================
+       SELECT LOCAL - CADASTRO
+    ================================================= */
+
     if (local) {
 
-        local.innerHTML =
-            '<option value="">Selecione o Local</option>';
+        local.innerHTML = `
+            <option value="">
+                Selecione o Local
+            </option>
+        `;
 
+        LOCAIS.forEach(
+            item => {
 
-        LOCAIS.forEach(item => {
+                local.innerHTML += `
+                    <option value="${item.id}">
+                        ${escaparHTML(item.nome)}
+                    </option>
+                `;
 
-            local.innerHTML += `
-                <option value="${item.id}">
-                    ${escaparHTML(item.nome)}
-                </option>
-            `;
-
-        });
+            }
+        );
 
     }
 
 
+    /* =================================================
+       SELECT DESTINO - MOVIMENTAÇÃO
+    ================================================= */
+
     if (destino) {
 
-        destino.innerHTML =
-            '<option value="">Selecione o Destino</option>';
+        destino.innerHTML = `
+            <option value="">
+                Selecione o Destino
+            </option>
+        `;
+
+        LOCAIS.forEach(
+            item => {
+
+                destino.innerHTML += `
+                    <option value="${item.id}">
+                        ${escaparHTML(item.nome)}
+                    </option>
+                `;
+
+            }
+        );
+
+    }
 
 
-        LOCAIS.forEach(item => {
+    /* =================================================
+       TOTAL DE LOCAIS
+    ================================================= */
 
-            destino.innerHTML += `
-                <option value="${item.id}">
-                    ${escaparHTML(item.nome)}
-                </option>
-            `;
+    const totalLocais =
+        document.getElementById(
+            'totalLocais'
+        );
 
-        });
+    if (totalLocais) {
+
+        totalLocais.innerText =
+            LOCAIS.length;
 
     }
 
 }
-
 
 /* =====================================================
    NOME LOCAL
