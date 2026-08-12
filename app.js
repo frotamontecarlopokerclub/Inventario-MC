@@ -383,73 +383,189 @@ function atualizarUsuarioInterface() {
    ABRIR TELA
 ===================================================== */
 
-function abrirTela(id, botao = null) {
+/* =====================================================
+   ABRIR TELA
+===================================================== */
+
+function abrirTela(
+    idTela,
+    elemento
+) {
+
+    /* =================================================
+       BLOQUEIO SEM LOGIN
+    ================================================= */
+
+    if (
+        !usuarioLogado &&
+        idTela !== 'loginTela'
+    ) {
+
+        alert(
+            'Faça login primeiro!'
+        );
+
+        return;
+    }
+
+
+    /* =================================================
+       BLOQUEIO DO PERFIL CONSULTA
+    ================================================= */
+
+    if (
+        usuarioLogado &&
+        !usuarioPodeGerenciar() &&
+        (
+            idTela === 'cadastroTela' ||
+            idTela === 'movimentacaoTela'
+        )
+    ) {
+
+        alert(
+            'Seu perfil é somente Consulta.'
+        );
+
+        return;
+    }
+
+
+    /* =================================================
+       LOCALIZAR TELA
+    ================================================= */
+
+    const tela =
+        document.getElementById(
+            idTela
+        );
+
+    if (!tela) {
+
+        console.error(
+            'Tela não encontrada:',
+            idTela
+        );
+
+        return;
+    }
+
+
+    /* =================================================
+       ESCONDER TODAS AS TELAS
+    ================================================= */
 
     document
         .querySelectorAll('.tela')
-        .forEach(tela => {
+        .forEach(
+            item => {
 
-            tela.classList.remove(
-                'activeTela'
-            );
+                item.classList.remove(
+                    'activeTela'
+                );
 
-        });
-
-
-    const tela =
-        document.getElementById(id);
-
-    if (tela)
-        tela.classList.add(
-            'activeTela'
+            }
         );
 
+
+    /* =================================================
+       MOSTRAR TELA SELECIONADA
+    ================================================= */
+
+    tela.classList.add(
+        'activeTela'
+    );
+
+
+    /* =================================================
+       ATUALIZAR MENU
+    ================================================= */
 
     document
         .querySelectorAll('.menu-item')
-        .forEach(menu => {
+        .forEach(
+            menu => {
 
-            menu.classList.remove(
-                'active'
-            );
+                menu.classList.remove(
+                    'active'
+                );
 
-        });
-
-
-    if (botao)
-        botao.classList.add(
-            'active'
+            }
         );
 
 
-    atualizarTituloTela(id);
+    if (elemento) {
 
-    toggleSidebar(false);
-
-
-    if (id === 'dashboardTela') {
-
-        carregarDashboard();
+        elemento.classList.add(
+            'active'
+        );
 
     }
 
-    if (id === 'estoqueTela') {
 
-        carregarItens();
+    /* =================================================
+       ATUALIZAR TÍTULO
+    ================================================= */
+
+    atualizarTituloTela(
+        idTela
+    );
+
+
+    /* =================================================
+       GARANTIR LOCAIS
+       
+       Sempre que abrir Cadastro ou Movimentações,
+       reconstruímos os selects.
+    ================================================= */
+
+    if (
+        idTela === 'cadastroTela' ||
+        idTela === 'movimentacaoTela'
+    ) {
+
+        console.log(
+            'Recarregando locais para:',
+            idTela
+        );
+
+        carregarLocais();
+
+        carregarFiltroLocaisDashboard();
+
+        /*
+           Segunda chamada após o navegador
+           atualizar o DOM. Isso evita problemas
+           caso algum elemento tenha sido renderizado
+           ou alterado durante a troca de tela.
+        */
+
+        setTimeout(
+            function() {
+
+                carregarLocais();
+
+            },
+            50
+        );
 
     }
 
-    if (id === 'historicoTela') {
 
-        carregarItens()
-            .then(() =>
-                carregarHistorico()
-            );
+    /* =================================================
+       MENU MOBILE
+    ================================================= */
+
+    if (
+        window.innerWidth <= 900
+    ) {
+
+        toggleSidebar(
+            false
+        );
 
     }
 
 }
-
 
 /* =====================================================
    TÍTULO DA TELA
@@ -802,12 +918,95 @@ async function carregarLocaisBanco() {
    PREENCHER LOCAIS
 ===================================================== */
 
+/* =====================================================
+   CARREGAR LOCAIS FIXOS
+===================================================== */
+
 function carregarLocais() {
+
+    console.log(
+        '======================================'
+    );
+
+    console.log(
+        'CARREGANDO LOCAIS FIXOS'
+    );
+
+    console.log(
+        'Quantidade de locais:',
+        LOCAIS.length
+    );
+
+
+    /* =================================================
+       LOCAL DO CADASTRO
+    ================================================= */
 
     const local =
         document.getElementById(
             'local'
         );
+
+
+    if (local) {
+
+        local.innerHTML = '';
+
+
+        const primeiraOpcao =
+            document.createElement(
+                'option'
+            );
+
+        primeiraOpcao.value = '';
+
+        primeiraOpcao.textContent =
+            'Selecione o Local';
+
+        local.appendChild(
+            primeiraOpcao
+        );
+
+
+        LOCAIS.forEach(
+            function(item) {
+
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+                option.value =
+                    String(item.id);
+
+                option.textContent =
+                    item.nome;
+
+                local.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        console.log(
+            'Locais carregados no cadastro:',
+            local.options.length
+        );
+
+    } else {
+
+        console.warn(
+            'Elemento #local não encontrado no HTML.'
+        );
+
+    }
+
+
+    /* =================================================
+       DESTINO DA MOVIMENTAÇÃO
+    ================================================= */
 
     const destino =
         document.getElementById(
@@ -815,55 +1014,51 @@ function carregarLocais() {
         );
 
 
-    /* =================================================
-       SELECT LOCAL - CADASTRO
-    ================================================= */
+    if (destino) {
 
-    if (local) {
+        destino.innerHTML = '';
 
-        local.innerHTML = `
-            <option value="">
-                Selecione o Local
-            </option>
-        `;
+
+        const primeiraOpcao =
+            document.createElement(
+                'option'
+            );
+
+        primeiraOpcao.value = '';
+
+        primeiraOpcao.textContent =
+            'Selecione o Destino';
+
+        destino.appendChild(
+            primeiraOpcao
+        );
+
 
         LOCAIS.forEach(
-            item => {
+            function(item) {
 
-                local.innerHTML += `
-                    <option value="${item.id}">
-                        ${escaparHTML(item.nome)}
-                    </option>
-                `;
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+                option.value =
+                    String(item.id);
+
+                option.textContent =
+                    item.nome;
+
+                destino.appendChild(
+                    option
+                );
 
             }
         );
 
-    }
 
-
-    /* =================================================
-       SELECT DESTINO - MOVIMENTAÇÃO
-    ================================================= */
-
-    if (destino) {
-
-        destino.innerHTML = `
-            <option value="">
-                Selecione o Destino
-            </option>
-        `;
-
-        LOCAIS.forEach(
-            item => {
-
-                destino.innerHTML += `
-                    <option value="${item.id}">
-                        ${escaparHTML(item.nome)}
-                    </option>
-                `;
-
-            }
+        console.log(
+            'Locais carregados no destino:',
+            destino.options.length
         );
 
     }
@@ -878,12 +1073,22 @@ function carregarLocais() {
             'totalLocais'
         );
 
+
     if (totalLocais) {
 
         totalLocais.innerText =
             LOCAIS.length;
 
     }
+
+
+    console.log(
+        'LOCAIS carregados com sucesso.'
+    );
+
+    console.log(
+        '======================================'
+    );
 
 }
 
@@ -1050,7 +1255,11 @@ async function salvarItem() {
 
     if (!exigirPermissaoGestor())
         return;
+/* =================================================
+   GARANTIR LOCAIS
+================================================= */
 
+carregarLocais();
 
     try {
 
