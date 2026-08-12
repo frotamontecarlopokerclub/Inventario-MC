@@ -1,9 +1,12 @@
 /* =====================================================
-   CONFIGURAÇÃO SUPABASE
+   SISTEMA DE INVENTÁRIO
+   GRUPO MONTE CARLO
+   APP.JS — VERSÃO CORRIGIDA
 ===================================================== */
 
+
 /* =====================================================
-   SUPABASE
+   CONFIGURAÇÃO SUPABASE
 ===================================================== */
 
 const SUPABASE_URL =
@@ -17,35 +20,26 @@ const SUPABASE_KEY =
    CLIENTE SUPABASE
 ===================================================== */
 
+let supabaseClient = null;
+
 if (
-    !window.supabase ||
-    typeof window.supabase.createClient !== 'function'
+    window.supabase &&
+    typeof window.supabase.createClient === 'function'
 ) {
 
-    console.error(
-        'Biblioteca Supabase não carregada.'
-    );
-
-} else {
-
-    window.supabaseClient =
+    supabaseClient =
         window.supabase.createClient(
             SUPABASE_URL,
             SUPABASE_KEY
         );
 
-}
+    window.supabaseClient =
+        supabaseClient;
 
-
-/* =====================================================
-   VALIDAÇÃO DO CLIENTE SUPABASE
-===================================================== */
-
-if (!window.supabaseClient) {
+} else {
 
     console.error(
-        'Cliente Supabase não foi inicializado. ' +
-        'Verifique se o script do Supabase foi carregado antes do app.js.'
+        'Biblioteca Supabase não carregada.'
     );
 
 }
@@ -63,15 +57,15 @@ let itens = [];
 
 let movimentacoes = [];
 
+let sistemaInicializado = false;
+
+
 /* =====================================================
    LOCAIS FIXOS
+   GRUPO MONTE CARLO
 ===================================================== */
 
-/* =====================================================
-   LOCAIS FIXOS - GRUPO MONTE CARLO
-===================================================== */
-
-let LOCAIS = [
+const LOCAIS = [
 
     {
         id: 1,
@@ -176,50 +170,83 @@ let LOCAIS = [
     {
         id: 21,
         nome: 'DESCARTE/BAIXA TOTAL'
-    }
-
 ];
 
+
 /* =====================================================
-   NORMALIZAR TEXTO
+   UTILITÁRIOS
 ===================================================== */
 
 function normalizarTexto(texto) {
 
     return String(texto || '')
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(
+            /[\u0300-\u036f]/g,
+            ''
+        )
         .toLowerCase()
         .trim();
 
 }
 
 
-/* =====================================================
-   ESCAPAR HTML
-===================================================== */
-
 function escaparHTML(valor) {
 
     return String(valor ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+        .replace(
+            /&/g,
+            '&amp;'
+        )
+        .replace(
+            /</g,
+            '&lt;'
+        )
+        .replace(
+            />/g,
+            '&gt;'
+        )
+        .replace(
+            /"/g,
+            '&quot;'
+        )
+        .replace(
+            /'/g,
+            '&#039;'
+        );
+
+}
+
+
+function obterNomeLocal(id) {
+
+    const local =
+        LOCAIS.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+    return (
+        local?.nome ||
+        'SEM LOCAL'
+    );
 
 }
 
 
 /* =====================================================
-   PERMISSÃO
+   PERMISSÕES
 ===================================================== */
 
 function usuarioPodeGerenciar() {
 
     return (
-        perfilUsuario &&
-        normalizarTexto(perfilUsuario) !== 'consulta'
+        !!usuarioLogado &&
+        !!perfilUsuario &&
+        normalizarTexto(
+            perfilUsuario
+        ) !== 'consulta'
     );
 
 }
@@ -227,21 +254,25 @@ function usuarioPodeGerenciar() {
 
 function exigirPermissaoGestor() {
 
-    if (!usuarioPodeGerenciar()) {
+    if (
+        !usuarioPodeGerenciar()
+    ) {
 
         alert(
             'Usuário sem permissão para realizar esta operação.'
         );
 
         return false;
+
     }
 
     return true;
+
 }
 
 
 /* =====================================================
-   MENUS
+   ATUALIZAR MENUS
 ===================================================== */
 
 function atualizarMenus() {
@@ -249,79 +280,212 @@ function atualizarMenus() {
     const menus = {
 
         login:
-            document.getElementById('menuLogin'),
+            document.getElementById(
+                'menuLogin'
+            ),
 
         dashboard:
-            document.getElementById('menuDashboard'),
+            document.getElementById(
+                'menuDashboard'
+            ),
 
         cadastro:
-            document.getElementById('menuCadastro'),
+            document.getElementById(
+                'menuCadastro'
+            ),
 
         movimentacao:
-            document.getElementById('menuMovimentacao'),
+            document.getElementById(
+                'menuMovimentacao'
+            ),
 
         estoque:
-            document.getElementById('menuEstoque'),
+            document.getElementById(
+                'menuEstoque'
+            ),
 
         historico:
-            document.getElementById('menuHistorico'),
+            document.getElementById(
+                'menuHistorico'
+            ),
 
         logout:
-            document.getElementById('menuLogout')
+            document.getElementById(
+                'menuLogout'
+            )
 
     };
 
 
-    Object.values(menus).forEach(menu => {
+    /*
+       PRIMEIRO ESCONDE TUDO
+    */
 
-        if (menu)
-            menu.style.display = 'none';
+    Object.values(
+        menus
+    ).forEach(
+        menu => {
 
-    });
+            if (menu) {
 
+                menu.style.display =
+                    'none';
+
+            }
+
+        }
+    );
+
+
+    /*
+       SEM LOGIN
+    */
 
     if (!usuarioLogado) {
 
-        if (menus.login)
-            menus.login.style.display = 'flex';
+        if (menus.login) {
+
+            menus.login.style.display =
+                'flex';
+
+        }
+
+        /*
+           Garante que o sidebar fique
+           escondido na tela de login.
+        */
+
+        const sidebar =
+            document.getElementById(
+                'sidebar'
+            );
+
+        const overlay =
+            document.getElementById(
+                'sidebarOverlay'
+            );
+
+        if (sidebar) {
+
+            sidebar.classList.remove(
+                'sidebar-open'
+            );
+
+            sidebar.classList.add(
+                'sidebar-login-hidden'
+            );
+
+        }
+
+        if (overlay) {
+
+            overlay.classList.remove(
+                'show'
+            );
+
+        }
 
         return;
+
     }
 
 
-    if (menus.dashboard)
-        menus.dashboard.style.display = 'flex';
+    /*
+       USUÁRIO LOGADO
+    */
 
-    if (menus.estoque)
-        menus.estoque.style.display = 'flex';
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
 
-    if (menus.historico)
-        menus.historico.style.display = 'flex';
+    if (sidebar) {
 
-    if (menus.logout)
-        menus.logout.style.display = 'flex';
+        sidebar.classList.remove(
+            'sidebar-login-hidden'
+        );
 
+    }
+
+
+    if (menus.dashboard) {
+
+        menus.dashboard.style.display =
+            'flex';
+
+    }
+
+
+    if (menus.estoque) {
+
+        menus.estoque.style.display =
+            'flex';
+
+    }
+
+
+    if (menus.historico) {
+
+        menus.historico.style.display =
+            'flex';
+
+    }
+
+
+    if (menus.logout) {
+
+        menus.logout.style.display =
+            'flex';
+
+    }
+
+
+    /*
+       PERFIL CONSULTA
+    */
 
     if (
-        normalizarTexto(perfilUsuario) ===
-        'consulta'
+        normalizarTexto(
+            perfilUsuario
+        ) === 'consulta'
     ) {
 
-        if (menus.cadastro)
-            menus.cadastro.style.display = 'none';
+        if (menus.cadastro) {
 
-        if (menus.movimentacao)
-            menus.movimentacao.style.display = 'none';
+            menus.cadastro.style.display =
+                'none';
+
+        }
+
+        if (menus.movimentacao) {
+
+            menus.movimentacao.style.display =
+                'none';
+
+        }
 
     } else {
 
-        if (menus.cadastro)
-            menus.cadastro.style.display = 'flex';
+        /*
+           GESTOR / ADMIN / OUTROS PERFIS
+        */
 
-        if (menus.movimentacao)
-            menus.movimentacao.style.display = 'flex';
+        if (menus.cadastro) {
+
+            menus.cadastro.style.display =
+                'flex';
+
+        }
+
+        if (menus.movimentacao) {
+
+            menus.movimentacao.style.display =
+                'flex';
+
+        }
 
     }
+
 
     atualizarUsuarioInterface();
 
@@ -329,7 +493,7 @@ function atualizarMenus() {
 
 
 /* =====================================================
-   INTERFACE USUÁRIO
+   INTERFACE DO USUÁRIO
 ===================================================== */
 
 function atualizarUsuarioInterface() {
@@ -364,17 +528,36 @@ function atualizarUsuarioInterface() {
         );
 
 
-    if (usuarioNome)
-        usuarioNome.innerText = nome;
+    if (usuarioNome) {
 
-    if (usuarioPerfil)
-        usuarioPerfil.innerText = perfil;
+        usuarioNome.innerText =
+            nome;
 
-    if (topbarUserName)
-        topbarUserName.innerText = nome;
+    }
 
-    if (topbarUserRole)
-        topbarUserRole.innerText = perfil;
+
+    if (usuarioPerfil) {
+
+        usuarioPerfil.innerText =
+            perfil;
+
+    }
+
+
+    if (topbarUserName) {
+
+        topbarUserName.innerText =
+            nome;
+
+    }
+
+
+    if (topbarUserRole) {
+
+        topbarUserRole.innerText =
+            perfil;
+
+    }
 
 }
 
@@ -383,18 +566,14 @@ function atualizarUsuarioInterface() {
    ABRIR TELA
 ===================================================== */
 
-/* =====================================================
-   ABRIR TELA
-===================================================== */
-
 function abrirTela(
     idTela,
-    elemento
+    elemento = null
 ) {
 
-    /* =================================================
+    /*
        BLOQUEIO SEM LOGIN
-    ================================================= */
+    */
 
     if (
         !usuarioLogado &&
@@ -406,12 +585,13 @@ function abrirTela(
         );
 
         return;
+
     }
 
 
-    /* =================================================
-       BLOQUEIO DO PERFIL CONSULTA
-    ================================================= */
+    /*
+       BLOQUEIO CONSULTA
+    */
 
     if (
         usuarioLogado &&
@@ -427,17 +607,15 @@ function abrirTela(
         );
 
         return;
+
     }
 
-
-    /* =================================================
-       LOCALIZAR TELA
-    ================================================= */
 
     const tela =
         document.getElementById(
             idTela
         );
+
 
     if (!tela) {
 
@@ -447,15 +625,18 @@ function abrirTela(
         );
 
         return;
+
     }
 
 
-    /* =================================================
-       ESCONDER TODAS AS TELAS
-    ================================================= */
+    /*
+       ESCONDER TODAS
+    */
 
     document
-        .querySelectorAll('.tela')
+        .querySelectorAll(
+            '.tela'
+        )
         .forEach(
             item => {
 
@@ -467,21 +648,23 @@ function abrirTela(
         );
 
 
-    /* =================================================
-       MOSTRAR TELA SELECIONADA
-    ================================================= */
+    /*
+       MOSTRAR SELECIONADA
+    */
 
     tela.classList.add(
         'activeTela'
     );
 
 
-    /* =================================================
+    /*
        ATUALIZAR MENU
-    ================================================= */
+    */
 
     document
-        .querySelectorAll('.menu-item')
+        .querySelectorAll(
+            '.menu-item'
+        )
         .forEach(
             menu => {
 
@@ -502,58 +685,84 @@ function abrirTela(
     }
 
 
-    /* =================================================
-       ATUALIZAR TÍTULO
-    ================================================= */
+    /*
+       TÍTULO
+    */
 
     atualizarTituloTela(
         idTela
     );
 
 
-    /* =================================================
+    /*
        GARANTIR LOCAIS
-       
-       Sempre que abrir Cadastro ou Movimentações,
-       reconstruímos os selects.
-    ================================================= */
+    */
+
+    carregarLocais();
+
+    carregarFiltroLocaisDashboard();
+
+
+    /*
+       AÇÕES ESPECÍFICAS
+    */
 
     if (
-        idTela === 'cadastroTela' ||
-        idTela === 'movimentacaoTela'
+        idTela ===
+        'dashboardTela'
     ) {
 
-        console.log(
-            'Recarregando locais para:',
-            idTela
-        );
-
-        carregarLocais();
-
-        carregarFiltroLocaisDashboard();
-
-        /*
-           Segunda chamada após o navegador
-           atualizar o DOM. Isso evita problemas
-           caso algum elemento tenha sido renderizado
-           ou alterado durante a troca de tela.
-        */
-
-        setTimeout(
-            function() {
-
-                carregarLocais();
-
-            },
-            50
-        );
+        carregarDashboard();
 
     }
 
 
-    /* =================================================
-       MENU MOBILE
-    ================================================= */
+    if (
+        idTela ===
+        'estoqueTela'
+    ) {
+
+        carregarItens();
+
+    }
+
+
+    if (
+        idTela ===
+        'historicoTela'
+    ) {
+
+        carregarItens()
+            .then(
+                () =>
+                    carregarHistorico()
+            );
+
+    }
+
+
+    if (
+        idTela ===
+        'movimentacaoTela'
+    ) {
+
+        carregarItens()
+            .then(
+                () => {
+
+                    carregarLocais();
+
+                    preencherOrigemAutomaticamente();
+
+                }
+            );
+
+    }
+
+
+    /*
+       MOBILE
+    */
 
     if (
         window.innerWidth <= 900
@@ -567,49 +776,46 @@ function abrirTela(
 
 }
 
+
 /* =====================================================
-   TÍTULO DA TELA
+   TÍTULOS
 ===================================================== */
 
-function atualizarTituloTela(id) {
+function atualizarTituloTela(
+    id
+) {
 
     const titles = {
 
-        loginTela:
-            [
-                'Sistema',
-                'Inventário Central Grupo Monte Carlo'
-            ],
+        loginTela: [
+            'Sistema',
+            'Inventário Central Grupo Monte Carlo'
+        ],
 
-        dashboardTela:
-            [
-                'Dashboard',
-                'Dashboard'
-            ],
+        dashboardTela: [
+            'Dashboard',
+            'Dashboard'
+        ],
 
-        cadastroTela:
-            [
-                'Inventário',
-                'Cadastro de patrimônio'
-            ],
+        cadastroTela: [
+            'Inventário',
+            'Cadastro'
+        ],
 
-        movimentacaoTela:
-            [
-                'Logística',
-                'Movimentar Item'
-            ],
+        movimentacaoTela: [
+            'Logística',
+            'Movimentações'
+        ],
 
-        estoqueTela:
-            [
-                'Inventário',
-                'Estoque'
-            ],
+        estoqueTela: [
+            'Inventário',
+            'Estoque'
+        ],
 
-        historicoTela:
-            [
-                'Rastreabilidade',
-                'Histórico'
-            ]
+        historicoTela: [
+            'Rastreabilidade',
+            'Histórico'
+        ]
 
     };
 
@@ -633,13 +839,20 @@ function atualizarTituloTela(id) {
         );
 
 
-    if (breadcrumb)
+    if (breadcrumb) {
+
         breadcrumb.innerText =
             dados[0];
 
-    if (title)
+    }
+
+
+    if (title) {
+
         title.innerText =
             dados[1];
+
+    }
 
 }
 
@@ -648,7 +861,9 @@ function atualizarTituloTela(id) {
    SIDEBAR MOBILE
 ===================================================== */
 
-function toggleSidebar(force = null) {
+function toggleSidebar(
+    force = null
+) {
 
     const sidebar =
         document.getElementById(
@@ -661,15 +876,46 @@ function toggleSidebar(force = null) {
         );
 
 
-    if (!sidebar)
+    if (!sidebar) {
+
         return;
+
+    }
+
+
+    /*
+       Nunca abre o sidebar
+       enquanto estiver deslogado.
+    */
+
+    if (
+        !usuarioLogado
+    ) {
+
+        sidebar.classList.remove(
+            'sidebar-open'
+        );
+
+        if (overlay) {
+
+            overlay.classList.remove(
+                'show'
+            );
+
+        }
+
+        return;
+
+    }
 
 
     let abrir =
         force;
 
 
-    if (abrir === null) {
+    if (
+        abrir === null
+    ) {
 
         abrir =
             !sidebar.classList.contains(
@@ -685,11 +931,14 @@ function toggleSidebar(force = null) {
     );
 
 
-    if (overlay)
+    if (overlay) {
+
         overlay.classList.toggle(
             'show',
             abrir
         );
+
+    }
 
 }
 
@@ -700,25 +949,51 @@ function toggleSidebar(force = null) {
 
 async function login() {
 
+    if (!supabaseClient) {
+
+        alert(
+            'Supabase não foi inicializado.'
+        );
+
+        return;
+
+    }
+
+
     const email =
         document.getElementById(
             'email'
         )?.value
-        ?.trim();
+            ?.trim();
+
+
+    /*
+       Seu HTML atual utiliza "senha".
+       Mantemos compatibilidade caso
+       esteja usando "password".
+    */
 
     const senha =
         document.getElementById(
             'senha'
-        )?.value;
+        )?.value ||
+        document.getElementById(
+            'password'
+        )?.value ||
+        '';
 
 
-    if (!email || !senha) {
+    if (
+        !email ||
+        !senha
+    ) {
 
         alert(
             'Informe e-mail e senha.'
         );
 
         return;
+
     }
 
 
@@ -728,19 +1003,25 @@ async function login() {
             data,
             error
         } =
-            await window.supabaseClient
+            await supabaseClient
                 .auth
                 .signInWithPassword({
 
-                    email,
-                    password: senha
+                    email:
+                        email,
+
+                    password:
+                        senha
 
                 });
 
 
         if (error) {
 
-            console.error(error);
+            console.error(
+                'Erro de login:',
+                error
+            );
 
             alert(
                 'Erro ao entrar:\n' +
@@ -748,29 +1029,38 @@ async function login() {
             );
 
             return;
+
         }
 
 
         usuarioLogado =
-            data.user;
+            data?.user ||
+            null;
 
+
+        /*
+           Busca o perfil antes
+           de liberar o sistema.
+        */
 
         await verificarPerfil();
 
 
-        if (!perfilUsuario) {
+        if (
+            !perfilUsuario
+        ) {
 
-            await window.supabaseClient
+            await supabaseClient
                 .auth
                 .signOut();
 
-            usuarioLogado = null;
 
-            alert(
-                'Usuário autenticado, porém sem perfil cadastrado.'
-            );
+            usuarioLogado =
+                null;
+
 
             atualizarMenus();
+
 
             abrirTela(
                 'loginTela',
@@ -779,13 +1069,27 @@ async function login() {
                 )
             );
 
+
+            alert(
+                'Usuário autenticado, porém não possui um perfil válido cadastrado na tabela usuarios.'
+            );
+
             return;
+
         }
 
+
+        /*
+           Login concluído.
+        */
 
         atualizarMenus();
 
         atualizarUsuarioInterface();
+
+        carregarLocais();
+
+        carregarFiltroLocaisDashboard();
 
 
         abrirTela(
@@ -801,7 +1105,10 @@ async function login() {
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            'Erro inesperado no login:',
+            err
+        );
 
         alert(
             'Erro inesperado ao realizar login.'
@@ -811,17 +1118,25 @@ async function login() {
 
 }
 
+
 /* =====================================================
    VERIFICAR PERFIL
 ===================================================== */
 
 async function verificarPerfil() {
 
-    perfilUsuario = null;
+    perfilUsuario =
+        null;
 
 
-    if (!usuarioLogado)
+    if (
+        !usuarioLogado ||
+        !supabaseClient
+    ) {
+
         return;
+
+    }
 
 
     try {
@@ -830,7 +1145,7 @@ async function verificarPerfil() {
             data,
             error
         } =
-            await window.supabaseClient
+            await supabaseClient
                 .from('usuarios')
                 .select('perfil')
                 .eq(
@@ -848,6 +1163,7 @@ async function verificarPerfil() {
             );
 
             return;
+
         }
 
 
@@ -858,11 +1174,15 @@ async function verificarPerfil() {
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            'Erro ao verificar perfil:',
+            err
+        );
 
     }
 
 }
+
 
 /* =====================================================
    LOGOUT
@@ -870,15 +1190,26 @@ async function verificarPerfil() {
 
 async function logout() {
 
+    if (!supabaseClient) {
+
+        return;
+
+    }
+
+
     try {
 
         await supabaseClient
             .auth
             .signOut();
 
+
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            'Erro ao sair:',
+            err
+        );
 
     }
 
@@ -889,23 +1220,13 @@ async function logout() {
    LOCAIS
 ===================================================== */
 
-a/* =====================================================
-   CARREGAR LOCAIS
-===================================================== */
-
-async function carregarLocaisBanco() {
+function carregarLocaisBanco() {
 
     /*
-       Os locais são fixos do Grupo Monte Carlo.
-
-       Não fazemos mais consulta à tabela "locais"
+       Os locais são fixos.
+       Não dependem da tabela locais
        do Supabase.
     */
-
-    console.log(
-        'Locais fixos carregados:',
-        LOCAIS.length
-    );
 
     carregarLocais();
 
@@ -915,32 +1236,14 @@ async function carregarLocaisBanco() {
 
 
 /* =====================================================
-   PREENCHER LOCAIS
-===================================================== */
-
-/* =====================================================
-   CARREGAR LOCAIS FIXOS
+   CARREGAR LOCAIS NOS SELECTS
 ===================================================== */
 
 function carregarLocais() {
 
-    console.log(
-        '======================================'
-    );
-
-    console.log(
-        'CARREGANDO LOCAIS FIXOS'
-    );
-
-    console.log(
-        'Quantidade de locais:',
-        LOCAIS.length
-    );
-
-
-    /* =================================================
-       LOCAL DO CADASTRO
-    ================================================= */
+    /*
+       CADASTRO
+    */
 
     const local =
         document.getElementById(
@@ -950,7 +1253,12 @@ function carregarLocais() {
 
     if (local) {
 
-        local.innerHTML = '';
+        const valorAtual =
+            local.value;
+
+
+        local.innerHTML =
+            '';
 
 
         const primeiraOpcao =
@@ -958,10 +1266,14 @@ function carregarLocais() {
                 'option'
             );
 
-        primeiraOpcao.value = '';
+
+        primeiraOpcao.value =
+            '';
+
 
         primeiraOpcao.textContent =
             'Selecione o Local';
+
 
         local.appendChild(
             primeiraOpcao
@@ -969,18 +1281,23 @@ function carregarLocais() {
 
 
         LOCAIS.forEach(
-            function(item) {
+            item => {
 
                 const option =
                     document.createElement(
                         'option'
                     );
 
+
                 option.value =
-                    String(item.id);
+                    String(
+                        item.id
+                    );
+
 
                 option.textContent =
                     item.nome;
+
 
                 local.appendChild(
                     option
@@ -990,23 +1307,35 @@ function carregarLocais() {
         );
 
 
-        console.log(
-            'Locais carregados no cadastro:',
-            local.options.length
-        );
+        /*
+           Preserva seleção quando
+           possível.
+        */
 
-    } else {
+        if (
+            valorAtual &&
+            LOCAIS.some(
+                item =>
+                    String(
+                        item.id
+                    ) ===
+                    String(
+                        valorAtual
+                    )
+            )
+        ) {
 
-        console.warn(
-            'Elemento #local não encontrado no HTML.'
-        );
+            local.value =
+                valorAtual;
+
+        }
 
     }
 
 
-    /* =================================================
-       DESTINO DA MOVIMENTAÇÃO
-    ================================================= */
+    /*
+       DESTINO
+    */
 
     const destino =
         document.getElementById(
@@ -1016,7 +1345,12 @@ function carregarLocais() {
 
     if (destino) {
 
-        destino.innerHTML = '';
+        const valorAtual =
+            destino.value;
+
+
+        destino.innerHTML =
+            '';
 
 
         const primeiraOpcao =
@@ -1024,10 +1358,14 @@ function carregarLocais() {
                 'option'
             );
 
-        primeiraOpcao.value = '';
+
+        primeiraOpcao.value =
+            '';
+
 
         primeiraOpcao.textContent =
             'Selecione o Destino';
+
 
         destino.appendChild(
             primeiraOpcao
@@ -1035,18 +1373,23 @@ function carregarLocais() {
 
 
         LOCAIS.forEach(
-            function(item) {
+            item => {
 
                 const option =
                     document.createElement(
                         'option'
                     );
 
+
                 option.value =
-                    String(item.id);
+                    String(
+                        item.id
+                    );
+
 
                 option.textContent =
                     item.nome;
+
 
                 destino.appendChild(
                     option
@@ -1056,17 +1399,30 @@ function carregarLocais() {
         );
 
 
-        console.log(
-            'Locais carregados no destino:',
-            destino.options.length
-        );
+        if (
+            valorAtual &&
+            LOCAIS.some(
+                item =>
+                    String(
+                        item.id
+                    ) ===
+                    String(
+                        valorAtual
+                    )
+            )
+        ) {
+
+            destino.value =
+                valorAtual;
+
+        }
 
     }
 
 
-    /* =================================================
+    /*
        TOTAL DE LOCAIS
-    ================================================= */
+    */
 
     const totalLocais =
         document.getElementById(
@@ -1081,33 +1437,103 @@ function carregarLocais() {
 
     }
 
-
-    console.log(
-        'LOCAIS carregados com sucesso.'
-    );
-
-    console.log(
-        '======================================'
-    );
-
 }
 
+
 /* =====================================================
-   NOME LOCAL
+   FILTRO DE LOCAIS DO DASHBOARD
 ===================================================== */
 
-function obterNomeLocal(id) {
+function carregarFiltroLocaisDashboard() {
 
-    const local =
-        LOCAIS.find(
-            item =>
-                String(item.id) ===
-                String(id)
+    const select =
+        document.getElementById(
+            'filtroLocalDashboard'
         );
 
 
-    return local?.nome ||
-        'SEM LOCAL';
+    if (!select) {
+
+        return;
+
+    }
+
+
+    const valorAtual =
+        select.value;
+
+
+    select.innerHTML =
+        '';
+
+
+    const todos =
+        document.createElement(
+            'option'
+        );
+
+
+    todos.value =
+        '';
+
+
+    todos.textContent =
+        'Todos os Locais';
+
+
+    select.appendChild(
+        todos
+    );
+
+
+    [
+        ...LOCAIS
+    ]
+        .sort(
+            (
+                a,
+                b
+            ) =>
+                a.nome.localeCompare(
+                    b.nome,
+                    'pt-BR'
+                )
+        )
+        .forEach(
+            local => {
+
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+
+                option.value =
+                    normalizarTexto(
+                        local.nome
+                    );
+
+
+                option.textContent =
+                    local.nome;
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+    if (
+        valorAtual
+    ) {
+
+        select.value =
+            valorAtual;
+
+    }
 
 }
 
@@ -1124,36 +1550,60 @@ function obterTipoControleCadastro() {
         );
 
 
-    return radio?.value ||
-        'estoque';
-
-}
-
-
-function itemEhEstoque(item) {
-
     return (
-        normalizarTexto(
-            item.controle
-        ) ===
+        radio?.value ||
         'estoque'
-        ||
-        normalizarTexto(
-            item.tipo_controle
-        ) ===
-        'estoque'
-        ||
-        normalizarTexto(
-            item.patrimonio
-        ) ===
-        ''
     );
 
 }
 
 
 /* =====================================================
-   ALTERNAR CONTROLE
+   VERIFICAR SE É ESTOQUE
+===================================================== */
+
+function itemEhEstoque(
+    item
+) {
+
+    if (!item) {
+
+        return false;
+
+    }
+
+
+    const controle =
+        normalizarTexto(
+            item.controle
+        );
+
+
+    const tipoControle =
+        normalizarTexto(
+            item.tipo_controle
+        );
+
+
+    /*
+       Registros antigos sem patrimônio
+       continuam sendo tratados como estoque.
+    */
+
+    return (
+        controle === 'estoque' ||
+        tipoControle === 'estoque' ||
+        String(
+            item.patrimonio ||
+            ''
+        ).trim() === ''
+    );
+
+}
+
+
+/* =====================================================
+   ALTERNAR TIPO DE CONTROLE
 ===================================================== */
 
 function alternarTipoControle() {
@@ -1161,10 +1611,12 @@ function alternarTipoControle() {
     const tipo =
         obterTipoControleCadastro();
 
+
     const quantidade =
         document.getElementById(
             'quantidadeLote'
         );
+
 
     const campoQuantidade =
         document.getElementById(
@@ -1177,18 +1629,29 @@ function alternarTipoControle() {
         'patrimonio'
     ) {
 
-        if (quantidade)
-            quantidade.value = '1';
+        if (quantidade) {
 
-        if (campoQuantidade)
+            quantidade.value =
+                '1';
+
+        }
+
+
+        if (campoQuantidade) {
+
             campoQuantidade.style.display =
                 'none';
 
+        }
+
     } else {
 
-        if (campoQuantidade)
+        if (campoQuantidade) {
+
             campoQuantidade.style.display =
                 '';
+
+        }
 
     }
 
@@ -1196,23 +1659,29 @@ function alternarTipoControle() {
 
 
 /* =====================================================
-   GERAR NÚMERO PATRIMÔNIO
+   GERAR NÚMERO DE PATRIMÔNIO
 ===================================================== */
 
 function gerarNumeroPatrimonio() {
 
-    if (!itens.length)
+    if (
+        !itens.length
+    ) {
+
         return 0;
+
+    }
 
 
     const numeros =
-        itens
-            .map(item =>
+        itens.map(
+            item =>
                 parseInt(
                     item.patrimonio,
                     10
-                ) || 0
-            );
+                ) ||
+                0
+        );
 
 
     return Math.max(
@@ -1226,23 +1695,38 @@ function gerarNumeroPatrimonio() {
    GRUPO DE ESTOQUE
 ===================================================== */
 
-function obterGrupoEstoque(item) {
+function obterGrupoEstoque(
+    item
+) {
 
-    if (!item)
+    if (!item) {
+
         return [];
 
+    }
 
-    return itens.filter(i => {
 
-        return (
-            itemEhEstoque(i) &&
-            normalizarTexto(i.nome) ===
-            normalizarTexto(item.nome) &&
-            String(i.local_id) ===
-            String(item.local_id)
-        );
+    return itens.filter(
+        i => {
 
-    });
+            return (
+                itemEhEstoque(i) &&
+                normalizarTexto(
+                    i.nome
+                ) ===
+                normalizarTexto(
+                    item.nome
+                ) &&
+                String(
+                    i.local_id
+                ) ===
+                String(
+                    item.local_id
+                )
+            );
+
+        }
+    );
 
 }
 
@@ -1253,45 +1737,89 @@ function obterGrupoEstoque(item) {
 
 async function salvarItem() {
 
-    if (!exigirPermissaoGestor())
-        return;
-/* =================================================
-   GARANTIR LOCAIS
-================================================= */
+    if (
+        !exigirPermissaoGestor()
+    ) {
 
-carregarLocais();
+        return;
+
+    }
+
+
+    if (!supabaseClient) {
+
+        alert(
+            'Supabase não está disponível.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+       GARANTIR QUE OS LOCAIS
+       ESTEJAM CARREGADOS
+    */
+
+    carregarLocais();
+
 
     try {
 
-        const nomeElement =
+        const nome =
             document.getElementById(
                 'nome'
-            );
+            )
+                ?.value
+                ?.trim() ||
+            '';
 
-        const descricaoElement =
+
+        const descricao =
             document.getElementById(
                 'descricao'
-            );
+            )
+                ?.value
+                ?.trim() ||
+            '';
 
-        const tipoElement =
+
+        const tipo =
             document.getElementById(
                 'tipoItem'
+            )
+                ?.value
+                ?.trim() ||
+            nome;
+
+
+        const quantidade =
+            parseInt(
+                document.getElementById(
+                    'quantidadeLote'
+                )
+                    ?.value ||
+                '1',
+                10
             );
 
-        const quantidadeElement =
-            document.getElementById(
-                'quantidadeLote'
-            );
 
-        const localElement =
+        const local_id =
             document.getElementById(
                 'local'
-            );
+            )
+                ?.value ||
+            '';
 
-        const statusElement =
+
+        const status =
             document.getElementById(
                 'status'
-            );
+            )
+                ?.value ||
+            'Ativo';
+
 
         const fotoInput =
             document.getElementById(
@@ -1299,42 +1827,11 @@ carregarLocais();
             );
 
 
-        const nome =
-            nomeElement?.value
-                ?.trim() || '';
-
-
-        const descricao =
-            descricaoElement?.value
-                ?.trim() || '';
-
-
-        const tipo =
-            tipoElement?.value
-                ?.trim() ||
-            nome;
-
-
-        const quantidade =
-            parseInt(
-                quantidadeElement?.value ||
-                '1',
-                10
-            );
-
-
-        const local_id =
-            localElement?.value ||
-            '';
-
-
-        const status =
-            statusElement?.value ||
-            'Ativo';
-
-
         const arquivo =
-            fotoInput?.files?.[0];
+            fotoInput
+                ?.files
+                ?. [0] ||
+            null;
 
 
         const controle =
@@ -1348,6 +1845,7 @@ carregarLocais();
             );
 
             return;
+
         }
 
 
@@ -1358,6 +1856,7 @@ carregarLocais();
             );
 
             return;
+
         }
 
 
@@ -1373,15 +1872,17 @@ carregarLocais();
             );
 
             return;
+
         }
 
 
-        let foto_url = '';
+        /*
+           FOTO
+        */
 
+        let foto_url =
+            '';
 
-        /* =================================================
-           UPLOAD FOTO
-        ================================================= */
 
         if (arquivo) {
 
@@ -1400,68 +1901,81 @@ carregarLocais();
 
 
             const {
-                error: uploadError
+                error:
+                    uploadError
             } =
                 await supabaseClient
                     .storage
-                    .from('inventario')
+                    .from(
+                        'inventario'
+                    )
                     .upload(
                         nomeArquivo,
                         arquivo,
                         {
-                            upsert: true
+                            upsert:
+                                true
                         }
                     );
 
 
-            if (uploadError) {
+            if (
+                uploadError
+            ) {
 
                 console.error(
                     uploadError
                 );
 
                 alert(
-                    'Erro ao enviar a imagem.'
+                    'Erro ao enviar a imagem:\n' +
+                    uploadError.message
                 );
 
                 return;
+
             }
 
 
             const {
-                data: urlData
+                data:
+                    urlData
             } =
                 supabaseClient
                     .storage
-                    .from('inventario')
+                    .from(
+                        'inventario'
+                    )
                     .getPublicUrl(
                         nomeArquivo
                     );
 
 
             foto_url =
-                urlData?.publicUrl ||
+                urlData
+                    ?.publicUrl ||
                 '';
 
         }
 
 
-        /* =================================================
-           ESTOQUE POR QUANTIDADE
-        ================================================= */
+        /*
+           ESTOQUE
+        */
 
         if (
             controle ===
             'estoque'
         ) {
 
-            const lote = [];
+            const lote =
+                [];
 
 
             /*
-               Cada unidade recebe um registro
-               interno, mas não recebe número
-               de patrimônio.
+               Cada unidade fica
+               como registro separado.
+               Não recebe patrimônio.
             */
 
             for (
@@ -1472,20 +1986,28 @@ carregarLocais();
 
                 lote.push({
 
-                    patrimonio: '',
+                    patrimonio:
+                        '',
 
-                    nome,
+                    nome:
+                        nome,
 
-                    tipo,
+                    tipo:
+                        tipo,
 
-                    descricao,
+                    descricao:
+                        descricao,
 
                     local_id:
-                        Number(local_id),
+                        Number(
+                            local_id
+                        ),
 
-                    status,
+                    status:
+                        status,
 
-                    foto_url,
+                    foto_url:
+                        foto_url,
 
                     controle:
                         'Estoque'
@@ -1499,13 +2021,18 @@ carregarLocais();
                 error
             } =
                 await supabaseClient
-                    .from('itens')
-                    .insert(lote);
+                    .from(
+                        'itens'
+                    )
+                    .insert(
+                        lote
+                    );
 
 
             if (error) {
 
                 console.error(
+                    'Erro ao inserir estoque:',
                     error
                 );
 
@@ -1515,6 +2042,7 @@ carregarLocais();
                 );
 
                 return;
+
             }
 
 
@@ -1525,16 +2053,16 @@ carregarLocais();
 
         } else {
 
-
-            /* =================================================
+            /*
                PATRIMÔNIO INDIVIDUAL
-            ================================================= */
+            */
 
             let maiorNumero =
                 gerarNumeroPatrimonio();
 
 
-            const lote = [];
+            const lote =
+                [];
 
 
             for (
@@ -1551,23 +2079,31 @@ carregarLocais();
                     patrimonio:
                         String(
                             maiorNumero
-                        ).padStart(
-                            4,
-                            '0'
-                        ),
+                        )
+                            .padStart(
+                                4,
+                                '0'
+                            ),
 
-                    nome,
+                    nome:
+                        nome,
 
-                    tipo,
+                    tipo:
+                        tipo,
 
-                    descricao,
+                    descricao:
+                        descricao,
 
                     local_id:
-                        Number(local_id),
+                        Number(
+                            local_id
+                        ),
 
-                    status,
+                    status:
+                        status,
 
-                    foto_url,
+                    foto_url:
+                        foto_url,
 
                     controle:
                         'Patrimônio'
@@ -1581,13 +2117,18 @@ carregarLocais();
                 error
             } =
                 await supabaseClient
-                    .from('itens')
-                    .insert(lote);
+                    .from(
+                        'itens'
+                    )
+                    .insert(
+                        lote
+                    );
 
 
             if (error) {
 
                 console.error(
+                    'Erro ao inserir patrimônio:',
                     error
                 );
 
@@ -1597,6 +2138,7 @@ carregarLocais();
                 );
 
                 return;
+
             }
 
 
@@ -1609,7 +2151,9 @@ carregarLocais();
 
         limparFormulario();
 
+
         await carregarDashboard();
+
 
         abrirTela(
             'estoqueTela',
@@ -1621,7 +2165,10 @@ carregarLocais();
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            'Erro inesperado ao cadastrar:',
+            err
+        );
 
         alert(
             'Erro inesperado ao cadastrar item.'
@@ -1643,17 +2190,25 @@ function limparFormulario() {
         'tipoItem',
         'descricao',
         'foto'
-    ].forEach(id => {
+    ]
+        .forEach(
+            id => {
 
-        const campo =
-            document.getElementById(
-                id
-            );
+                const campo =
+                    document.getElementById(
+                        id
+                    );
 
-        if (campo)
-            campo.value = '';
 
-    });
+                if (campo) {
+
+                    campo.value =
+                        '';
+
+                }
+
+            }
+        );
 
 
     const local =
@@ -1661,8 +2216,13 @@ function limparFormulario() {
             'local'
         );
 
-    if (local)
-        local.value = '';
+
+    if (local) {
+
+        local.value =
+            '';
+
+    }
 
 
     const status =
@@ -1670,8 +2230,13 @@ function limparFormulario() {
             'status'
         );
 
-    if (status)
-        status.value = 'Ativo';
+
+    if (status) {
+
+        status.value =
+            'Ativo';
+
+    }
 
 
     const quantidade =
@@ -1679,8 +2244,13 @@ function limparFormulario() {
             'quantidadeLote'
         );
 
-    if (quantidade)
-        quantidade.value = '1';
+
+    if (quantidade) {
+
+        quantidade.value =
+            '1';
+
+    }
 
 
     const estoque =
@@ -1688,8 +2258,13 @@ function limparFormulario() {
             'controleEstoque'
         );
 
-    if (estoque)
-        estoque.checked = true;
+
+    if (estoque) {
+
+        estoque.checked =
+            true;
+
+    }
 
 
     alternarTipoControle();
@@ -1703,6 +2278,15 @@ function limparFormulario() {
 
 async function carregarItens() {
 
+    if (
+        !supabaseClient
+    ) {
+
+        return;
+
+    }
+
+
     try {
 
         const {
@@ -1710,12 +2294,15 @@ async function carregarItens() {
             error
         } =
             await supabaseClient
-                .from('itens')
+                .from(
+                    'itens'
+                )
                 .select('*')
                 .order(
                     'id',
                     {
-                        ascending: false
+                        ascending:
+                            false
                     }
                 );
 
@@ -1727,60 +2314,89 @@ async function carregarItens() {
                 error
             );
 
-            alert(
-                'Erro ao carregar patrimônios:\n' +
-                error.message
-            );
-
             return;
+
         }
 
 
         itens =
-            data || [];
+            data ||
+            [];
 
 
-        const tabela =
-            document.getElementById(
-                'listaItens'
-            );
+        renderizarEstoque();
+
+        preencherItensMovimentacao();
+
+        atualizarDashboardAvancado();
+
+        gerarRelatorioLocais();
 
 
-        const itemMov =
-            document.getElementById(
-                'itemMov'
-            );
+    } catch (err) {
+
+        console.error(
+            'Erro inesperado ao carregar itens:',
+            err
+        );
+
+    }
+
+}
 
 
-        if (tabela)
-            tabela.innerHTML = '';
+/* =====================================================
+   RENDERIZAR ESTOQUE
+===================================================== */
+
+function renderizarEstoque() {
+
+    const tabela =
+        document.getElementById(
+            'listaItens'
+        );
 
 
-        if (itemMov) {
-
-            itemMov.innerHTML = `
-                <option value="">
-                    Selecione o item
-                </option>
-            `;
-
-        }
+    const itemMov =
+        document.getElementById(
+            'itemMov'
+        );
 
 
-        /*
-           Agrupar estoque por:
-           nome + tipo + local
-        */
+    if (tabela) {
 
-        const gruposEstoque = {};
+        tabela.innerHTML =
+            '';
 
-        const registrosPatrimonio = [];
+    }
 
 
-        itens.forEach(item => {
+    if (itemMov) {
+
+        itemMov.innerHTML = `
+            <option value="">
+                Selecione o item
+            </option>
+        `;
+
+    }
+
+
+    const gruposEstoque =
+        {};
+
+
+    const registrosPatrimonio =
+        [];
+
+
+    itens.forEach(
+        item => {
 
             if (
-                itemEhEstoque(item)
+                itemEhEstoque(
+                    item
+                )
             ) {
 
                 const chave =
@@ -1788,240 +2404,259 @@ async function carregarItens() {
 
 
                 if (
-                    !gruposEstoque[chave]
+                    !gruposEstoque[
+                        chave
+                    ]
                 ) {
 
-                    gruposEstoque[chave] = {
+                    gruposEstoque[
+                        chave
+                    ] = {
 
-                        item,
+                        item:
+                            item,
 
-                        quantidade: 0
+                        quantidade:
+                            0
 
                     };
 
                 }
 
 
-                gruposEstoque[chave]
+                gruposEstoque[
+                    chave
+                ]
                     .quantidade++;
-
 
             } else {
 
-                registrosPatrimonio
-                    .push(item);
+                registrosPatrimonio.push(
+                    item
+                );
 
             }
 
-        });
+        }
+    );
 
 
-        /*
-           EXIBIR ESTOQUES
-        */
+    /*
+       ESTOQUE
+    */
 
-        Object.values(
-            gruposEstoque
-        ).forEach(grupo => {
+    Object.values(
+        gruposEstoque
+    )
+        .forEach(
+            grupo => {
 
-            const item =
-                grupo.item;
-
-
-            const local =
-                obterNomeLocal(
-                    item.local_id
-                );
+                const item =
+                    grupo.item;
 
 
-            const classeStatus =
-                normalizarTexto(
-                    item.status
-                ) === 'ativo'
-                    ? 'ativo'
-                    : normalizarTexto(
+                const local =
+                    obterNomeLocal(
+                        item.local_id
+                    );
+
+
+                const classeStatus =
+                    normalizarTexto(
+                        item.status
+                    ) === 'ativo'
+                        ? 'ativo'
+                        :
+                    normalizarTexto(
                         item.status
                     ) === 'em manutencao'
                         ? 'manutencao'
-                        : normalizarTexto(
-                            item.status
-                        ) === 'baixado'
-                            ? 'baixado'
-                            : 'extraviado';
+                        :
+                    normalizarTexto(
+                        item.status
+                    ) === 'baixado'
+                        ? 'baixado'
+                        :
+                    'extraviado';
 
 
-            if (tabela) {
+                if (tabela) {
 
-                tabela.innerHTML += `
+                    tabela.innerHTML += `
 
-                    <tr>
+                        <tr>
 
-                        <td>
+                            <td>
 
-                            <img
-                                src="${escaparHTML(item.foto_url || 'https://placehold.co/80x80/png?text=IMG')}"
-                                alt="Foto"
-                                onclick="abrirModalFoto('${escaparHTML(item.foto_url || '')}')"
-                                style="
-                                    width:60px;
-                                    height:60px;
-                                    object-fit:cover;
-                                    border-radius:8px;
-                                    cursor:pointer;
-                                "
-                            >
+                                <img
+                                    src="${escaparHTML(
+                                        item.foto_url ||
+                                        'https://placehold.co/80x80/png?text=IMG'
+                                    )}"
+                                    alt="Foto"
+                                    onclick="abrirModalFoto('${escaparHTML(
+                                        item.foto_url ||
+                                        ''
+                                    )}')"
+                                    style="
+                                        width:60px;
+                                        height:60px;
+                                        object-fit:cover;
+                                        border-radius:8px;
+                                        cursor:pointer;
+                                    "
+                                >
 
-                        </td>
+                            </td>
 
-                        <td>
-                            -
-                        </td>
+                            <td>
+                                -
+                            </td>
 
-                        <td>
-                            ${escaparHTML(
-                                item.tipo ||
-                                item.nome ||
-                                '-'
-                            )}
-                        </td>
-
-                        <td>
-                            <strong>
+                            <td>
                                 ${escaparHTML(
-                                    item.nome
+                                    item.tipo ||
+                                    item.nome ||
+                                    '-'
                                 )}
-                            </strong>
-                        </td>
+                            </td>
 
-                        <td>
+                            <td>
+                                <strong>
+                                    ${escaparHTML(
+                                        item.nome
+                                    )}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${escaparHTML(
+                                    item.descricao ||
+                                    '-'
+                                )}
+                            </td>
+
+                            <td>
+                                ${escaparHTML(
+                                    local
+                                )}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    ${grupo.quantidade}
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="control-badge estoque">
+                                    Estoque
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="status ${classeStatus}">
+                                    ${escaparHTML(
+                                        item.status ||
+                                        '-'
+                                    )}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    ${
+                                        usuarioPodeGerenciar()
+                                        ?
+
+                                        `
+
+                                        <button
+                                            class="btn-edit"
+                                            type="button"
+                                            onclick="editarEstoque(
+                                                '${encodeURIComponent(item.nome)}',
+                                                '${item.local_id}'
+                                            )"
+                                        >
+
+                                            <i class="fa-solid fa-pen"></i>
+                                            Editar
+
+                                        </button>
+
+
+                                        <button
+                                            class="btn-delete"
+                                            type="button"
+                                            onclick="excluirEstoque(
+                                                '${encodeURIComponent(item.nome)}',
+                                                '${item.local_id}'
+                                            )"
+                                        >
+
+                                            <i class="fa-solid fa-trash"></i>
+                                            Excluir
+
+                                        </button>
+
+                                        `
+
+                                        :
+
+                                        '-'
+                                    }
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+
+
+                if (itemMov) {
+
+                    itemMov.innerHTML += `
+
+                        <option
+                            value="${item.id}"
+                        >
+
+                            ESTOQUE —
                             ${escaparHTML(
-                                item.descricao ||
-                                '-'
+                                item.nome
                             )}
-                        </td>
-
-                        <td>
+                            —
+                            ${grupo.quantidade}
+                            unidade(s)
+                            —
                             ${escaparHTML(
                                 local
                             )}
-                        </td>
 
-                        <td>
+                        </option>
 
-                            <strong>
-                                ${grupo.quantidade}
-                            </strong>
+                    `;
 
-                        </td>
-
-                        <td>
-                            <span class="control-badge estoque">
-                                Estoque
-                            </span>
-                        </td>
-
-                        <td>
-
-                            <span
-                                class="status ${classeStatus}"
-                            >
-                                ${escaparHTML(
-                                    item.status ||
-                                    '-'
-                                )}
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <div class="actions">
-
-                                ${
-                                    usuarioPodeGerenciar()
-                                    ?
-
-                                    `
-
-                                    <button
-                                        class="btn-edit"
-                                        type="button"
-                                        onclick="editarEstoque('${encodeURIComponent(item.nome)}','${item.local_id}')"
-                                    >
-
-                                        <i class="fa-solid fa-pen"></i>
-
-                                        Editar
-
-                                    </button>
-
-
-                                    <button
-                                        class="btn-delete"
-                                        type="button"
-                                        onclick="excluirEstoque('${encodeURIComponent(item.nome)}','${item.local_id}')"
-                                    >
-
-                                        <i class="fa-solid fa-trash"></i>
-
-                                        Excluir
-
-                                    </button>
-
-                                    `
-
-                                    :
-
-                                    '-'
-
-                                }
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                `;
+                }
 
             }
+        );
 
 
-            if (itemMov) {
+    /*
+       PATRIMÔNIOS
+    */
 
-                itemMov.innerHTML += `
-
-                    <option
-                        value="${item.id}"
-                    >
-
-                        ESTOQUE —
-                        ${escaparHTML(
-                            item.nome
-                        )}
-                        —
-                        ${grupo.quantidade}
-                        unidade(s)
-                        —
-                        ${escaparHTML(
-                            local
-                        )}
-
-                    </option>
-
-                `;
-
-            }
-
-        });
-
-
-        /*
-           EXIBIR PATRIMÔNIOS
-        */
-
-        registrosPatrimonio
-            .forEach(item => {
+    registrosPatrimonio
+        .forEach(
+            item => {
 
                 const local =
                     obterNomeLocal(
@@ -2082,9 +2717,15 @@ async function carregarItens() {
                             <td>
 
                                 <img
-                                    src="${escaparHTML(item.foto_url || 'https://placehold.co/80x80/png?text=IMG')}"
+                                    src="${escaparHTML(
+                                        item.foto_url ||
+                                        'https://placehold.co/80x80/png?text=IMG'
+                                    )}"
                                     alt="Foto"
-                                    onclick="abrirModalFoto('${escaparHTML(item.foto_url || '')}')"
+                                    onclick="abrirModalFoto('${escaparHTML(
+                                        item.foto_url ||
+                                        ''
+                                    )}')"
                                     style="
                                         width:60px;
                                         height:60px;
@@ -2096,87 +2737,62 @@ async function carregarItens() {
 
                             </td>
 
-
                             <td>
-
                                 <strong>
                                     ${escaparHTML(
                                         item.patrimonio
                                     )}
                                 </strong>
-
                             </td>
 
-
                             <td>
-
                                 ${escaparHTML(
                                     item.tipo ||
                                     item.nome ||
                                     '-'
                                 )}
-
                             </td>
 
-
                             <td>
-
                                 ${escaparHTML(
                                     item.nome ||
                                     '-'
                                 )}
-
                             </td>
 
-
                             <td>
-
                                 ${escaparHTML(
                                     item.descricao ||
                                     '-'
                                 )}
-
                             </td>
 
-
                             <td>
-
                                 ${escaparHTML(
                                     local
                                 )}
-
                             </td>
-
 
                             <td>
                                 1
                             </td>
 
-
                             <td>
-
                                 <span class="control-badge patrimonio">
                                     Patrimônio
                                 </span>
-
                             </td>
-
 
                             <td>
 
-                                <span
-                                    class="status ${classeStatus}"
-                                >
-
+                                <span class="status ${classeStatus}">
                                     ${escaparHTML(
                                         item.status ||
                                         '-'
                                     )}
-
                                 </span>
 
                             </td>
-
 
                             <td>
 
@@ -2184,7 +2800,6 @@ async function carregarItens() {
 
                                     ${
                                         usuarioPodeGerenciar()
-
                                         ?
 
                                         `
@@ -2196,7 +2811,6 @@ async function carregarItens() {
                                         >
 
                                             <i class="fa-solid fa-pen"></i>
-
                                             Editar
 
                                         </button>
@@ -2209,7 +2823,6 @@ async function carregarItens() {
                                         >
 
                                             <i class="fa-solid fa-trash"></i>
-
                                             Excluir
 
                                         </button>
@@ -2219,7 +2832,6 @@ async function carregarItens() {
                                         :
 
                                         '-'
-
                                     }
 
                                 </div>
@@ -2259,48 +2871,98 @@ async function carregarItens() {
 
                 }
 
-            });
-
-
-        const totalItens =
-            document.getElementById(
-                'totalItens'
-            );
-
-
-        if (totalItens) {
-
-            totalItens.innerText =
-                itens.length;
-
-        }
-
-
-        const totalBaixados =
-            document.getElementById(
-                'totalBaixados'
-            );
-
-
-        if (totalBaixados) {
-
-            totalBaixados.innerText =
-                itens.filter(
-                    item =>
-                        normalizarTexto(
-                            item.status
-                        ) === 'baixado'
-                ).length;
-
-        }
-
-
-    } catch (err) {
-
-        console.error(
-            'Erro inesperado ao carregar itens:',
-            err
+            }
         );
+
+
+    /*
+       DASHBOARD
+    */
+
+    const totalItens =
+        document.getElementById(
+            'totalItens'
+        ) ||
+        document.getElementById(
+            'dashTotal'
+        );
+
+
+    if (totalItens) {
+
+        totalItens.innerText =
+            itens.length;
+
+    }
+
+
+    const totalBaixados =
+        document.getElementById(
+            'totalBaixados'
+        );
+
+
+    if (totalBaixados) {
+
+        totalBaixados.innerText =
+            itens.filter(
+                item =>
+                    normalizarTexto(
+                        item.status
+                    ) ===
+                    'baixado'
+            ).length;
+
+    }
+
+}
+
+
+/* =====================================================
+   PREENCHER ITENS DA MOVIMENTAÇÃO
+===================================================== */
+
+function preencherItensMovimentacao() {
+
+    const select =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    if (!select) {
+
+        return;
+
+    }
+
+
+    const valorAtual =
+        select.value;
+
+
+    /*
+       renderizarEstoque()
+       já constrói as opções.
+       Esta função existe para
+       garantir compatibilidade.
+    */
+
+    if (
+        select.options.length <= 1
+    ) {
+
+        renderizarEstoque();
+
+    }
+
+
+    if (
+        valorAtual
+    ) {
+
+        select.value =
+            valorAtual;
 
     }
 
@@ -2311,10 +2973,17 @@ async function carregarItens() {
    EDITAR PATRIMÔNIO
 ===================================================== */
 
-async function editarItem(id) {
+async function editarItem(
+    id
+) {
 
-    if (!exigirPermissaoGestor())
+    if (
+        !exigirPermissaoGestor()
+    ) {
+
         return;
+
+    }
 
 
     const item =
@@ -2332,31 +3001,40 @@ async function editarItem(id) {
         );
 
         return;
+
     }
 
 
     const novoNome =
         prompt(
             'Novo nome do patrimônio:',
-            item.nome || ''
+            item.nome ||
+            ''
         );
 
 
     if (
         novoNome === null ||
         !novoNome.trim()
-    )
+    ) {
+
         return;
+
+    }
 
 
     const {
         error
     } =
         await supabaseClient
-            .from('itens')
+            .from(
+                'itens'
+            )
             .update({
+
                 nome:
                     novoNome.trim()
+
             })
             .eq(
                 'id',
@@ -2366,7 +3044,9 @@ async function editarItem(id) {
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             'Erro ao editar patrimônio:\n' +
@@ -2374,10 +3054,12 @@ async function editarItem(id) {
         );
 
         return;
+
     }
 
 
     await carregarDashboard();
+
 
     alert(
         'Patrimônio atualizado com sucesso.'
@@ -2395,8 +3077,13 @@ async function editarEstoque(
     localId
 ) {
 
-    if (!exigirPermissaoGestor())
+    if (
+        !exigirPermissaoGestor()
+    ) {
+
         return;
+
+    }
 
 
     const nome =
@@ -2406,34 +3093,41 @@ async function editarEstoque(
 
 
     const grupo =
-        itens.filter(item =>
+        itens.filter(
+            item => {
 
-            itemEhEstoque(item) &&
+                return (
+                    itemEhEstoque(
+                        item
+                    ) &&
+                    normalizarTexto(
+                        item.nome
+                    ) ===
+                    normalizarTexto(
+                        nome
+                    ) &&
+                    String(
+                        item.local_id
+                    ) ===
+                    String(
+                        localId
+                    )
+                );
 
-            normalizarTexto(
-                item.nome
-            ) ===
-            normalizarTexto(
-                nome
-            ) &&
-
-            String(
-                item.local_id
-            ) ===
-            String(
-                localId
-            )
-
+            }
         );
 
 
-    if (!grupo.length) {
+    if (
+        !grupo.length
+    ) {
 
         alert(
             'Estoque não encontrado.'
         );
 
         return;
+
     }
 
 
@@ -2447,20 +3141,25 @@ async function editarEstoque(
     if (
         novoNome === null ||
         !novoNome.trim()
-    )
+    ) {
+
         return;
+
+    }
 
 
     const novaDescricao =
         prompt(
             'Nova descrição:',
-            grupo[0].descricao || ''
+            grupo[0].descricao ||
+            ''
         );
 
 
     const ids =
         grupo.map(
-            item => item.id
+            item =>
+                item.id
         );
 
 
@@ -2468,7 +3167,9 @@ async function editarEstoque(
         error
     } =
         await supabaseClient
-            .from('itens')
+            .from(
+                'itens'
+            )
             .update({
 
                 nome:
@@ -2487,7 +3188,9 @@ async function editarEstoque(
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             'Erro ao editar estoque:\n' +
@@ -2495,10 +3198,12 @@ async function editarEstoque(
         );
 
         return;
+
     }
 
 
     await carregarDashboard();
+
 
     alert(
         'Estoque atualizado com sucesso.'
@@ -2511,10 +3216,17 @@ async function editarEstoque(
    EXCLUIR PATRIMÔNIO
 ===================================================== */
 
-async function excluirItem(id) {
+async function excluirItem(
+    id
+) {
 
-    if (!exigirPermissaoGestor())
+    if (
+        !exigirPermissaoGestor()
+    ) {
+
         return;
+
+    }
 
 
     const item =
@@ -2528,20 +3240,26 @@ async function excluirItem(id) {
     const confirmar =
         confirm(
             `Deseja excluir o patrimônio ${
-                item?.patrimonio || ''
+                item?.patrimonio ||
+                ''
             }?`
         );
 
 
-    if (!confirmar)
+    if (!confirmar) {
+
         return;
+
+    }
 
 
     const {
         error
     } =
         await supabaseClient
-            .from('itens')
+            .from(
+                'itens'
+            )
             .delete()
             .eq(
                 'id',
@@ -2551,7 +3269,9 @@ async function excluirItem(id) {
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             'Erro ao excluir patrimônio:\n' +
@@ -2559,10 +3279,12 @@ async function excluirItem(id) {
         );
 
         return;
+
     }
 
 
     await carregarDashboard();
+
 
     alert(
         'Patrimônio excluído com sucesso.'
@@ -2580,8 +3302,13 @@ async function excluirEstoque(
     localId
 ) {
 
-    if (!exigirPermissaoGestor())
+    if (
+        !exigirPermissaoGestor()
+    ) {
+
         return;
+
+    }
 
 
     const nome =
@@ -2591,34 +3318,41 @@ async function excluirEstoque(
 
 
     const grupo =
-        itens.filter(item =>
+        itens.filter(
+            item => {
 
-            itemEhEstoque(item) &&
+                return (
+                    itemEhEstoque(
+                        item
+                    ) &&
+                    normalizarTexto(
+                        item.nome
+                    ) ===
+                    normalizarTexto(
+                        nome
+                    ) &&
+                    String(
+                        item.local_id
+                    ) ===
+                    String(
+                        localId
+                    )
+                );
 
-            normalizarTexto(
-                item.nome
-            ) ===
-            normalizarTexto(
-                nome
-            ) &&
-
-            String(
-                item.local_id
-            ) ===
-            String(
-                localId
-            )
-
+            }
         );
 
 
-    if (!grupo.length) {
+    if (
+        !grupo.length
+    ) {
 
         alert(
             'Estoque não encontrado.'
         );
 
         return;
+
     }
 
 
@@ -2628,13 +3362,17 @@ async function excluirEstoque(
         );
 
 
-    if (!confirmar)
+    if (!confirmar) {
+
         return;
+
+    }
 
 
     const ids =
         grupo.map(
-            item => item.id
+            item =>
+                item.id
         );
 
 
@@ -2642,7 +3380,9 @@ async function excluirEstoque(
         error
     } =
         await supabaseClient
-            .from('itens')
+            .from(
+                'itens'
+            )
             .delete()
             .in(
                 'id',
@@ -2652,7 +3392,9 @@ async function excluirEstoque(
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
         alert(
             'Erro ao excluir estoque:\n' +
@@ -2660,14 +3402,873 @@ async function excluirEstoque(
         );
 
         return;
+
     }
 
 
     await carregarDashboard();
 
+
     alert(
         'Estoque excluído com sucesso.'
     );
+
+}
+/* =====================================================
+   MOVIMENTAÇÃO DE ESTOQUE / PATRIMÔNIO
+===================================================== */
+
+function preencherOrigemAutomaticamente() {
+
+    const selectItem =
+        document.getElementById(
+            'itemMov'
+        );
+
+    const origemInput =
+        document.getElementById(
+            'origemAtual'
+        ) ||
+        document.getElementById(
+            'origemNome'
+        );
+
+
+    if (
+        !selectItem ||
+        !origemInput
+    ) {
+
+        return;
+
+    }
+
+
+    const itemId =
+        selectItem.value;
+
+
+    if (!itemId) {
+
+        origemInput.value =
+            '';
+
+        return;
+
+    }
+
+
+    const item =
+        itens.find(
+            i =>
+                String(i.id) ===
+                String(itemId)
+        );
+
+
+    if (!item) {
+
+        origemInput.value =
+            '';
+
+        return;
+
+    }
+
+
+    origemInput.value =
+        obterNomeLocal(
+            item.local_id
+        );
+
+}
+
+
+/* =====================================================
+   MOVIMENTAR ITEM
+===================================================== */
+
+async function movimentarItem() {
+
+    if (
+        !exigirPermissaoGestor()
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const itemSelect =
+            document.getElementById(
+                'itemMov'
+            );
+
+
+        const destinoSelect =
+            document.getElementById(
+                'destino'
+            );
+
+
+        const observacaoCampo =
+            document.getElementById(
+                'observacaoMov'
+            );
+
+
+        const quantidadeCampo =
+            document.getElementById(
+                'quantidadeMov'
+            );
+
+
+        const statusCampo =
+            document.getElementById(
+                'statusMov'
+            );
+
+
+        const itemId =
+            itemSelect?.value ||
+            '';
+
+
+        const destinoId =
+            destinoSelect?.value ||
+            '';
+
+
+        const observacao =
+            observacaoCampo
+                ?.value
+                ?.trim() ||
+            '';
+
+
+        const quantidadeSolicitada =
+            parseInt(
+                quantidadeCampo?.value ||
+                '1',
+                10
+            );
+
+
+        const novoStatus =
+            statusCampo?.value ||
+            '';
+
+
+        /*
+           VALIDAÇÕES
+        */
+
+        if (!itemId) {
+
+            alert(
+                'Selecione o item que será movimentado.'
+            );
+
+            return;
+
+        }
+
+
+        if (!destinoId) {
+
+            alert(
+                'Selecione o destino.'
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !Number.isInteger(
+                quantidadeSolicitada
+            ) ||
+            quantidadeSolicitada < 1
+        ) {
+
+            alert(
+                'Informe uma quantidade válida.'
+            );
+
+            return;
+
+        }
+
+
+        const item =
+            itens.find(
+                i =>
+                    String(i.id) ===
+                    String(itemId)
+            );
+
+
+        if (!item) {
+
+            alert(
+                'Item não encontrado.'
+            );
+
+            return;
+
+        }
+
+
+        const origemId =
+            Number(
+                item.local_id
+            );
+
+
+        const destinoIdNumber =
+            Number(
+                destinoId
+            );
+
+
+        /*
+           NÃO PERMITE ORIGEM = DESTINO
+        */
+
+        if (
+            origemId ===
+            destinoIdNumber
+        ) {
+
+            alert(
+                'O destino precisa ser diferente do local atual.'
+            );
+
+            return;
+
+        }
+
+
+        /*
+           =================================================
+           ESTOQUE
+           =================================================
+
+           Se o item for estoque, a movimentação
+           pode ser parcial.
+
+           Exemplo:
+
+           CD1
+           Copos = 300
+
+           Movimentar 100 para DORYO
+
+           Resultado:
+
+           CD1  = 200
+           DORYO = 100
+        */
+
+        if (
+            itemEhEstoque(
+                item
+            )
+        ) {
+
+            await movimentarEstoqueParcial(
+                item,
+                destinoIdNumber,
+                quantidadeSolicitada,
+                observacao,
+                novoStatus
+            );
+
+            return;
+
+        }
+
+
+        /*
+           =================================================
+           PATRIMÔNIO
+           =================================================
+
+           Patrimônio individual é sempre
+           movimentado como uma unidade.
+        */
+
+        if (
+            quantidadeSolicitada !== 1
+        ) {
+
+            alert(
+                'Patrimônio individual deve ser movimentado com quantidade 1.'
+            );
+
+            return;
+
+        }
+
+
+        await movimentarPatrimonio(
+            item,
+            destinoIdNumber,
+            observacao,
+            novoStatus
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            'Erro ao movimentar item:',
+            err
+        );
+
+        alert(
+            'Erro inesperado ao movimentar o item.'
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   MOVIMENTAR ESTOQUE PARCIAL
+===================================================== */
+
+async function movimentarEstoqueParcial(
+    item,
+    destinoId,
+    quantidade,
+    observacao,
+    novoStatus
+) {
+
+    /*
+       Localiza TODAS as unidades
+       do mesmo estoque no local de origem.
+    */
+
+    const estoqueOrigem =
+        itens.filter(
+            registro => {
+
+                return (
+                    itemEhEstoque(
+                        registro
+                    ) &&
+
+                    normalizarTexto(
+                        registro.nome
+                    ) ===
+                    normalizarTexto(
+                        item.nome
+                    ) &&
+
+                    String(
+                        registro.local_id
+                    ) ===
+                    String(
+                        item.local_id
+                    )
+                );
+
+            }
+        );
+
+
+    const quantidadeDisponivel =
+        estoqueOrigem.length;
+
+
+    /*
+       NÃO PERMITIR MOVIMENTAÇÃO
+       MAIOR QUE O ESTOQUE
+    */
+
+    if (
+        quantidade >
+        quantidadeDisponivel
+    ) {
+
+        alert(
+            `Quantidade insuficiente.\n\nDisponível: ${quantidadeDisponivel}\nSolicitado: ${quantidade}`
+        );
+
+        return;
+
+    }
+
+
+    /*
+       CONFIRMAÇÃO
+    */
+
+    const origemNome =
+        obterNomeLocal(
+            item.local_id
+        );
+
+
+    const destinoNome =
+        obterNomeLocal(
+            destinoId
+        );
+
+
+    const confirmar =
+        confirm(
+            `CONFIRMAR MOVIMENTAÇÃO?\n\n` +
+
+            `Item: ${item.nome}\n` +
+
+            `Quantidade: ${quantidade}\n` +
+
+            `Origem: ${origemNome}\n` +
+
+            `Destino: ${destinoNome}`
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    /*
+       SELECIONA EXATAMENTE
+       A QUANTIDADE SOLICITADA.
+    */
+
+    const unidadesMover =
+        estoqueOrigem.slice(
+            0,
+            quantidade
+        );
+
+
+    const idsMover =
+        unidadesMover.map(
+            registro =>
+                registro.id
+        );
+
+
+    /*
+       =================================================
+       ATUALIZAR LOCAL
+       =================================================
+    */
+
+    const dadosAtualizacao = {
+
+        local_id:
+            destinoId
+
+    };
+
+
+    /*
+       Se o usuário escolheu
+       alterar status, aplica.
+    */
+
+    if (
+        novoStatus
+    ) {
+
+        dadosAtualizacao.status =
+            novoStatus;
+
+    }
+
+
+    const {
+        error:
+            updateError
+    } =
+        await supabaseClient
+            .from(
+                'itens'
+            )
+            .update(
+                dadosAtualizacao
+            )
+            .in(
+                'id',
+                idsMover
+            );
+
+
+    if (updateError) {
+
+        console.error(
+            'Erro ao atualizar estoque:',
+            updateError
+        );
+
+        alert(
+            'Erro ao movimentar estoque:\n' +
+            updateError.message
+        );
+
+        return;
+
+    }
+
+
+    /*
+       =================================================
+       HISTÓRICO
+       =================================================
+    */
+
+    const registroHistorico = {
+
+        item_id:
+            item.id,
+
+        origem_id:
+            Number(
+                item.local_id
+            ),
+
+        destino_id:
+            Number(
+                destinoId
+            ),
+
+        quantidade:
+            quantidade,
+
+        observacao:
+            observacao,
+
+        data:
+            new Date()
+                .toISOString()
+
+    };
+
+
+    const {
+        error:
+            historicoError
+    } =
+        await supabaseClient
+            .from(
+                'movimentacoes'
+            )
+            .insert([
+                registroHistorico
+            ]);
+
+
+    if (historicoError) {
+
+        /*
+           A movimentação já ocorreu.
+           Portanto apenas registramos
+           o erro para diagnóstico.
+        */
+
+        console.error(
+            'Erro ao registrar histórico:',
+            historicoError
+        );
+
+        alert(
+            'O estoque foi movimentado, mas houve erro ao registrar o histórico:\n' +
+            historicoError.message
+        );
+
+    } else {
+
+        alert(
+            `Movimentação realizada com sucesso!\n\n${quantidade} unidade(s) de "${item.nome}" foram transferidas de ${origemNome} para ${destinoNome}.`
+        );
+
+    }
+
+
+    limparFormularioMovimentacao();
+
+
+    await carregarDashboard();
+
+}
+
+
+/* =====================================================
+   MOVIMENTAR PATRIMÔNIO
+===================================================== */
+
+async function movimentarPatrimonio(
+    item,
+    destinoId,
+    observacao,
+    novoStatus
+) {
+
+    const origemId =
+        Number(
+            item.local_id
+        );
+
+
+    const origemNome =
+        obterNomeLocal(
+            origemId
+        );
+
+
+    const destinoNome =
+        obterNomeLocal(
+            destinoId
+        );
+
+
+    const confirmar =
+        confirm(
+            `CONFIRMAR MOVIMENTAÇÃO?\n\n` +
+
+            `Patrimônio: ${item.patrimonio}\n` +
+
+            `Item: ${item.nome}\n` +
+
+            `Origem: ${origemNome}\n` +
+
+            `Destino: ${destinoNome}`
+        );
+
+
+    if (!confirmar) {
+
+        return;
+
+    }
+
+
+    const dadosAtualizacao = {
+
+        local_id:
+            destinoId
+
+    };
+
+
+    if (
+        novoStatus
+    ) {
+
+        dadosAtualizacao.status =
+            novoStatus;
+
+    }
+
+
+    /*
+       ATUALIZAR PATRIMÔNIO
+    */
+
+    const {
+        error:
+            updateError
+    } =
+        await supabaseClient
+            .from(
+                'itens'
+            )
+            .update(
+                dadosAtualizacao
+            )
+            .eq(
+                'id',
+                item.id
+            );
+
+
+    if (updateError) {
+
+        console.error(
+            updateError
+        );
+
+        alert(
+            'Erro ao movimentar patrimônio:\n' +
+            updateError.message
+        );
+
+        return;
+
+    }
+
+
+    /*
+       REGISTRAR HISTÓRICO
+    */
+
+    const {
+        error:
+            historicoError
+    } =
+        await supabaseClient
+            .from(
+                'movimentacoes'
+            )
+            .insert([
+                {
+
+                    item_id:
+                        item.id,
+
+                    origem_id:
+                        origemId,
+
+                    destino_id:
+                        destinoId,
+
+                    quantidade:
+                        1,
+
+                    observacao:
+                        observacao,
+
+                    data:
+                        new Date()
+                            .toISOString()
+
+                }
+            ]);
+
+
+    if (historicoError) {
+
+        console.error(
+            historicoError
+        );
+
+        alert(
+            'O patrimônio foi movimentado, porém ocorreu um erro ao registrar o histórico:\n' +
+            historicoError.message
+        );
+
+    } else {
+
+        alert(
+            'Patrimônio movimentado com sucesso!'
+        );
+
+    }
+
+
+    limparFormularioMovimentacao();
+
+
+    await carregarDashboard();
+
+}
+
+
+/* =====================================================
+   LIMPAR FORMULÁRIO DE MOVIMENTAÇÃO
+===================================================== */
+
+function limparFormularioMovimentacao() {
+
+    const itemMov =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    const destino =
+        document.getElementById(
+            'destino'
+        );
+
+
+    const origem =
+        document.getElementById(
+            'origemAtual'
+        ) ||
+        document.getElementById(
+            'origemNome'
+        );
+
+
+    const quantidade =
+        document.getElementById(
+            'quantidadeMov'
+        );
+
+
+    const observacao =
+        document.getElementById(
+            'observacaoMov'
+        );
+
+
+    const status =
+        document.getElementById(
+            'statusMov'
+        );
+
+
+    if (itemMov) {
+
+        itemMov.value =
+            '';
+
+    }
+
+
+    if (destino) {
+
+        destino.value =
+            '';
+
+    }
+
+
+    if (origem) {
+
+        origem.value =
+            '';
+
+    }
+
+
+    if (quantidade) {
+
+        quantidade.value =
+            '1';
+
+    }
+
+
+    if (observacao) {
+
+        observacao.value =
+            '';
+
+    }
+
+
+    if (status) {
+
+        status.value =
+            '';
+
+    }
 
 }
 
@@ -2678,6 +4279,15 @@ async function excluirEstoque(
 
 async function carregarHistorico() {
 
+    if (
+        !supabaseClient
+    ) {
+
+        return;
+
+    }
+
+
     try {
 
         const {
@@ -2685,12 +4295,15 @@ async function carregarHistorico() {
             error
         } =
             await supabaseClient
-                .from('movimentacoes')
+                .from(
+                    'movimentacoes'
+                )
                 .select('*')
                 .order(
                     'data',
                     {
-                        ascending: false
+                        ascending:
+                            false
                     }
                 );
 
@@ -2703,11 +4316,13 @@ async function carregarHistorico() {
             );
 
             return;
+
         }
 
 
         movimentacoes =
-            data || [];
+            data ||
+            [];
 
 
         const tabela =
@@ -2716,11 +4331,15 @@ async function carregarHistorico() {
             );
 
 
-        if (!tabela)
+        if (!tabela) {
+
             return;
 
+        }
 
-        tabela.innerHTML = '';
+
+        tabela.innerHTML =
+            '';
 
 
         movimentacoes.forEach(
@@ -2728,8 +4347,10 @@ async function carregarHistorico() {
 
                 const item =
                     itens.find(
-                        i =>
-                            String(i.id) ===
+                        registro =>
+                            String(
+                                registro.id
+                            ) ===
                             String(
                                 mov.item_id
                             )
@@ -2748,14 +4369,39 @@ async function carregarHistorico() {
                     );
 
 
-                const dataFormatada =
+                const quantidade =
+                    mov.quantidade ||
+                    1;
+
+
+                let dataFormatada =
+                    '-';
+
+
+                if (
                     mov.data
-                        ? new Date(
+                ) {
+
+                    const data =
+                        new Date(
                             mov.data
-                        ).toLocaleString(
-                            'pt-BR'
+                        );
+
+
+                    if (
+                        !Number.isNaN(
+                            data.getTime()
                         )
-                        : '-';
+                    ) {
+
+                        dataFormatada =
+                            data.toLocaleString(
+                                'pt-BR'
+                            );
+
+                    }
+
+                }
 
 
                 tabela.innerHTML += `
@@ -2764,52 +4410,70 @@ async function carregarHistorico() {
 
                         <td>
 
-                            <strong>
-
-                                ${escaparHTML(
+                            ${
+                                escaparHTML(
                                     item?.patrimonio ||
+                                    '-'
+                                )
+                            }
+
+                        </td>
+
+                        <td>
+
+                            ${
+                                escaparHTML(
                                     item?.nome ||
                                     '-'
-                                )}
-
-                            </strong>
-
-                        </td>
-
-
-                        <td>
-
-                            ${escaparHTML(
-                                origem
-                            )}
+                                )
+                            }
 
                         </td>
 
-
                         <td>
 
-                            ${escaparHTML(
-                                destino
-                            )}
+                            ${
+                                escaparHTML(
+                                    origem
+                                )
+                            }
 
                         </td>
 
-
                         <td>
 
-                            ${escaparHTML(
-                                mov.observacao ||
-                                '-'
-                            )}
+                            ${
+                                escaparHTML(
+                                    destino
+                                )
+                            }
 
                         </td>
 
+                        <td>
+
+                            ${
+                                quantidade
+                            }
+
+                        </td>
 
                         <td>
 
-                            ${escaparHTML(
+                            ${
+                                escaparHTML(
+                                    mov.observacao ||
+                                    '-'
+                                )
+                            }
+
+                        </td>
+
+                        <td>
+
+                            ${
                                 dataFormatada
-                            )}
+                            }
 
                         </td>
 
@@ -2827,15 +4491,17 @@ async function carregarHistorico() {
             );
 
 
-        if (totalMov)
+        if (totalMov) {
+
             totalMov.innerText =
                 movimentacoes.length;
 
+        }
 
     } catch (err) {
 
         console.error(
-            'Erro no histórico:',
+            'Erro inesperado no histórico:',
             err
         );
 
@@ -2845,581 +4511,16 @@ async function carregarHistorico() {
 
 
 /* =====================================================
-   PREENCHER ORIGEM
-===================================================== */
-
-function preencherOrigemAutomaticamente() {
-
-    const select =
-        document.getElementById(
-            'itemMov'
-        );
-
-
-    const origem =
-        document.getElementById(
-            'origemAtual'
-        );
-
-
-    const qtd =
-        document.getElementById(
-            'quantidadeMov'
-        );
-
-
-    const disp =
-        document.getElementById(
-            'quantidadeDisponivel'
-        );
-
-
-    if (
-        !select ||
-        !origem
-    )
-        return;
-
-
-    const item =
-        itens.find(
-            i =>
-                String(i.id) ===
-                String(
-                    select.value
-                )
-        );
-
-
-    if (!item) {
-
-        origem.value = '';
-
-
-        if (qtd) {
-
-            qtd.value = '1';
-
-            qtd.disabled = true;
-
-            qtd.removeAttribute(
-                'max'
-            );
-
-        }
-
-
-        if (disp)
-            disp.innerText =
-                'Selecione um item';
-
-
-        return;
-    }
-
-
-    origem.value =
-        obterNomeLocal(
-            item.local_id
-        );
-
-
-    const estoque =
-        itemEhEstoque(
-            item
-        );
-
-
-    const disponivel =
-        estoque
-            ? obterGrupoEstoque(
-                item
-            ).length
-            : 1;
-
-
-    if (qtd) {
-
-        qtd.disabled =
-            !estoque;
-
-        qtd.max =
-            String(
-                disponivel
-            );
-
-        qtd.value =
-            '1';
-
-    }
-
-
-    if (disp) {
-
-        disp.innerText =
-            estoque
-
-                ? `${disponivel} unidade(s) disponível(is) neste local`
-
-                : 'Patrimônio individual • 1 unidade';
-
-    }
-
-}
-
-
-/* =====================================================
-   LIMPAR MOVIMENTAÇÃO
-===================================================== */
-
-function limparMovimentacao() {
-
-    const item =
-        document.getElementById(
-            'itemMov'
-        );
-
-
-    const origem =
-        document.getElementById(
-            'origemAtual'
-        );
-
-
-    const destino =
-        document.getElementById(
-            'destino'
-        );
-
-
-    const status =
-        document.getElementById(
-            'statusMov'
-        );
-
-
-    const obs =
-        document.getElementById(
-            'observacaoMov'
-        );
-
-
-    const qtd =
-        document.getElementById(
-            'quantidadeMov'
-        );
-
-
-    const disp =
-        document.getElementById(
-            'quantidadeDisponivel'
-        );
-
-
-    if (item)
-        item.value = '';
-
-
-    if (origem)
-        origem.value = '';
-
-
-    if (destino)
-        destino.value = '';
-
-
-    if (status)
-        status.value = '';
-
-
-    if (obs)
-        obs.value = '';
-
-
-    if (qtd) {
-
-        qtd.value = '1';
-
-        qtd.disabled = true;
-
-        qtd.removeAttribute(
-            'max'
-        );
-
-    }
-
-
-    if (disp)
-        disp.innerText =
-            'Selecione um item';
-
-}
-
-
-/* =====================================================
-   MOVIMENTAR ITEM / ESTOQUE
-===================================================== */
-
-async function movimentarItem() {
-
-    if (!exigirPermissaoGestor())
-        return;
-
-
-    try {
-
-        const item_id =
-            document
-                .getElementById(
-                    'itemMov'
-                )
-                ?.value;
-
-
-        const destino_id =
-            document
-                .getElementById(
-                    'destino'
-                )
-                ?.value;
-
-
-        const statusMov =
-            document
-                .getElementById(
-                    'statusMov'
-                )
-                ?.value ||
-            '';
-
-
-        const obsBase =
-            document
-                .getElementById(
-                    'observacaoMov'
-                )
-                ?.value
-                ?.trim() ||
-            '';
-
-
-        const qtdSolicitada =
-            parseInt(
-                document
-                    .getElementById(
-                        'quantidadeMov'
-                    )
-                    ?.value ||
-                '1',
-                10
-            );
-
-
-        if (!item_id) {
-
-            alert(
-                'Selecione o item ou estoque.'
-            );
-
-            return;
-        }
-
-
-        if (!destino_id) {
-
-            alert(
-                'Selecione o destino.'
-            );
-
-            return;
-        }
-
-
-        if (
-            !Number.isInteger(
-                qtdSolicitada
-            ) ||
-            qtdSolicitada < 1
-        ) {
-
-            alert(
-                'Informe uma quantidade válida.'
-            );
-
-            return;
-        }
-
-
-        const item =
-            itens.find(
-                i =>
-                    String(i.id) ===
-                    String(item_id)
-            );
-
-
-        if (!item) {
-
-            alert(
-                'Item não encontrado.'
-            );
-
-            return;
-        }
-
-
-        const origem_id =
-            Number(
-                item.local_id
-            );
-
-
-        const novoLocal =
-            Number(
-                destino_id
-            );
-
-
-        if (
-            origem_id ===
-            novoLocal &&
-            !statusMov
-        ) {
-
-            alert(
-                'O destino selecionado é o mesmo local atual.'
-            );
-
-            return;
-        }
-
-
-        let ids = [];
-
-
-        /*
-           ESTOQUE
-        */
-
-        if (
-            itemEhEstoque(
-                item
-            )
-        ) {
-
-            const grupo =
-                obterGrupoEstoque(
-                    item
-                );
-
-
-            if (
-                qtdSolicitada >
-                grupo.length
-            ) {
-
-                alert(
-                    `Quantidade indisponível. Existem apenas ${grupo.length} unidade(s) neste local.`
-                );
-
-                return;
-            }
-
-
-            ids =
-                grupo
-                    .slice(
-                        0,
-                        qtdSolicitada
-                    )
-                    .map(
-                        i => i.id
-                    );
-
-
-        } else {
-
-
-            /*
-               PATRIMÔNIO INDIVIDUAL
-            */
-
-            if (
-                qtdSolicitada !==
-                1
-            ) {
-
-                alert(
-                    'Patrimônio individual só pode ser movimentado na quantidade 1.'
-                );
-
-                return;
-            }
-
-
-            ids = [
-                item.id
-            ];
-
-        }
-
-
-        /*
-           ATUALIZAR LOCAL
-        */
-
-        const dados = {
-
-            local_id:
-                novoLocal
-
-        };
-
-
-        if (statusMov)
-            dados.status =
-                statusMov;
-
-
-        const {
-            error:
-                updateError
-        } =
-            await supabaseClient
-                .from('itens')
-                .update(
-                    dados
-                )
-                .in(
-                    'id',
-                    ids
-                );
-
-
-        if (updateError) {
-
-            console.error(
-                updateError
-            );
-
-            alert(
-                'Erro ao movimentar item:\n' +
-                updateError.message
-            );
-
-            return;
-        }
-
-
-        /*
-           HISTÓRICO
-        */
-
-        const observacao =
-            itemEhEstoque(
-                item
-            )
-
-                ?
-
-                `[ESTOQUE] Transferidas ${ids.length} unidade(s) de "${item.nome}". ${obsBase}`.trim()
-
-                :
-
-                obsBase;
-
-
-        const {
-            error:
-                movError
-        } =
-            await supabaseClient
-                .from('movimentacoes')
-                .insert([{
-
-                    item_id:
-                        Number(
-                            item_id
-                        ),
-
-                    origem_id,
-
-                    destino_id:
-                        novoLocal,
-
-                    observacao,
-
-                    data:
-                        new Date()
-                            .toISOString()
-
-                }]);
-
-
-        if (movError) {
-
-            console.error(
-                movError
-            );
-
-
-            alert(
-                `Movimentação realizada (${ids.length} unidade(s)), mas o histórico apresentou erro.\n${movError.message}`
-            );
-
-        } else {
-
-            alert(
-                `${ids.length} unidade(s) movimentada(s) com sucesso!`
-            );
-
-        }
-
-
-        limparMovimentacao();
-
-
-        await carregarDashboard();
-
-
-    } catch (err) {
-
-        console.error(
-            err
-        );
-
-
-        alert(
-            'Erro inesperado ao movimentar item.'
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   DASHBOARD
-===================================================== */
-
-async function carregarDashboard() {
-
-    await carregarItens();
-
-    atualizarDashboardAvancado();
-
-    gerarRelatorioLocais();
-
-}
-
-
-/* =====================================================
-   DASHBOARD STATUS
+   DASHBOARD — STATUS
 ===================================================== */
 
 function atualizarDashboardAvancado() {
 
-    const ativo =
+    const total =
+        itens.length;
+
+
+    const ativos =
         itens.filter(
             item =>
                 normalizarTexto(
@@ -3439,7 +4540,7 @@ function atualizarDashboardAvancado() {
         ).length;
 
 
-    const baixado =
+    const baixados =
         itens.filter(
             item =>
                 normalizarTexto(
@@ -3449,7 +4550,7 @@ function atualizarDashboardAvancado() {
         ).length;
 
 
-    const extraviado =
+    const extraviados =
         itens.filter(
             item =>
                 normalizarTexto(
@@ -3459,59 +4560,185 @@ function atualizarDashboardAvancado() {
         ).length;
 
 
-    const dashTotal =
-        document.getElementById(
-            'dashTotal'
+    /*
+       TOTAL
+    */
+
+    [
+        'totalItens',
+        'dashTotal'
+    ]
+        .forEach(
+            id => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (elemento) {
+
+                    elemento.innerText =
+                        total;
+
+                }
+
+            }
         );
 
 
-    const dashAtivo =
-        document.getElementById(
-            'dashAtivo'
+    /*
+       ATIVOS
+    */
+
+    [
+        'dashAtivo',
+        'totalAtivos'
+    ]
+        .forEach(
+            id => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (elemento) {
+
+                    elemento.innerText =
+                        ativos;
+
+                }
+
+            }
         );
 
 
-    const dashManutencao =
-        document.getElementById(
-            'dashManutencao'
+    /*
+       MANUTENÇÃO
+    */
+
+    [
+        'dashManutencao',
+        'totalManutencao'
+    ]
+        .forEach(
+            id => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (elemento) {
+
+                    elemento.innerText =
+                        manutencao;
+
+                }
+
+            }
         );
 
 
-    const dashBaixado =
-        document.getElementById(
-            'dashBaixado'
+    /*
+       BAIXADOS
+    */
+
+    [
+        'dashBaixado',
+        'totalBaixados'
+    ]
+        .forEach(
+            id => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (elemento) {
+
+                    elemento.innerText =
+                        baixados;
+
+                }
+
+            }
         );
 
 
-    const dashExtraviado =
-        document.getElementById(
-            'dashExtraviado'
+    /*
+       EXTRAVIADOS
+    */
+
+    [
+        'dashExtraviado',
+        'totalExtraviados'
+    ]
+        .forEach(
+            id => {
+
+                const elemento =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (elemento) {
+
+                    elemento.innerText =
+                        extraviados;
+
+                }
+
+            }
         );
 
 
-    if (dashTotal)
-        dashTotal.innerText =
-            itens.length;
+    /*
+       LOCAIS
+    */
+
+    const totalLocais =
+        document.getElementById(
+            'totalLocais'
+        );
 
 
-    if (dashAtivo)
-        dashAtivo.innerText =
-            ativo;
+    if (totalLocais) {
+
+        totalLocais.innerText =
+            LOCAIS.length;
+
+    }
 
 
-    if (dashManutencao)
-        dashManutencao.innerText =
-            manutencao;
+    /*
+       MOVIMENTAÇÕES
+    */
+
+    const totalMov =
+        document.getElementById(
+            'totalMov'
+        );
 
 
-    if (dashBaixado)
-        dashBaixado.innerText =
-            baixado;
+    if (
+        totalMov &&
+        Array.isArray(
+            movimentacoes
+        )
+    ) {
 
+        totalMov.innerText =
+            movimentacoes.length;
 
-    if (dashExtraviado)
-        dashExtraviado.innerText =
-            extraviado;
+    }
 
 }
 
@@ -3528,69 +4755,117 @@ function gerarRelatorioLocais() {
         );
 
 
-    if (!tabela)
+    if (!tabela) {
+
         return;
 
-
-    tabela.innerHTML = '';
-
-
-    const agrupado = {};
+    }
 
 
-    itens.forEach(item => {
-
-        const nomeLocal =
-            obterNomeLocal(
-                item.local_id
-            );
+    tabela.innerHTML =
+        '';
 
 
-        const tipo =
-            item.tipo ||
-            item.nome ||
-            'SEM TIPO';
+    /*
+       AGRUPA POR:
+       ITEM + LOCAL
+    */
+
+    const agrupado =
+        {};
 
 
-        const chave =
-            `${item.nome}||${nomeLocal}`;
+    itens.forEach(
+        item => {
+
+            const localNome =
+                obterNomeLocal(
+                    item.local_id
+                );
 
 
-        if (
-            !agrupado[chave]
-        ) {
+            const nomeItem =
+                item.nome ||
+                'SEM NOME';
 
-            agrupado[chave] = {
 
-                item:
-                    item.nome,
+            const tipo =
+                item.tipo ||
+                nomeItem;
 
-                local:
-                    nomeLocal,
 
-                quantidade:
-                    0
+            const chave =
+                `${normalizarTexto(nomeItem)}||${normalizarTexto(tipo)}||${normalizarTexto(localNome)}`;
 
-            };
+
+            if (
+                !agrupado[chave]
+            ) {
+
+                agrupado[chave] = {
+
+                    item:
+                        nomeItem,
+
+                    tipo:
+                        tipo,
+
+                    local:
+                        localNome,
+
+                    quantidade:
+                        0
+
+                };
+
+            }
+
+
+            agrupado[
+                chave
+            ]
+                .quantidade++;
 
         }
+    );
 
 
-        agrupado[chave]
-            .quantidade++;
-
-    });
-
+    /*
+       RENDERIZA
+    */
 
     Object.values(
         agrupado
     )
         .sort(
-            (a,b) =>
-                a.local.localeCompare(
-                    b.local,
+            (
+                a,
+                b
+            ) => {
+
+                const localCompare =
+                    a.local.localeCompare(
+                        b.local,
+                        'pt-BR'
+                    );
+
+
+                if (
+                    localCompare !==
+                    0
+                ) {
+
+                    return localCompare;
+
+                }
+
+
+                return a.item.localeCompare(
+                    b.item,
                     'pt-BR'
-                )
+                );
+
+            }
         )
         .forEach(
             registro => {
@@ -3612,19 +4887,17 @@ function gerarRelatorioLocais() {
                                 )
                             )}"
                         >
-
                             ${escaparHTML(
                                 registro.local
                             )}
-
                         </td>
 
                         <td>
-
                             <strong>
-                                ${registro.quantidade}
+                                ${
+                                    registro.quantidade
+                                }
                             </strong>
-
                         </td>
 
                     </tr>
@@ -3633,6 +4906,9 @@ function gerarRelatorioLocais() {
 
             }
         );
+
+
+    filtrarDashboard();
 
 }
 
@@ -3645,21 +4921,21 @@ function filtrarDashboard() {
 
     const busca =
         normalizarTexto(
-            document
-                .getElementById(
-                    'filtroDashboard'
-                )
-                ?.value
+            document.getElementById(
+                'filtroDashboard'
+            )
+                ?.value ||
+            ''
         );
 
 
     const localFiltro =
         normalizarTexto(
-            document
-                .getElementById(
-                    'filtroLocalDashboard'
-                )
-                ?.value
+            document.getElementById(
+                'filtroLocalDashboard'
+            )
+                ?.value ||
+            ''
         );
 
 
@@ -3674,16 +4950,19 @@ function filtrarDashboard() {
 
             const item =
                 normalizarTexto(
-                    linha.children[0]
-                        ?.innerText
+                    linha.children[
+                        0
+                    ]?.innerText ||
+                    ''
                 );
 
 
             const local =
                 normalizarTexto(
-                    linha.children[1]
-                        ?.dataset
-                        ?.local
+                    linha.children[
+                        1
+                    ]?.innerText ||
+                    ''
                 );
 
 
@@ -3691,21 +4970,24 @@ function filtrarDashboard() {
                 `${item} ${local}`;
 
 
-            const matchBusca =
+            const correspondeBusca =
+                !busca ||
                 texto.includes(
                     busca
                 );
 
 
-            const matchLocal =
+            const correspondeLocal =
                 !localFiltro ||
                 local ===
                 localFiltro;
 
 
             linha.style.display =
-                matchBusca &&
-                matchLocal
+                (
+                    correspondeBusca &&
+                    correspondeLocal
+                )
                     ? ''
                     : 'none';
 
@@ -3716,75 +4998,128 @@ function filtrarDashboard() {
 
 
 /* =====================================================
-   FILTRO DE LOCAIS
+   FILTRAR ESTOQUE
 ===================================================== */
 
-function carregarFiltroLocaisDashboard() {
+function filtrarItens() {
 
-    const select =
-        document.getElementById(
-            'filtroLocalDashboard'
+    const termo =
+        normalizarTexto(
+            document.getElementById(
+                'busca'
+            )
+                ?.value ||
+            ''
         );
 
 
-    if (!select)
-        return;
+    const linhas =
+        document.querySelectorAll(
+            '#listaItens tr'
+        );
 
 
-    select.innerHTML = `
+    linhas.forEach(
+        linha => {
 
-        <option value="">
-            Todos os Locais
-        </option>
+            const texto =
+                normalizarTexto(
+                    linha.innerText
+                );
 
-    `;
 
-
-    [
-        ...LOCAIS
-    ]
-        .sort(
-            (a,b) =>
-                a.nome.localeCompare(
-                    b.nome,
-                    'pt-BR'
+            linha.style.display =
+                !termo ||
+                texto.includes(
+                    termo
                 )
-        )
-        .forEach(
-            local => {
+                    ? ''
+                    : 'none';
 
-                select.innerHTML += `
-
-                    <option
-                        value="${escaparHTML(
-                            normalizarTexto(
-                                local.nome
-                            )
-                        )}"
-                    >
-
-                        ${escaparHTML(
-                            local.nome
-                        )}
-
-                    </option>
-
-                `;
-
-            }
-        );
+        }
+    );
 
 }
 
 
 /* =====================================================
-   MODAL FOTO
+   DASHBOARD COMPLETO
 ===================================================== */
 
-function abrirModalFoto(url) {
+async function carregarDashboard() {
 
-    if (!url)
+    if (
+        !usuarioLogado
+    ) {
+
         return;
+
+    }
+
+
+    try {
+
+        /*
+           Locais são locais fixos.
+        */
+
+        carregarLocais();
+
+        carregarFiltroLocaisDashboard();
+
+
+        /*
+           Carrega dados.
+        */
+
+        await carregarItens();
+
+
+        await carregarHistorico();
+
+
+        /*
+           Atualiza indicadores.
+        */
+
+        atualizarDashboardAvancado();
+
+
+        gerarRelatorioLocais();
+
+
+        /*
+           Filtros.
+        */
+
+        filtrarDashboard();
+
+
+    } catch (err) {
+
+        console.error(
+            'Erro ao carregar dashboard:',
+            err
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   MODAL DE FOTO
+===================================================== */
+
+function abrirModalFoto(
+    url
+) {
+
+    if (!url) {
+
+        return;
+
+    }
 
 
     const modal =
@@ -3799,19 +5134,30 @@ function abrirModalFoto(url) {
         );
 
 
-    if (!modal || !imagem)
+    if (
+        !modal ||
+        !imagem
+    ) {
+
         return;
 
+    }
 
-    imagem.src = url;
+
+    imagem.src =
+        url;
 
 
     modal.classList.add(
-        'show'
+        'active'
     );
 
 }
 
+
+/* =====================================================
+   FECHAR MODAL FOTO
+===================================================== */
 
 function fecharModalFoto() {
 
@@ -3821,38 +5167,553 @@ function fecharModalFoto() {
         );
 
 
+    if (!modal) {
+
+        return;
+
+    }
+
+
+    modal.classList.remove(
+        'active'
+    );
+
+
     const imagem =
         document.getElementById(
             'imagemModal'
         );
 
 
-    if (modal)
-        modal.classList.remove(
-            'show'
-        );
+    if (imagem) {
 
+        imagem.src =
+            '';
 
-    if (imagem)
-        imagem.src = '';
+    }
 
 }
 
 
 /* =====================================================
-   FECHAR MENU AO CLICAR FORA
+   EXPORTAR CSV / EXCEL
+===================================================== */
+
+function exportarExcel() {
+
+    if (
+        !itens.length
+    ) {
+
+        alert(
+            'Nenhum item cadastrado para exportar.'
+        );
+
+        return;
+
+    }
+
+
+    let csv =
+        'PATRIMÔNIO;TIPO;NOME;DESCRIÇÃO;LOCAL;QUANTIDADE;CONTROLE;STATUS\n';
+
+
+    /*
+       AGRUPAMENTO DO ESTOQUE
+    */
+
+    const grupos =
+        {};
+
+
+    itens.forEach(
+        item => {
+
+            const local =
+                obterNomeLocal(
+                    item.local_id
+                );
+
+
+            if (
+                itemEhEstoque(
+                    item
+                )
+            ) {
+
+                const chave =
+                    `${normalizarTexto(item.nome)}||${item.local_id}`;
+
+
+                if (
+                    !grupos[chave]
+                ) {
+
+                    grupos[chave] = {
+
+                        item:
+                            item,
+
+                        quantidade:
+                            0,
+
+                        local:
+                            local
+
+                    };
+
+                }
+
+
+                grupos[
+                    chave
+                ]
+                    .quantidade++;
+
+            } else {
+
+                csv +=
+                    `"${String(
+                        item.patrimonio ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${String(
+                        item.tipo ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${String(
+                        item.nome ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${String(
+                        item.descricao ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${local}";`;
+
+
+                csv +=
+                    `1;`;
+
+
+                csv +=
+                    `"Patrimônio";`;
+
+
+                csv +=
+                    `"${String(
+                        item.status ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}"\n`;
+
+            }
+
+        }
+    );
+
+
+    /*
+       ESTOQUE
+    */
+
+    Object.values(
+        grupos
+    )
+        .forEach(
+            grupo => {
+
+                const item =
+                    grupo.item;
+
+
+                csv +=
+                    `"";`;
+
+
+                csv +=
+                    `"${String(
+                        item.tipo ||
+                        item.nome ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${String(
+                        item.nome ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${String(
+                        item.descricao ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}";`;
+
+
+                csv +=
+                    `"${grupo.local}";`;
+
+
+                csv +=
+                    `${grupo.quantidade};`;
+
+
+                csv +=
+                    `"Estoque";`;
+
+
+                csv +=
+                    `"${String(
+                        item.status ||
+                        ''
+                    )
+                        .replace(
+                            /"/g,
+                            '""'
+                        )}"\n`;
+
+            }
+        );
+
+
+    /*
+       BOM UTF-8
+    */
+
+    const blob =
+        new Blob(
+            [
+                '\uFEFF' +
+                csv
+            ],
+            {
+
+                type:
+                    'text/csv;charset=utf-8;'
+
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            'a'
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        'inventario-grupo-monte-carlo.csv';
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =====================================================
+   ENTER NO LOGIN
+===================================================== */
+
+function configurarLogin() {
+
+    const form =
+        document.getElementById(
+            'loginForm'
+        );
+
+
+    if (!form) {
+
+        return;
+
+    }
+
+
+    /*
+       Evita cadastro duplicado
+       do evento.
+    */
+
+    if (
+        form.dataset.loginConfigurado ===
+        'true'
+    ) {
+
+        return;
+
+    }
+
+
+    form.dataset.loginConfigurado =
+        'true';
+
+
+    form.addEventListener(
+        'submit',
+        async event => {
+
+            event.preventDefault();
+
+            await login();
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   EVENTO DO SELECT DE MOVIMENTAÇÃO
+===================================================== */
+
+function configurarMovimentacao() {
+
+    const select =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    if (!select) {
+
+        return;
+
+    }
+
+
+    if (
+        select.dataset.movConfigurado ===
+        'true'
+    ) {
+
+        return;
+
+    }
+
+
+    select.dataset.movConfigurado =
+        'true';
+
+
+    select.addEventListener(
+        'change',
+        preencherOrigemAutomaticamente
+    );
+
+}
+
+
+/* =====================================================
+   EVENTO DO FORMULÁRIO DE CADASTRO
+===================================================== */
+
+function configurarCadastro() {
+
+    const form =
+        document.getElementById(
+            'cadastroForm'
+        );
+
+
+    if (!form) {
+
+        return;
+
+    }
+
+
+    if (
+        form.dataset.cadastroConfigurado ===
+        'true'
+    ) {
+
+        return;
+
+    }
+
+
+    form.dataset.cadastroConfigurado =
+        'true';
+
+
+    form.addEventListener(
+        'submit',
+        async event => {
+
+            event.preventDefault();
+
+            await salvarItem();
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   TIPO DE CONTROLE
+===================================================== */
+
+function configurarControleCadastro() {
+
+    const radios =
+        document.querySelectorAll(
+            'input[name="tipoControle"]'
+        );
+
+
+    radios.forEach(
+        radio => {
+
+            radio.addEventListener(
+                'change',
+                alternarTipoControle
+            );
+
+        }
+    );
+
+
+    alternarTipoControle();
+
+}
+
+
+/* =====================================================
+   MODAL — ESC
+===================================================== */
+
+document.addEventListener(
+    'keydown',
+    event => {
+
+        if (
+            event.key ===
+            'Escape'
+        ) {
+
+            fecharModalFoto();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   CLIQUE FORA DO MODAL
 ===================================================== */
 
 document.addEventListener(
     'click',
-    function(event) {
+    event => {
+
+        const modal =
+            document.getElementById(
+                'modalFoto'
+            );
+
 
         if (
-            window.innerWidth >
-            900
-        )
+            !modal
+        ) {
+
             return;
 
+        }
+
+
+        if (
+            event.target ===
+            modal
+        ) {
+
+            fecharModalFoto();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   MENU MOBILE
+===================================================== */
+
+document.addEventListener(
+    'click',
+    event => {
 
         const sidebar =
             document.getElementById(
@@ -3860,17 +5721,51 @@ document.addEventListener(
             );
 
 
-        const menuBtn =
-            document.getElementById(
-                'mobileMenuBtn'
-            ) ||
+        const menuButton =
             document.querySelector(
                 '.mobile-menu-btn'
             );
 
 
-        if (!sidebar)
+        const overlay =
+            document.getElementById(
+                'sidebarOverlay'
+            );
+
+
+        if (
+            !sidebar
+        ) {
+
             return;
+
+        }
+
+
+        /*
+           Se estiver deslogado,
+           menu nunca deve abrir.
+        */
+
+        if (
+            !usuarioLogado
+        ) {
+
+            sidebar.classList.remove(
+                'sidebar-open'
+            );
+
+            if (overlay) {
+
+                overlay.classList.remove(
+                    'show'
+                );
+
+            }
+
+            return;
+
+        }
 
 
         const clicouDentro =
@@ -3880,12 +5775,34 @@ document.addEventListener(
 
 
         const clicouBotao =
-            menuBtn?.contains(
+            menuButton &&
+            menuButton.contains(
+                event.target
+            );
+
+
+        const clicouOverlay =
+            overlay &&
+            overlay.contains(
                 event.target
             );
 
 
         if (
+            clicouOverlay
+        ) {
+
+            toggleSidebar(
+                false
+            );
+
+            return;
+
+        }
+
+
+        if (
+            window.innerWidth <= 900 &&
             !clicouDentro &&
             !clicouBotao
         ) {
@@ -3901,109 +5818,292 @@ document.addEventListener(
 
 
 /* =====================================================
-   ESC
+   INICIALIZAÇÃO
 ===================================================== */
 
-document.addEventListener(
-    'keydown',
-    function(event) {
+async function inicializarSistema() {
 
-        if (
-            event.key ===
-            'Escape'
-        ) {
+    if (
+        sistemaInicializado
+    ) {
 
-            fecharModalFoto();
-
-            toggleSidebar(
-                false
-            );
-
-        }
+        return;
 
     }
-);
 
 
-/* =====================================================
-   INIT
-===================================================== */
-
-window.addEventListener(
-    'load',
-    async function() {
-
-        try {
-
-            console.log(
-                'Inicializando Sistema de Inventário...'
-            );
+    sistemaInicializado =
+        true;
 
 
-            await carregarLocaisBanco();
+    console.log(
+        '================================'
+    );
 
 
-            carregarLocais();
+    console.log(
+        'SISTEMA DE INVENTÁRIO'
+    );
 
-            carregarFiltroLocaisDashboard();
+
+    console.log(
+        'INICIANDO SISTEMA...'
+    );
+
+
+    console.log(
+        '================================'
+    );
+
+
+    /*
+       SUPABASE
+    */
+
+    if (
+        !supabaseClient
+    ) {
+
+        console.error(
+            'SUPABASE NÃO DISPONÍVEL.'
+        );
+
+        alert(
+            'Não foi possível conectar ao Supabase.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+       LOCAIS
+    */
+
+    carregarLocais();
+
+    carregarFiltroLocaisDashboard();
+
+
+    /*
+       FORMULÁRIOS
+    */
+
+    configurarLogin();
+
+    configurarCadastro();
+
+    configurarMovimentacao();
+
+    configurarControleCadastro();
+
+
+    /*
+       ESTADO INICIAL
+    */
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .auth
+            .getSession();
+
+
+    if (error) {
+
+        console.error(
+            'Erro ao recuperar sessão:',
+            error
+        );
+
+    }
+
+
+    /*
+       USUÁRIO JÁ LOGADO
+    */
+
+    if (
+        data?.session?.user
+    ) {
+
+        usuarioLogado =
+            data.session.user;
+
+
+        await verificarPerfil();
+
+
+        if (
+            perfilUsuario
+        ) {
 
             atualizarMenus();
 
             atualizarUsuarioInterface();
 
-            atualizarTituloTela(
-                'loginTela'
+
+            abrirTela(
+                'dashboardTela',
+                document.getElementById(
+                    'menuDashboard'
+                )
             );
 
 
-            const {
-                data,
-                error
-            } =
-                await supabaseClient
-                    .auth
-                    .getSession();
+            await carregarDashboard();
 
 
-            if (error) {
+        } else {
 
-                console.error(
-                    'Erro ao verificar sessão:',
-                    error
+            /*
+               Sessão existe, mas
+               não existe perfil.
+            */
+
+            await supabaseClient
+                .auth
+                .signOut();
+
+
+            usuarioLogado =
+                null;
+
+
+            perfilUsuario =
+                null;
+
+
+            atualizarMenus();
+
+
+            abrirTela(
+                'loginTela',
+                document.getElementById(
+                    'menuLogin'
+                )
+            );
+
+        }
+
+
+    } else {
+
+        /*
+           VISITANTE
+        */
+
+        usuarioLogado =
+            null;
+
+
+        perfilUsuario =
+            null;
+
+
+        atualizarMenus();
+
+
+        abrirTela(
+            'loginTela',
+            document.getElementById(
+                'menuLogin'
+            )
+        );
+
+    }
+
+
+    /*
+       OBSERVADOR DE AUTENTICAÇÃO
+    */
+
+    supabaseClient
+        .auth
+        .onAuthStateChange(
+            async (
+                event,
+                session
+            ) => {
+
+                console.log(
+                    'Evento de autenticação:',
+                    event
                 );
 
-                abrirTela(
-                    'loginTela',
-                    document.getElementById(
-                        'menuLogin'
-                    )
-                );
 
-                return;
-            }
+                /*
+                   LOGIN
+                */
 
+                if (
+                    event ===
+                        'SIGNED_IN' &&
+                    session?.user
+                ) {
 
-            if (
-                data?.session
-            ) {
-
-                usuarioLogado =
-                    data.session.user;
+                    usuarioLogado =
+                        session.user;
 
 
-                await verificarPerfil();
-
-
-                if (!perfilUsuario) {
-
-                    await supabaseClient
-                        .auth
-                        .signOut();
-
-                    usuarioLogado = null;
+                    await verificarPerfil();
 
 
                     atualizarMenus();
+
+                    atualizarUsuarioInterface();
+
+
+                    if (
+                        perfilUsuario
+                    ) {
+
+                        abrirTela(
+                            'dashboardTela',
+                            document.getElementById(
+                                'menuDashboard'
+                            )
+                        );
+
+
+                        await carregarDashboard();
+
+                    }
+
+                }
+
+
+                /*
+                   LOGOUT
+                */
+
+                if (
+                    event ===
+                    'SIGNED_OUT'
+                ) {
+
+                    usuarioLogado =
+                        null;
+
+
+                    perfilUsuario =
+                        null;
+
+
+                    itens =
+                        [];
+
+
+                    movimentacoes =
+                        [];
+
+
+                    atualizarMenus();
+
+                    atualizarUsuarioInterface();
 
 
                     abrirTela(
@@ -4013,71 +6113,51 @@ window.addEventListener(
                         )
                     );
 
-
-                    alert(
-                        'Usuário autenticado, porém sem perfil cadastrado na tabela usuarios.'
-                    );
-
-
-                    return;
-
                 }
 
-
-                atualizarMenus();
-
-                atualizarUsuarioInterface();
-
-
-                abrirTela(
-                    'dashboardTela',
-                    document.getElementById(
-                        'menuDashboard'
-                    )
-                );
-
-
-                await carregarDashboard();
-
-
-            } else {
-
-                usuarioLogado = null;
-
-                perfilUsuario = null;
-
-
-                atualizarMenus();
-
-                atualizarUsuarioInterface();
-
-
-                abrirTela(
-                    'loginTela',
-                    document.getElementById(
-                        'menuLogin'
-                    )
-                );
-
             }
+        );
 
 
-            console.log(
-                '======================================'
-            );
+    console.log(
+        '================================'
+    );
 
-            console.log(
-                ' SISTEMA DE INVENTÁRIO INICIADO'
-            );
 
-            console.log(
-                ' SUPABASE ONLINE'
-            );
+    console.log(
+        'SISTEMA DE INVENTÁRIO INICIADO'
+    );
 
-            console.log(
-                '======================================'
-            );
 
+    console.log(
+        'SUPABASE ONLINE'
+    );
+
+
+    console.log(
+        'LOCAIS DISPONÍVEIS:',
+        LOCAIS.length
+    );
+
+
+    console.log(
+        '================================'
+    );
+
+}
+
+
+/* =====================================================
+   WINDOW LOAD
+===================================================== */
+
+window.addEventListener(
+    'load',
+    async () => {
+
+        try {
+
+            await inicializarSistema();
 
         } catch (err) {
 
@@ -4086,10 +6166,8 @@ window.addEventListener(
                 err
             );
 
-
-            alert(
-                'Erro ao iniciar o sistema. Verifique o console do navegador.'
-            );
+            sistemaInicializado =
+                false;
 
         }
 
@@ -4098,136 +6176,74 @@ window.addEventListener(
 
 
 /* =====================================================
-   OBSERVAR AUTENTICAÇÃO
+   DISPONIBILIZAR FUNÇÕES GLOBALMENTE
+   NECESSÁRIO PARA onclick="" DO HTML
 ===================================================== */
 
-supabaseClient
-    .auth
-    .onAuthStateChange(
-        async function(
-            event,
-            session
-        ) {
+window.login =
+    login;
 
-            console.log(
-                'Evento de autenticação:',
-                event
-            );
+window.logout =
+    logout;
 
+window.abrirTela =
+    abrirTela;
 
-            if (
-                event ===
-                'SIGNED_OUT'
-            ) {
+window.toggleSidebar =
+    toggleSidebar;
 
-                usuarioLogado = null;
+window.salvarItem =
+    salvarItem;
 
-                perfilUsuario = null;
+window.editarItem =
+    editarItem;
 
-                itens = [];
+window.excluirItem =
+    excluirItem;
 
-                movimentacoes = [];
+window.editarEstoque =
+    editarEstoque;
 
+window.excluirEstoque =
+    excluirEstoque;
 
-                atualizarMenus();
+window.movimentarItem =
+    movimentarItem;
 
-                atualizarUsuarioInterface();
+window.preencherOrigemAutomaticamente =
+    preencherOrigemAutomaticamente;
 
+window.carregarLocais =
+    carregarLocais;
 
-                abrirTela(
-                    'loginTela',
-                    document.getElementById(
-                        'menuLogin'
-                    )
-                );
+window.carregarItens =
+    carregarItens;
 
+window.carregarHistorico =
+    carregarHistorico;
 
-                return;
+window.carregarDashboard =
+    carregarDashboard;
 
-            }
+window.filtrarItens =
+    filtrarItens;
 
+window.filtrarDashboard =
+    filtrarDashboard;
 
-            if (
-                session?.user
-            ) {
+window.exportarExcel =
+    exportarExcel;
 
-                usuarioLogado =
-                    session.user;
+window.abrirModalFoto =
+    abrirModalFoto;
 
+window.fecharModalFoto =
+    fecharModalFoto;
 
-                await verificarPerfil();
-
-
-                atualizarMenus();
-
-                atualizarUsuarioInterface();
-
-            }
-
-        }
-    );
-    window.supabaseClient
-    .auth
-    .onAuthStateChange(
-        async function(
-            event,
-            session
-        ) {
-
-            console.log(
-                'Evento de autenticação:',
-                event
-            );
+window.alternarTipoControle =
+    alternarTipoControle;
 
 
-            if (
-                event ===
-                'SIGNED_OUT'
-            ) {
-
-                usuarioLogado = null;
-
-                perfilUsuario = null;
-
-                itens = [];
-
-                movimentacoes = [];
-
-
-                atualizarMenus();
-
-                atualizarUsuarioInterface();
-
-
-                abrirTela(
-                    'loginTela',
-                    document.getElementById(
-                        'menuLogin'
-                    )
-                );
-
-
-                return;
-
-            }
-
-
-            if (
-                session?.user
-            ) {
-
-                usuarioLogado =
-                    session.user;
-
-
-                await verificarPerfil();
-
-
-                atualizarMenus();
-
-                atualizarUsuarioInterface();
-
-            }
-
-        }
-    );
+/* =====================================================
+   FIM DO APP.JS
+===================================================== */
