@@ -41,6 +41,7 @@
 <div
     id="sidebarOverlay"
     class="sidebar-overlay"
+    onclick="toggleSidebar()"
 ></div>
 
 
@@ -438,6 +439,18 @@
 
                     </button>
 
+                    <button
+                        type="button"
+                        class="btn-secondary btn-consulta-publica"
+                        onclick="abrirConsultaPublica()"
+                    >
+
+                        <i class="fa-solid fa-eye"></i>
+
+                        Consultar Inventário
+
+                    </button>
+
 
                 </form>
 
@@ -456,6 +469,166 @@
 
         </div>
 
+
+    </section>
+
+
+
+    <!-- =================================================
+         CONSULTA PÚBLICA DE INVENTÁRIO
+    ================================================== -->
+
+    <section
+        id="consultaPublicaTela"
+        class="tela consulta-publica-tela"
+    >
+
+        <div class="consulta-publica-container">
+
+            <div class="consulta-publica-header">
+
+                <div class="consulta-publica-marca">
+
+                    <div class="consulta-publica-logo">
+
+                        <img
+                            src="monte-carlo-logo-transparente.png"
+                            alt="Grupo Monte Carlo"
+                            onerror="this.style.display='none'"
+                        >
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            GRUPO MONTE CARLO
+                        </span>
+
+                        <h1>
+                            Consulta de Inventário
+                        </h1>
+
+                        <p>
+                            Consulte os itens ativos, suas quantidades e localizações.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-secondary consulta-voltar"
+                    onclick="voltarParaLogin()"
+                >
+
+                    <i class="fa-solid fa-arrow-left"></i>
+
+                    Voltar
+
+                </button>
+
+            </div>
+
+
+            <div class="consulta-publica-toolbar">
+
+                <div class="consulta-publica-busca">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="search"
+                        id="buscaPublica"
+                        placeholder="Pesquisar item, categoria ou local..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <select
+                    id="filtroLocalPublico"
+                    aria-label="Filtrar por local"
+                >
+
+                    <option value="">
+                        Todos os locais
+                    </option>
+
+                </select>
+
+
+                <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="limparFiltrosConsultaPublica()"
+                >
+
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                    Limpar
+
+                </button>
+
+
+                <button
+                    type="button"
+                    id="btnAtualizarConsulta"
+                    class="btn-primary"
+                    onclick="atualizarConsultaPublica()"
+                >
+
+                    <i class="fa-solid fa-rotate"></i>
+
+                    Atualizar
+
+                </button>
+
+            </div>
+
+
+            <div class="consulta-publica-resumo">
+
+                <div>
+
+                    <span>
+                        ITENS DISPONÍVEIS
+                    </span>
+
+                    <strong id="contadorConsultaPublica">
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="consulta-publica-resumo-info">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    Somente itens ativos são exibidos.
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="listaConsultaPublica"
+                class="consulta-publica-grid"
+            ></div>
+
+
+            <div class="consulta-publica-footer">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+                Consulta somente para visualização
+
+            </div>
+
+        </div>
 
     </section>
 
