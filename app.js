@@ -2228,3 +2228,3583 @@ async function carregarDashboard() {
     }
 
 }
+/* =========================================================
+   DASHBOARD — STATUS
+========================================================= */
+
+function atualizarDashboardAvancado() {
+
+    const totalAtivos =
+        itens.filter(
+            item =>
+                item.status === 'Ativo'
+        )
+        .reduce(
+            (
+                total,
+                item
+            ) =>
+                total +
+                quantidadeItem(item),
+            0
+        );
+
+
+    const totalManutencao =
+        itens.filter(
+            item =>
+                item.status ===
+                'Em manutenção'
+        )
+        .reduce(
+            (
+                total,
+                item
+            ) =>
+                total +
+                quantidadeItem(item),
+            0
+        );
+
+
+    const totalBaixado =
+        itens.filter(
+            item =>
+                item.status ===
+                'Baixado'
+        )
+        .reduce(
+            (
+                total,
+                item
+            ) =>
+                total +
+                quantidadeItem(item),
+            0
+        );
+
+
+    const totalExtraviado =
+        itens.filter(
+            item =>
+                item.status ===
+                'Extraviado'
+        )
+        .reduce(
+            (
+                total,
+                item
+            ) =>
+                total +
+                quantidadeItem(item),
+            0
+        );
+
+
+    const dashAtivo =
+        document.getElementById(
+            'dashAtivo'
+        );
+
+
+    if (dashAtivo) {
+
+        dashAtivo.innerText =
+            totalAtivos;
+
+    }
+
+
+    const dashManutencao =
+        document.getElementById(
+            'dashManutencao'
+        );
+
+
+    if (dashManutencao) {
+
+        dashManutencao.innerText =
+            totalManutencao;
+
+    }
+
+
+    const dashBaixado =
+        document.getElementById(
+            'dashBaixado'
+        );
+
+
+    if (dashBaixado) {
+
+        dashBaixado.innerText =
+            totalBaixado;
+
+    }
+
+
+    const dashExtraviado =
+        document.getElementById(
+            'dashExtraviado'
+        );
+
+
+    if (dashExtraviado) {
+
+        dashExtraviado.innerText =
+            totalExtraviado;
+
+    }
+
+}
+
+
+/* =========================================================
+   RELATÓRIO POR LOCAL
+========================================================= */
+
+function gerarRelatorioLocais() {
+
+    const tabela =
+        document.getElementById(
+            'dashboardLocais'
+        );
+
+
+    if (!tabela) {
+
+        return;
+
+    }
+
+
+    tabela.innerHTML =
+        '';
+
+
+    const agrupado = {};
+
+
+    itens.forEach(
+        item => {
+
+            const local =
+                nomeLocal(
+                    item.local_id
+                );
+
+
+            const tipo =
+                item.tipo ||
+                item.nome ||
+                'ITEM';
+
+
+            const quantidade =
+                quantidadeItem(
+                    item
+                );
+
+
+            const chave =
+                `${tipo}||${local}`;
+
+
+            if (!agrupado[chave]) {
+
+                agrupado[chave] = {
+
+                    item:
+                        tipo,
+
+                    local:
+                        local,
+
+                    quantidade:
+                        0
+
+                };
+
+            }
+
+
+            agrupado[chave]
+                .quantidade +=
+                    quantidade;
+
+        }
+    );
+
+
+    const registros =
+        Object.values(
+            agrupado
+        );
+
+
+    registros.sort(
+        (
+            a,
+            b
+        ) => {
+
+            const local =
+                a.local.localeCompare(
+                    b.local,
+                    'pt-BR'
+                );
+
+
+            if (
+                local !==
+                0
+            ) {
+
+                return local;
+
+            }
+
+
+            return a.item.localeCompare(
+                b.item,
+                'pt-BR'
+            );
+
+        }
+    );
+
+
+    if (
+        registros.length ===
+        0
+    ) {
+
+        tabela.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="3"
+                    class="empty-state"
+                >
+
+                    Nenhum item
+                    cadastrado.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    registros.forEach(
+        registro => {
+
+            const tr =
+                document.createElement(
+                    'tr'
+                );
+
+
+            tr.innerHTML = `
+
+                <td>
+                    ${escaparHTML(
+                        registro.item
+                    )}
+                </td>
+
+                <td
+                    data-local="${escaparHTML(
+                        registro.local
+                            .toLowerCase()
+                    )}"
+                >
+
+                    ${escaparHTML(
+                        registro.local
+                    )}
+
+                </td>
+
+                <td>
+
+                    <strong>
+                        ${registro.quantidade}
+                    </strong>
+
+                </td>
+
+            `;
+
+
+            tabela.appendChild(
+                tr
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FILTRO DO DASHBOARD
+========================================================= */
+
+function filtrarDashboard() {
+
+    const busca =
+        document
+            .getElementById(
+                'filtroDashboard'
+            )
+            ?.value
+            ?.trim()
+            .toLowerCase() ||
+        '';
+
+
+    const filtroLocal =
+        document
+            .getElementById(
+                'filtroLocalDashboard'
+            )
+            ?.value
+            ?.trim()
+            .toLowerCase() ||
+        '';
+
+
+    const linhas =
+        document.querySelectorAll(
+            '#dashboardLocais tr'
+        );
+
+
+    linhas.forEach(
+        linha => {
+
+            const item =
+                linha.children[0]
+                    ?.innerText
+                    ?.toLowerCase() ||
+                '';
+
+
+            const local =
+                linha.children[1]
+                    ?.dataset
+                    ?.local ||
+                '';
+
+
+            const texto =
+                `${item} ${local}`;
+
+
+            const correspondeBusca =
+                !busca ||
+                texto.includes(
+                    busca
+                );
+
+
+            const correspondeLocal =
+                !filtroLocal ||
+                local ===
+                    filtroLocal;
+
+
+            linha.style.display =
+                (
+                    correspondeBusca &&
+                    correspondeLocal
+                )
+                    ? ''
+                    : 'none';
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FILTRO DE LOCAIS DO DASHBOARD
+========================================================= */
+
+function carregarFiltroLocaisDashboard() {
+
+    const select =
+        document.getElementById(
+            'filtroLocalDashboard'
+        );
+
+
+    if (!select) {
+
+        return;
+
+    }
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Todos os Locais
+        </option>
+
+    `;
+
+
+    [...LOCAIS]
+        .sort(
+            (
+                a,
+                b
+            ) =>
+                a.nome.localeCompare(
+                    b.nome,
+                    'pt-BR'
+                )
+        )
+        .forEach(
+            local => {
+
+                select.innerHTML += `
+
+                    <option
+                        value="${escaparHTML(
+                            local.nome
+                                .toLowerCase()
+                        )}"
+                    >
+
+                        ${escaparHTML(
+                            local.nome
+                        )}
+
+                    </option>
+
+                `;
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   HISTÓRICO
+========================================================= */
+
+async function carregarHistorico() {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('movimentacoes')
+                .select('*')
+                .order(
+                    'data',
+                    {
+                        ascending:
+                            false
+                    }
+                );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        movimentacoes =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        const tabela =
+            document.getElementById(
+                'historico'
+            );
+
+
+        if (!tabela) {
+
+            return;
+
+        }
+
+
+        tabela.innerHTML =
+            '';
+
+
+        if (
+            movimentacoes.length ===
+            0
+        ) {
+
+            tabela.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="empty-state"
+                    >
+
+                        Nenhuma movimentação
+                        registrada.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+
+
+        movimentacoes.forEach(
+            mov => {
+
+                const item =
+                    itens.find(
+                        registro =>
+                            Number(
+                                registro.id
+                            ) ===
+                            Number(
+                                mov.item_id
+                            )
+                    );
+
+
+                const origem =
+                    nomeLocal(
+                        mov.origem_id
+                    );
+
+
+                const destino =
+                    nomeLocal(
+                        mov.destino_id
+                    );
+
+
+                const data =
+                    mov.data
+                        ? new Date(
+                            mov.data
+                        )
+                        .toLocaleString(
+                            'pt-BR'
+                        )
+                        : '-';
+
+
+                const tr =
+                    document.createElement(
+                        'tr'
+                    );
+
+
+                tr.innerHTML = `
+
+                    <td>
+
+                        ${escaparHTML(
+                            item?.patrimonio ||
+                            item?.nome ||
+                            '-'
+                        )}
+
+                    </td>
+
+                    <td>
+
+                        ${escaparHTML(
+                            origem
+                        )}
+
+                    </td>
+
+                    <td>
+
+                        ${escaparHTML(
+                            destino
+                        )}
+
+                    </td>
+
+                    <td>
+
+                        ${escaparHTML(
+                            mov.observacao ||
+                            '-'
+                        )}
+
+                    </td>
+
+                    <td>
+
+                        ${escaparHTML(
+                            data
+                        )}
+
+                    </td>
+
+                `;
+
+
+                tabela.appendChild(
+                    tr
+                );
+
+            }
+        );
+
+
+        const totalMov =
+            document.getElementById(
+                'totalMov'
+            );
+
+
+        if (totalMov) {
+
+            totalMov.innerText =
+                movimentacoes.length;
+
+        }
+
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO AO CARREGAR HISTÓRICO:',
+            erro
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PREENCHER ORIGEM AUTOMATICAMENTE
+========================================================= */
+
+function preencherOrigemAutomaticamente() {
+
+    const selectItem =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    const origemInput =
+        document.getElementById(
+            'origemAtual'
+        ) ||
+        document.getElementById(
+            'origemNome'
+        );
+
+
+    if (
+        !selectItem ||
+        !origemInput
+    ) {
+
+        return;
+
+    }
+
+
+    const itemId =
+        selectItem.value;
+
+
+    if (!itemId) {
+
+        origemInput.value =
+            '';
+
+        atualizarResumoMovimentacao();
+
+        return;
+
+    }
+
+
+    const item =
+        itens.find(
+            registro =>
+                String(
+                    registro.id
+                ) ===
+                String(
+                    itemId
+                )
+        );
+
+
+    if (!item) {
+
+        origemInput.value =
+            '';
+
+        atualizarResumoMovimentacao();
+
+        return;
+
+    }
+
+
+    origemInput.value =
+        nomeLocal(
+            item.local_id
+        );
+
+
+    const quantidadeCampo =
+        document.getElementById(
+            'quantidadeMov'
+        );
+
+
+    if (quantidadeCampo) {
+
+        const estoque =
+            quantidadeItem(
+                item
+            );
+
+
+        const atual =
+            parseInt(
+                quantidadeCampo.value ||
+                '1',
+                10
+            );
+
+
+        if (
+            atual >
+            estoque
+        ) {
+
+            quantidadeCampo.value =
+                estoque;
+
+        }
+
+
+        quantidadeCampo.max =
+            estoque;
+
+    }
+
+
+    atualizarResumoMovimentacao();
+
+}
+
+
+/* =========================================================
+   ATUALIZAR RESUMO DA MOVIMENTAÇÃO
+========================================================= */
+
+function atualizarResumoMovimentacao() {
+
+    const itemSelect =
+        document.getElementById(
+            'itemMov'
+        );
+
+
+    const destinoSelect =
+        document.getElementById(
+            'destino'
+        );
+
+
+    const quantidadeInput =
+        document.getElementById(
+            'quantidadeMov'
+        );
+
+
+    const resumo =
+        document.getElementById(
+            'resumoMovimentacao'
+        );
+
+
+    if (!resumo) {
+
+        return;
+
+    }
+
+
+    const item =
+        itens.find(
+            registro =>
+                String(
+                    registro.id
+                ) ===
+                String(
+                    itemSelect?.value
+                )
+        );
+
+
+    if (!item) {
+
+        resumo.innerHTML =
+            '';
+
+        return;
+
+    }
+
+
+    const origem =
+        nomeLocal(
+            item.local_id
+        );
+
+
+    const destino =
+        destinoSelect?.value
+            ? nomeLocal(
+                destinoSelect.value
+            )
+            : 'Selecione o destino';
+
+
+    const quantidade =
+        Math.max(
+            1,
+            parseInt(
+                quantidadeInput?.value ||
+                '1',
+                10
+            )
+        );
+
+
+    resumo.innerHTML = `
+
+        <div class="mov-resumo">
+
+            <div>
+
+                <small>
+                    Origem
+                </small>
+
+                <strong>
+                    ${escaparHTML(
+                        origem
+                    )}
+                </strong>
+
+            </div>
+
+            <div class="mov-seta">
+
+                <i
+                    class="fa-solid fa-arrow-right"
+                ></i>
+
+            </div>
+
+            <div>
+
+                <small>
+                    Destino
+                </small>
+
+                <strong>
+                    ${escaparHTML(
+                        destino
+                    )}
+                </strong>
+
+            </div>
+
+            <div>
+
+                <small>
+                    Quantidade
+                </small>
+
+                <strong>
+                    ${quantidade}
+                    unidade(s)
+                </strong>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   MOVIMENTAR ITEM
+========================================================= */
+
+async function movimentarItem(event) {
+
+    if (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+    }
+
+
+    if (!usuarioLogado) {
+
+        alert(
+            'Faça login primeiro.'
+        );
+
+        return false;
+
+    }
+
+
+    if (
+        perfilUsuario ===
+        'consulta'
+    ) {
+
+        alert(
+            'Usuário sem permissão para movimentar itens.'
+        );
+
+        return false;
+
+    }
+
+
+    const itemId =
+        document.getElementById(
+            'itemMov'
+        )?.value ||
+        '';
+
+
+    const destinoId =
+        document.getElementById(
+            'destino'
+        )?.value ||
+        '';
+
+
+    const quantidade =
+        Math.max(
+            1,
+            parseInt(
+                document.getElementById(
+                    'quantidadeMov'
+                )?.value ||
+                '1',
+                10
+            )
+        );
+
+
+    const observacao =
+        document.getElementById(
+            'observacaoMov'
+        )?.value
+        ?.trim() ||
+        '';
+
+
+    const statusNovo =
+        document.getElementById(
+            'statusMov'
+        )?.value ||
+        '';
+
+
+    if (!itemId) {
+
+        alert(
+            'Selecione o patrimônio/item.'
+        );
+
+        return false;
+
+    }
+
+
+    if (!destinoId) {
+
+        alert(
+            'Selecione o destino.'
+        );
+
+        return false;
+
+    }
+
+
+    const item =
+        itens.find(
+            registro =>
+                Number(
+                    registro.id
+                ) ===
+                Number(itemId)
+        );
+
+
+    if (!item) {
+
+        alert(
+            'Item não encontrado.'
+        );
+
+        return false;
+
+    }
+
+
+    const origemId =
+        Number(
+            item.local_id
+        );
+
+
+    const destino =
+        Number(
+            destinoId
+        );
+
+
+    if (
+        origemId ===
+        destino
+    ) {
+
+        alert(
+            'O destino precisa ser diferente do local atual.'
+        );
+
+        return false;
+
+    }
+
+
+    const estoqueAtual =
+        quantidadeItem(
+            item
+        );
+
+
+    if (
+        quantidade >
+        estoqueAtual
+    ) {
+
+        alert(
+            `Quantidade indisponível.\n\n` +
+            `Estoque atual: ${estoqueAtual} unidade(s).`
+        );
+
+        return false;
+
+    }
+
+
+    try {
+
+        /*
+           =================================================
+           CASO 1:
+           MOVIMENTAÇÃO DE TODO O ESTOQUE
+           =================================================
+        */
+
+        if (
+            quantidade ===
+            estoqueAtual
+        ) {
+
+            const dadosAtualizacao = {
+
+                local_id:
+                    destino
+
+            };
+
+
+            if (statusNovo) {
+
+                dadosAtualizacao.status =
+                    statusNovo;
+
+            }
+
+
+            const {
+                error:
+                    erroUpdate
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .update(
+                        dadosAtualizacao
+                    )
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+
+            if (erroUpdate) {
+
+                throw erroUpdate;
+
+            }
+
+
+            const {
+                error:
+                    erroHistorico
+            } =
+                await supabaseClient
+                    .from('movimentacoes')
+                    .insert([{
+
+                        item_id:
+                            Number(
+                                item.id
+                            ),
+
+                        origem_id:
+                            origemId,
+
+                        destino_id:
+                            destino,
+
+                        quantidade:
+                            quantidade,
+
+                        observacao:
+                            observacao,
+
+                        data:
+                            new Date()
+                                .toISOString()
+
+                    }]);
+
+
+            if (erroHistorico) {
+
+                console.error(
+                    'ERRO HISTÓRICO:',
+                    erroHistorico
+                );
+
+            }
+
+        }
+
+
+        /*
+           =================================================
+           CASO 2:
+           MOVIMENTAÇÃO PARCIAL
+           =================================================
+        */
+
+        else {
+
+            /*
+               Reduzimos a quantidade na origem.
+            */
+
+            const novaQuantidadeOrigem =
+                estoqueAtual -
+                quantidade;
+
+
+            const {
+                error:
+                    erroOrigem
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .update({
+
+                        quantidade:
+                            novaQuantidadeOrigem
+
+                    })
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+
+            if (erroOrigem) {
+
+                throw erroOrigem;
+
+            }
+
+
+            /*
+               Procuramos estoque igual no destino.
+            */
+
+            const {
+                data:
+                    destinoExistente,
+                error:
+                    erroBuscaDestino
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .select('*')
+                    .eq(
+                        'nome',
+                        item.nome
+                    )
+                    .eq(
+                        'local_id',
+                        destino
+                    )
+                    .is(
+                        'patrimonio',
+                        null
+                    )
+                    .maybeSingle();
+
+
+            if (erroBuscaDestino) {
+
+                throw erroBuscaDestino;
+
+            }
+
+
+            if (destinoExistente) {
+
+                const quantidadeDestino =
+                    quantidadeItem(
+                        destinoExistente
+                    );
+
+
+                const {
+                    error:
+                        erroDestino
+                } =
+                    await supabaseClient
+                        .from('itens')
+                        .update({
+
+                            quantidade:
+                                quantidadeDestino +
+                                quantidade
+
+                        })
+                        .eq(
+                            'id',
+                            destinoExistente.id
+                        );
+
+
+                if (erroDestino) {
+
+                    throw erroDestino;
+
+                }
+
+            } else {
+
+                const {
+                    error:
+                        erroNovoDestino
+                } =
+                    await supabaseClient
+                        .from('itens')
+                        .insert([{
+
+                            patrimonio:
+                                null,
+
+                            nome:
+                                item.nome,
+
+                            tipo:
+                                item.tipo,
+
+                            descricao:
+                                item.descricao,
+
+                            local_id:
+                                destino,
+
+                            quantidade:
+                                quantidade,
+
+                            status:
+                                statusNovo ||
+                                item.status ||
+                                'Ativo',
+
+                            foto_url:
+                                item.foto_url ||
+                                null
+
+                        }]);
+
+
+                if (erroNovoDestino) {
+
+                    throw erroNovoDestino;
+
+                }
+
+            }
+
+
+            /*
+               Se todo o estoque saiu da origem,
+               removemos o registro zerado.
+            */
+
+            if (
+                novaQuantidadeOrigem <=
+                0
+            ) {
+
+                await supabaseClient
+                    .from('itens')
+                    .delete()
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+            }
+
+
+            /*
+               =================================================
+               HISTÓRICO
+               =================================================
+            */
+
+            const {
+                error:
+                    erroHistorico
+            } =
+                await supabaseClient
+                    .from('movimentacoes')
+                    .insert([{
+
+                        item_id:
+                            Number(
+                                item.id
+                            ),
+
+                        origem_id:
+                            origemId,
+
+                        destino_id:
+                            destino,
+
+                        quantidade:
+                            quantidade,
+
+                        observacao:
+                            observacao,
+
+                        data:
+                            new Date()
+                                .toISOString()
+
+                    }]);
+
+
+            if (erroHistorico) {
+
+                console.error(
+                    'ERRO HISTÓRICO:',
+                    erroHistorico
+                );
+
+            }
+
+        }
+
+
+        alert(
+            'Movimentação realizada com sucesso!'
+        );
+
+
+        const itemMov =
+            document.getElementById(
+                'itemMov'
+            );
+
+
+        const destinoCampo =
+            document.getElementById(
+                'destino'
+            );
+
+
+        const quantidadeCampo =
+            document.getElementById(
+                'quantidadeMov'
+            );
+
+
+        const observacaoCampo =
+            document.getElementById(
+                'observacaoMov'
+            );
+
+
+        const statusCampo =
+            document.getElementById(
+                'statusMov'
+            );
+
+
+        const origemCampo =
+            document.getElementById(
+                'origemAtual'
+            ) ||
+            document.getElementById(
+                'origemNome'
+            );
+
+
+        if (itemMov) {
+
+            itemMov.value =
+                '';
+
+        }
+
+
+        if (destinoCampo) {
+
+            destinoCampo.value =
+                '';
+
+        }
+
+
+        if (quantidadeCampo) {
+
+            quantidadeCampo.value =
+                1;
+
+        }
+
+
+        if (observacaoCampo) {
+
+            observacaoCampo.value =
+                '';
+
+        }
+
+
+        if (statusCampo) {
+
+            statusCampo.value =
+                '';
+
+        }
+
+
+        if (origemCampo) {
+
+            origemCampo.value =
+                '';
+
+        }
+
+
+        const resumo =
+            document.getElementById(
+                'resumoMovimentacao'
+            );
+
+
+        if (resumo) {
+
+            resumo.innerHTML =
+                '';
+
+        }
+
+
+        await carregarDashboard();
+
+        await carregarHistorico();
+
+
+        return false;
+
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO AO MOVIMENTAR:',
+            erro
+        );
+
+
+        alert(
+            'Erro ao movimentar o item.\n\n' +
+            (
+                erro?.message ||
+                'Erro desconhecido.'
+            )
+        );
+
+
+        return false;
+
+    }
+
+}
+/* =========================================================
+   CONSULTA PÚBLICA DE INVENTÁRIO
+   SEM LOGIN
+========================================================= */
+
+
+/* =========================================================
+   ABRIR CONSULTA PÚBLICA
+========================================================= */
+
+function abrirConsultaPublica() {
+
+    /*
+       A consulta pública NÃO cria sessão,
+       NÃO altera usuarioLogado e
+       NÃO interfere no login administrativo.
+    */
+
+    const loginTela =
+        document.getElementById(
+            'loginTela'
+        );
+
+    const consultaTela =
+        document.getElementById(
+            'consultaPublicaTela'
+        );
+
+
+    if (!consultaTela) {
+
+        console.error(
+            'Tela consultaPublicaTela não encontrada no HTML.'
+        );
+
+        alert(
+            'A tela de consulta pública não foi encontrada.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Esconde todas as telas.
+    */
+
+    document
+        .querySelectorAll('.tela')
+        .forEach(
+            tela => {
+
+                tela.classList.remove(
+                    'activeTela'
+                );
+
+            }
+        );
+
+
+    /*
+       Abre a consulta.
+    */
+
+    consultaTela.classList.add(
+        'activeTela'
+    );
+
+
+    /*
+       No modo público, a sidebar administrativa
+       permanece escondida.
+    */
+
+    document.body
+        .classList
+        .add(
+            'public-mode'
+        );
+
+
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+
+    if (sidebar) {
+
+        sidebar.classList.remove(
+            'open'
+        );
+
+        sidebar.style.display =
+            'none';
+
+    }
+
+
+    /*
+       Carrega os locais do filtro.
+    */
+
+    carregarLocaisConsultaPublica();
+
+
+    /*
+       Carrega os itens ativos.
+    */
+
+    carregarConsultaPublica();
+
+}
+
+
+/* =========================================================
+   VOLTAR PARA LOGIN
+========================================================= */
+
+function voltarParaLogin() {
+
+    const consultaTela =
+        document.getElementById(
+            'consultaPublicaTela'
+        );
+
+
+    if (consultaTela) {
+
+        consultaTela.classList.remove(
+            'activeTela'
+        );
+
+    }
+
+
+    document.body
+        .classList
+        .remove(
+            'public-mode'
+        );
+
+
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+
+    if (sidebar) {
+
+        sidebar.style.display =
+            '';
+
+        sidebar.classList.remove(
+            'open'
+        );
+
+    }
+
+
+    abrirTela(
+        'loginTela'
+    );
+
+}
+
+
+/* =========================================================
+   CARREGAR LOCAIS DA CONSULTA PÚBLICA
+========================================================= */
+
+function carregarLocaisConsultaPublica() {
+
+    const select =
+        document.getElementById(
+            'filtroLocalPublico'
+        );
+
+
+    if (!select) {
+
+        return;
+
+    }
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Todos os locais
+        </option>
+
+    `;
+
+
+    [...LOCAIS]
+        .sort(
+            (
+                a,
+                b
+            ) =>
+                a.nome.localeCompare(
+                    b.nome,
+                    'pt-BR'
+                )
+        )
+        .forEach(
+            local => {
+
+                select.innerHTML += `
+
+                    <option
+                        value="${Number(local.id)}"
+                    >
+
+                        ${escaparHTML(
+                            local.nome
+                        )}
+
+                    </option>
+
+                `;
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   VARIÁVEL DOS ITENS PÚBLICOS
+========================================================= */
+
+let itensConsultaPublica = [];
+
+
+/* =========================================================
+   CARREGAR CONSULTA PÚBLICA
+========================================================= */
+
+async function carregarConsultaPublica() {
+
+    const container =
+        document.getElementById(
+            'listaConsultaPublica'
+        );
+
+
+    if (!container) {
+
+        console.error(
+            'Elemento listaConsultaPublica não encontrado.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Estado de carregamento.
+    */
+
+    container.innerHTML = `
+
+        <div class="consulta-loading">
+
+            <i
+                class="fa-solid fa-spinner fa-spin"
+            ></i>
+
+            <span>
+                Carregando inventário...
+            </span>
+
+        </div>
+
+    `;
+
+
+    try {
+
+        /*
+           IMPORTANTE:
+
+           A consulta pública NÃO acessa
+           diretamente a tabela "itens".
+
+           Ela consulta somente a VIEW
+           criada no Supabase:
+
+           consulta_publica_inventario
+        */
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from(
+                    'consulta_publica_inventario'
+                )
+                .select(
+                    'nome,tipo,descricao,quantidade,local_id,status,foto_url'
+                )
+                .eq(
+                    'status',
+                    'Ativo'
+                )
+                .order(
+                    'nome',
+                    {
+                        ascending:
+                            true
+                    }
+                );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        itensConsultaPublica =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        /*
+           Agrupa itens por:
+
+           ITEM + LOCAL
+
+           Exemplo:
+
+           300 copos CD1
+
+           será:
+
+           Copo de vidro
+           CD1
+           300 unidades
+        */
+
+        itensConsultaPublica =
+            consolidarItensConsultaPublica(
+                itensConsultaPublica
+            );
+
+
+        renderizarConsultaPublica();
+
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO CONSULTA PÚBLICA:',
+            erro
+        );
+
+
+        container.innerHTML = `
+
+            <div class="consulta-erro">
+
+                <i
+                    class="fa-solid fa-triangle-exclamation"
+                ></i>
+
+                <h3>
+                    Não foi possível carregar
+                    o inventário
+                </h3>
+
+                <p>
+                    Verifique sua conexão
+                    e tente novamente.
+                </p>
+
+                <button
+                    type="button"
+                    onclick="carregarConsultaPublica()"
+                >
+
+                    <i
+                        class="fa-solid fa-rotate-right"
+                    ></i>
+
+                    Tentar novamente
+
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+   CONSOLIDAR ITENS DA CONSULTA
+========================================================= */
+
+function consolidarItensConsultaPublica(
+    lista
+) {
+
+    const mapa = new Map();
+
+
+    lista.forEach(
+        item => {
+
+            /*
+               A quantidade vem do banco.
+
+               Se por algum motivo não existir,
+               consideramos 1.
+            */
+
+            const quantidade =
+                quantidadeItem(
+                    item
+                );
+
+
+            const chave =
+                [
+                    String(
+                        item.nome ||
+                        ''
+                    )
+                    .trim()
+                    .toLowerCase(),
+
+                    String(
+                        item.tipo ||
+                        ''
+                    )
+                    .trim()
+                    .toLowerCase(),
+
+                    String(
+                        item.local_id ||
+                        ''
+                    )
+
+                ]
+                .join('||');
+
+
+            if (
+                !mapa.has(
+                    chave
+                )
+            ) {
+
+                mapa.set(
+                    chave,
+                    {
+
+                        nome:
+                            item.nome ||
+                            'Item',
+
+                        tipo:
+                            item.tipo ||
+                            '',
+
+                        descricao:
+                            item.descricao ||
+                            '',
+
+                        local_id:
+                            item.local_id,
+
+                        status:
+                            item.status ||
+                            'Ativo',
+
+                        foto_url:
+                            item.foto_url ||
+                            '',
+
+                        quantidade:
+                            quantidade
+
+                    }
+                );
+
+            } else {
+
+                const registro =
+                    mapa.get(
+                        chave
+                    );
+
+
+                registro.quantidade +=
+                    quantidade;
+
+
+                /*
+                   Se o primeiro registro
+                   não tiver foto, mas outro
+                   tiver, usamos a foto
+                   encontrada.
+                */
+
+                if (
+                    !registro.foto_url &&
+                    item.foto_url
+                ) {
+
+                    registro.foto_url =
+                        item.foto_url;
+
+                }
+
+            }
+
+        }
+    );
+
+
+    return Array.from(
+        mapa.values()
+    );
+
+}
+
+
+/* =========================================================
+   RENDERIZAR CONSULTA PÚBLICA
+========================================================= */
+
+function renderizarConsultaPublica() {
+
+    const container =
+        document.getElementById(
+            'listaConsultaPublica'
+        );
+
+
+    if (!container) {
+
+        return;
+
+    }
+
+
+    const busca =
+        document
+            .getElementById(
+                'buscaPublica'
+            )
+            ?.value
+            ?.trim()
+            .toLowerCase() ||
+        '';
+
+
+    const localFiltro =
+        document
+            .getElementById(
+                'filtroLocalPublico'
+            )
+            ?.value ||
+        '';
+
+
+    const itensFiltrados =
+        itensConsultaPublica.filter(
+            item => {
+
+                const texto =
+                    [
+                        item.nome,
+                        item.tipo,
+                        item.descricao,
+                        nomeLocal(
+                            item.local_id
+                        )
+
+                    ]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLowerCase();
+
+
+                const correspondeBusca =
+                    !busca ||
+                    texto.includes(
+                        busca
+                    );
+
+
+                const correspondeLocal =
+                    !localFiltro ||
+                    String(
+                        item.local_id
+                    ) ===
+                    String(
+                        localFiltro
+                    );
+
+
+                return (
+                    correspondeBusca &&
+                    correspondeLocal
+                );
+
+            }
+        );
+
+
+    /*
+       Atualiza contador.
+    */
+
+    const contador =
+        document.getElementById(
+            'contadorConsultaPublica'
+        );
+
+
+    if (contador) {
+
+        contador.innerText =
+            itensFiltrados.length;
+
+    }
+
+
+    /*
+       Nenhum resultado.
+    */
+
+    if (
+        itensFiltrados.length ===
+        0
+    ) {
+
+        container.innerHTML = `
+
+            <div class="consulta-vazia">
+
+                <div class="consulta-vazia-icon">
+
+                    <i
+                        class="fa-solid fa-box-open"
+                    ></i>
+
+                </div>
+
+                <h3>
+                    Nenhum item encontrado
+                </h3>
+
+                <p>
+                    Tente alterar a pesquisa
+                    ou o local selecionado.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        '';
+
+
+    itensFiltrados.forEach(
+        item => {
+
+            const card =
+                document.createElement(
+                    'article'
+                );
+
+
+            card.className =
+                'consulta-item-card';
+
+
+            const local =
+                nomeLocal(
+                    item.local_id
+                );
+
+
+            const quantidade =
+                quantidadeItem(
+                    item
+                );
+
+
+            const foto =
+                item.foto_url
+                    ? `
+
+                        <div
+                            class="consulta-foto"
+                        >
+
+                            <img
+                                src="${escaparHTML(item.foto_url)}"
+                                alt="${escaparHTML(item.nome)}"
+                                loading="lazy"
+                                onclick="abrirModalFoto('${escaparHTML(item.foto_url)}')"
+                            >
+
+                            <button
+                                type="button"
+                                class="consulta-foto-expandir"
+                                onclick="event.stopPropagation(); abrirModalFoto('${escaparHTML(item.foto_url)}')"
+                                title="Ampliar foto"
+                            >
+
+                                <i
+                                    class="fa-solid fa-expand"
+                                ></i>
+
+                            </button>
+
+                        </div>
+
+                    `
+                    : `
+
+                        <div
+                            class="consulta-foto consulta-sem-foto"
+                        >
+
+                            <i
+                                class="fa-solid fa-image"
+                            ></i>
+
+                            <span>
+                                Sem foto
+                            </span>
+
+                        </div>
+
+                    `;
+
+
+            const descricao =
+                item.descricao
+                    ? `
+
+                        <p
+                            class="consulta-descricao"
+                        >
+
+                            ${escaparHTML(
+                                item.descricao
+                            )}
+
+                        </p>
+
+                    `
+                    : '';
+
+
+            card.innerHTML = `
+
+                ${foto}
+
+                <div
+                    class="consulta-card-conteudo"
+                >
+
+                    <div
+                        class="consulta-card-topo"
+                    >
+
+                        <span
+                            class="consulta-status"
+                        >
+
+                            <span
+                                class="consulta-status-dot"
+                            ></span>
+
+                            Ativo
+
+                        </span>
+
+                        <span
+                            class="consulta-tipo"
+                        >
+
+                            ${escaparHTML(
+                                item.tipo ||
+                                'Estoque'
+                            )}
+
+                        </span>
+
+                    </div>
+
+
+                    <h3
+                        class="consulta-item-nome"
+                    >
+
+                        ${escaparHTML(
+                            item.nome
+                        )}
+
+                    </h3>
+
+
+                    ${descricao}
+
+
+                    <div
+                        class="consulta-info-grid"
+                    >
+
+                        <div
+                            class="consulta-info"
+                        >
+
+                            <span
+                                class="consulta-info-label"
+                            >
+
+                                Quantidade
+
+                            </span>
+
+                            <strong
+                                class="consulta-quantidade"
+                            >
+
+                                ${quantidade}
+
+                            </strong>
+
+                            <small>
+                                unidade(s)
+                            </small>
+
+                        </div>
+
+
+                        <div
+                            class="consulta-info"
+                        >
+
+                            <span
+                                class="consulta-info-label"
+                            >
+
+                                Localização
+
+                            </span>
+
+                            <strong
+                                class="consulta-local"
+                            >
+
+                                <i
+                                    class="fa-solid fa-location-dot"
+                                ></i>
+
+                                ${escaparHTML(
+                                    local
+                                )}
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   PESQUISAR CONSULTA PÚBLICA
+========================================================= */
+
+function filtrarConsultaPublica() {
+
+    renderizarConsultaPublica();
+
+}
+
+
+/* =========================================================
+   LIMPAR FILTROS DA CONSULTA PÚBLICA
+========================================================= */
+
+function limparFiltrosConsultaPublica() {
+
+    const busca =
+        document.getElementById(
+            'buscaPublica'
+        );
+
+
+    const local =
+        document.getElementById(
+            'filtroLocalPublico'
+        );
+
+
+    if (busca) {
+
+        busca.value =
+            '';
+
+    }
+
+
+    if (local) {
+
+        local.value =
+            '';
+
+    }
+
+
+    renderizarConsultaPublica();
+
+}
+
+
+/* =========================================================
+   ATUALIZAR CONSULTA PÚBLICA
+========================================================= */
+
+async function atualizarConsultaPublica() {
+
+    const botao =
+        document.getElementById(
+            'btnAtualizarConsulta'
+        );
+
+
+    const texto =
+        botao?.innerHTML;
+
+
+    if (botao) {
+
+        botao.disabled =
+            true;
+
+        botao.innerHTML = `
+
+            <i
+                class="fa-solid fa-spinner fa-spin"
+            ></i>
+
+            Atualizando...
+
+        `;
+
+    }
+
+
+    try {
+
+        await carregarConsultaPublica();
+
+    } finally {
+
+        if (botao) {
+
+            botao.disabled =
+                false;
+
+            botao.innerHTML =
+                texto ||
+                '<i class="fa-solid fa-rotate"></i> Atualizar';
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   MODAL DA FOTO
+========================================================= */
+
+function abrirModalFoto(url) {
+
+    if (!url) {
+
+        return;
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            'modalFoto'
+        );
+
+
+    const imagem =
+        document.getElementById(
+            'imagemModal'
+        );
+
+
+    if (
+        !modal ||
+        !imagem
+    ) {
+
+        /*
+           Fallback caso o modal não exista.
+        */
+
+        window.open(
+            url,
+            '_blank'
+        );
+
+        return;
+
+    }
+
+
+    imagem.src =
+        url;
+
+
+    imagem.alt =
+        'Foto do item';
+
+
+    modal.classList.add(
+        'active'
+    );
+
+
+    document.body.classList.add(
+        'modal-aberto'
+    );
+
+}
+
+
+/* =========================================================
+   FECHAR MODAL DA FOTO
+========================================================= */
+
+function fecharModalFoto(
+    event
+) {
+
+    /*
+       Se o clique aconteceu
+       diretamente no fundo do modal,
+       fecha.
+
+       Se o HTML chamar diretamente
+       fecharModalFoto(), também fecha.
+    */
+
+    if (
+        event &&
+        event.target &&
+        event.currentTarget &&
+        event.target !==
+            event.currentTarget
+    ) {
+
+        return;
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            'modalFoto'
+        );
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            'active'
+        );
+
+    }
+
+
+    document.body.classList.remove(
+        'modal-aberto'
+    );
+
+}
+
+
+/* =========================================================
+   TECLA ESC FECHA MODAIS
+========================================================= */
+
+document.addEventListener(
+    'keydown',
+    event => {
+
+        if (
+            event.key ===
+            'Escape'
+        ) {
+
+            fecharModalFoto();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ABRIR TELA
+========================================================= */
+
+function abrirTela(
+    idTela,
+    elemento
+) {
+
+    /*
+       Consulta pública é exceção:
+       não precisa de login.
+    */
+
+    const telasPublicas = [
+
+        'loginTela',
+
+        'consultaPublicaTela'
+
+    ];
+
+
+    if (
+        !usuarioLogado &&
+        !telasPublicas.includes(
+            idTela
+        )
+    ) {
+
+        alert(
+            'Faça login primeiro.'
+        );
+
+        return;
+
+    }
+
+
+    const tela =
+        document.getElementById(
+            idTela
+        );
+
+
+    if (!tela) {
+
+        console.error(
+            'Tela não encontrada:',
+            idTela
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Fecha todas as telas.
+    */
+
+    document
+        .querySelectorAll(
+            '.tela'
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    'activeTela'
+                );
+
+            }
+        );
+
+
+    tela.classList.add(
+        'activeTela'
+    );
+
+
+    /*
+       Menu ativo.
+    */
+
+    document
+        .querySelectorAll(
+            '.menu-item'
+        )
+        .forEach(
+            menu => {
+
+                menu.classList.remove(
+                    'active'
+                );
+
+            }
+        );
+
+
+    if (elemento) {
+
+        elemento.classList.add(
+            'active'
+        );
+
+    }
+
+
+    /*
+       Login.
+    */
+
+    if (
+        idTela ===
+        'loginTela'
+    ) {
+
+        document.body
+            .classList
+            .add(
+                'login-mode'
+            );
+
+        document.body
+            .classList
+            .remove(
+                'public-mode'
+            );
+
+    }
+
+
+    /*
+       Consulta pública.
+    */
+
+    if (
+        idTela ===
+        'consultaPublicaTela'
+    ) {
+
+        document.body
+            .classList
+            .remove(
+                'login-mode'
+            );
+
+        document.body
+            .classList
+            .add(
+                'public-mode'
+            );
+
+        carregarLocaisConsultaPublica();
+
+        carregarConsultaPublica();
+
+    }
+
+
+    /*
+       Telas autenticadas.
+    */
+
+    if (
+        idTela !==
+            'loginTela' &&
+        idTela !==
+            'consultaPublicaTela'
+    ) {
+
+        document.body
+            .classList
+            .remove(
+                'login-mode'
+            );
+
+        document.body
+            .classList
+            .remove(
+                'public-mode'
+            );
+
+    }
+
+
+    /*
+       Fecha sidebar no mobile.
+    */
+
+    if (
+        window.innerWidth <=
+        900
+    ) {
+
+        const sidebar =
+            document.getElementById(
+                'sidebar'
+            );
+
+
+        if (sidebar) {
+
+            sidebar.classList.remove(
+                'open'
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   MENU MOBILE
+========================================================= */
+
+function toggleSidebar() {
+
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+
+    if (!sidebar) {
+
+        return;
+
+    }
+
+
+    /*
+       Não permite abrir o menu
+       na consulta pública.
+    */
+
+    if (
+        document.body
+            .classList
+            .contains(
+                'public-mode'
+            )
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        document.body
+            .classList
+            .contains(
+                'login-mode'
+            )
+    ) {
+
+        return;
+
+    }
+
+
+    sidebar.classList.toggle(
+        'open'
+    );
+
+}
+
+
+/* =========================================================
+   FECHAR SIDEBAR AO CLICAR FORA
+========================================================= */
+
+document.addEventListener(
+    'click',
+    event => {
+
+        const sidebar =
+            document.getElementById(
+                'sidebar'
+            );
+
+
+        const menuBtn =
+            document.querySelector(
+                '.mobile-menu-btn'
+            );
+
+
+        if (
+            !sidebar ||
+            !menuBtn
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            window.innerWidth >
+            900
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            document.body
+                .classList
+                .contains(
+                    'login-mode'
+                ) ||
+            document.body
+                .classList
+                .contains(
+                    'public-mode'
+                )
+        ) {
+
+            sidebar.classList.remove(
+                'open'
+            );
+
+            return;
+
+        }
+
+
+        const clicouSidebar =
+            sidebar.contains(
+                event.target
+            );
+
+
+        const clicouBotao =
+            menuBtn.contains(
+                event.target
+            );
+
+
+        if (
+            !clicouSidebar &&
+            !clicouBotao
+        ) {
+
+            sidebar.classList.remove(
+                'open'
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EXPORTAR EXCEL / CSV
+========================================================= */
+
+function exportarExcel() {
+
+    if (
+        itens.length ===
+        0
+    ) {
+
+        alert(
+            'Nenhum item cadastrado.'
+        );
+
+        return;
+
+    }
+
+
+    let csv =
+        'PATRIMÔNIO;TIPO;NOME;DESCRIÇÃO;QUANTIDADE;LOCAL;STATUS\n';
+
+
+    itens.forEach(
+        item => {
+
+            const local =
+                nomeLocal(
+                    item.local_id
+                );
+
+
+            const linha = [
+
+                item.patrimonio ||
+                    'Estoque',
+
+                item.tipo ||
+                    item.nome ||
+                    '',
+
+                item.nome ||
+                    '',
+
+                item.descricao ||
+                    '',
+
+                quantidadeItem(
+                    item
+                ),
+
+                local,
+
+                item.status ||
+                    ''
+
+            ]
+                .map(
+                    valor =>
+                        `"${String(valor)
+                            .replace(
+                                /"/g,
+                                '""'
+                            )}"`
+                )
+                .join(';');
+
+
+            csv +=
+                linha +
+                '\n';
+
+        }
+    );
+
+
+    const blob =
+        new Blob(
+            [
+                '\ufeff' +
+                csv
+            ],
+            {
+
+                type:
+                    'text/csv;charset=utf-8;'
+
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            'a'
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        'inventario-grupo-monte-carlo.csv';
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
+window.addEventListener(
+    'load',
+    async () => {
+
+        try {
+
+            /*
+               Estado inicial:
+               sem login = modo login.
+            */
+
+            document.body
+                .classList
+                .add(
+                    'login-mode'
+                );
+
+
+            carregarLocais();
+
+            atualizarMenus();
+
+            atualizarUsuarioInterface();
+
+
+            /*
+               Verifica sessão existente.
+            */
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .auth
+                    .getSession();
+
+
+            if (error) {
+
+                console.error(
+                    'ERRO GET SESSION:',
+                    error
+                );
+
+            }
+
+
+            if (
+                data?.session
+                    ?.user
+            ) {
+
+                usuarioLogado =
+                    data.session.user;
+
+
+                await verificarPerfil();
+
+
+                document.body
+                    .classList
+                    .remove(
+                        'login-mode'
+                    );
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+
+                abrirTela(
+                    'dashboardTela',
+                    document.getElementById(
+                        'menuDashboard'
+                    )
+                );
+
+
+                await carregarDashboard();
+
+                await carregarHistorico();
+
+
+            } else {
+
+                usuarioLogado =
+                    null;
+
+                perfilUsuario =
+                    null;
+
+
+                atualizarMenus();
+
+                atualizarUsuarioInterface();
+
+
+                abrirTela(
+                    'loginTela',
+                    document.getElementById(
+                        'menuLogin'
+                    )
+                );
+
+            }
+
+
+            /*
+               Observa mudanças de autenticação.
+            */
+
+            supabaseClient
+                .auth
+                .onAuthStateChange(
+                    async (
+                        evento,
+                        session
+                    ) => {
+
+                        console.log(
+                            'AUTH:',
+                            evento
+                        );
+
+
+                        if (
+                            session?.user
+                        ) {
+
+                            usuarioLogado =
+                                session.user;
+
+
+                            await verificarPerfil();
+
+
+                            document.body
+                                .classList
+                                .remove(
+                                    'login-mode'
+                                );
+
+
+                            atualizarMenus();
+
+                            atualizarUsuarioInterface();
+
+                        } else {
+
+                            usuarioLogado =
+                                null;
+
+                            perfilUsuario =
+                                null;
+
+
+                            document.body
+                                .classList
+                                .add(
+                                    'login-mode'
+                                );
+
+
+                            atualizarMenus();
+
+                            atualizarUsuarioInterface();
+
+                        }
+
+                    }
+                );
+
+
+            console.log(
+                'Sistema conectado ao Supabase.'
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                'ERRO AO INICIAR SISTEMA:',
+                erro
+            );
+
+
+            alert(
+                'Erro ao iniciar o sistema.'
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EVENTOS DA CONSULTA PÚBLICA
+========================================================= */
+
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        const busca =
+            document.getElementById(
+                'buscaPublica'
+            );
+
+
+        if (busca) {
+
+            busca.addEventListener(
+                'input',
+                filtrarConsultaPublica
+            );
+
+        }
+
+
+        const filtroLocal =
+            document.getElementById(
+                'filtroLocalPublico'
+            );
+
+
+        if (filtroLocal) {
+
+            filtroLocal.addEventListener(
+                'change',
+                filtrarConsultaPublica
+            );
+
+        }
+
+
+        const quantidadeMov =
+            document.getElementById(
+                'quantidadeMov'
+            );
+
+
+        if (quantidadeMov) {
+
+            quantidadeMov.addEventListener(
+                'input',
+                atualizarResumoMovimentacao
+            );
+
+        }
+
+
+        const itemMov =
+            document.getElementById(
+                'itemMov'
+            );
+
+
+        if (itemMov) {
+
+            itemMov.addEventListener(
+                'change',
+                preencherOrigemAutomaticamente
+            );
+
+        }
+
+
+        const destino =
+            document.getElementById(
+                'destino'
+            );
+
+
+        if (destino) {
+
+            destino.addEventListener(
+                'change',
+                atualizarResumoMovimentacao
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EXPOSIÇÃO DAS FUNÇÕES PARA O HTML
+========================================================= */
+
+window.login =
+    login;
+
+window.logout =
+    logout;
+
+window.abrirTela =
+    abrirTela;
+
+window.abrirConsultaPublica =
+    abrirConsultaPublica;
+
+window.voltarParaLogin =
+    voltarParaLogin;
+
+window.carregarConsultaPublica =
+    carregarConsultaPublica;
+
+window.atualizarConsultaPublica =
+    atualizarConsultaPublica;
+
+window.filtrarConsultaPublica =
+    filtrarConsultaPublica;
+
+window.limparFiltrosConsultaPublica =
+    limparFiltrosConsultaPublica;
+
+window.abrirModalFoto =
+    abrirModalFoto;
+
+window.fecharModalFoto =
+    fecharModalFoto;
+
+window.toggleSidebar =
+    toggleSidebar;
+
+window.salvarItem =
+    salvarItem;
+
+window.editarItem =
+    editarItem;
+
+window.excluirItem =
+    excluirItem;
+
+window.movimentarItem =
+    movimentarItem;
+
+window.preencherOrigemAutomaticamente =
+    preencherOrigemAutomaticamente;
+
+window.atualizarResumoMovimentacao =
+    atualizarResumoMovimentacao;
+
+window.filtrarItens =
+    filtrarItens;
+
+window.filtrarDashboard =
+    filtrarDashboard;
+
+window.exportarExcel =
+    exportarExcel;
+
+window.alternarTipoControle =
+    alternarTipoControle;
