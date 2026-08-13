@@ -221,76 +221,250 @@ function usuarioPodeMovimentar(){
 
 async function login(){
 
-    if(!inicializarSupabase()){
+    console.log(
+        '======================================'
+    );
+
+    console.log(
+        'INICIANDO LOGIN'
+    );
+
+    console.log(
+        '======================================'
+    );
+
+
+    /* -----------------------------------------------------
+       GARANTE SUPABASE
+    ----------------------------------------------------- */
+
+    if(!supabaseClient){
+
+        console.log(
+            'Supabase ainda não inicializado. Inicializando...'
+        );
+
+
+        const inicializou =
+        inicializarSupabase();
+
+
+        if(!inicializou){
+
+            alert(
+                'Erro: o sistema não conseguiu conectar ao Supabase.'
+            );
+
+            return;
+        }
+
+    }
+
+
+    /* -----------------------------------------------------
+       CAMPOS
+    ----------------------------------------------------- */
+
+    const emailInput =
+    document.getElementById(
+        'email'
+    );
+
+
+    const passwordInput =
+    document.getElementById(
+        'password'
+    );
+
+
+    if(!emailInput){
+
+        console.error(
+            'Campo #email não encontrado.'
+        );
 
         alert(
-            'Erro: o Supabase não foi carregado.'
+            'Erro interno: campo de e-mail não encontrado.'
         );
 
         return;
     }
 
 
-    const emailInput =
-    obterElemento('email');
+    if(!passwordInput){
 
-    const passwordInput =
-    obterElemento('password');
-
-
-    const email =
-    emailInput
-    ?.value
-    ?.trim()
-    || '';
-
-
-    const password =
-    passwordInput
-    ?.value
-    || '';
-
-
-    if(!email || !password){
+        console.error(
+            'Campo #password não encontrado.'
+        );
 
         alert(
-            'Informe email e senha.'
+            'Erro interno: campo de senha não encontrado.'
         );
 
         return;
+    }
+
+
+    const email =
+    emailInput.value
+    .trim()
+    .toLowerCase();
+
+
+    const password =
+    passwordInput.value;
+
+
+    console.log(
+        'E-mail informado:',
+        email
+    );
+
+
+    if(!email){
+
+        alert(
+            'Informe seu e-mail.'
+        );
+
+        emailInput.focus();
+
+        return;
+    }
+
+
+    if(!password){
+
+        alert(
+            'Informe sua senha.'
+        );
+
+        passwordInput.focus();
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       BOTÃO
+    ----------------------------------------------------- */
+
+    const botao =
+    document.getElementById(
+        'btnLogin'
+    );
+
+
+    const textoBotao =
+    document.getElementById(
+        'textoBtnLogin'
+    );
+
+
+    if(botao){
+
+        botao.disabled =
+        true;
+
+    }
+
+
+    if(textoBotao){
+
+        textoBotao.innerText =
+        'Entrando...';
+
     }
 
 
     try{
 
-        const resultado =
+        console.log(
+            'Enviando autenticação para o Supabase...'
+        );
+
+
+        /* -------------------------------------------------
+           LOGIN SUPABASE
+        ------------------------------------------------- */
+
+        const {
+            data,
+            error
+        } =
         await supabaseClient
         .auth
         .signInWithPassword({
 
-            email:email,
+            email:
+            email,
 
-            password:password
+            password:
+            password
 
         });
 
 
-        const data =
-        resultado.data;
+        console.log(
+            'Resposta do Supabase:',
+            data,
+            error
+        );
 
-        const error =
-        resultado.error;
 
+        /* -------------------------------------------------
+           ERRO DE AUTENTICAÇÃO
+        ------------------------------------------------- */
 
         if(error){
 
             console.error(
-                'Erro Supabase Login:',
+                'ERRO DE LOGIN SUPABASE:',
                 error
             );
 
+
+            if(
+                error.message
+                ?.toLowerCase()
+                .includes(
+                    'invalid login credentials'
+                )
+            ){
+
+                alert(
+                    'E-mail ou senha incorretos.'
+                );
+
+            }else{
+
+                alert(
+                    'Erro ao fazer login: ' +
+                    error.message
+                );
+
+            }
+
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           USUÁRIO AUTENTICADO
+        ------------------------------------------------- */
+
+        if(
+            !data ||
+            !data.user
+        ){
+
+            console.error(
+                'Supabase não retornou usuário.'
+            );
+
             alert(
-                'Login inválido. Verifique o email e a senha.'
+                'O login não retornou um usuário válido.'
             );
 
             return;
@@ -298,54 +472,92 @@ async function login(){
 
 
         usuarioLogado =
-        data?.user || null;
+        data.user;
 
 
-        if(!usuarioLogado){
+        console.log(
+            'USUÁRIO AUTENTICADO:',
+            usuarioLogado.email
+        );
 
-            alert(
-                'Não foi possível identificar o usuário.'
-            );
 
-            return;
-        }
-
+        /* -------------------------------------------------
+           BUSCAR PERFIL
+        ------------------------------------------------- */
 
         await verificarPerfil();
 
 
+        console.log(
+            'PERFIL IDENTIFICADO:',
+            perfilUsuario
+        );
+
+
+        /* -------------------------------------------------
+           ATUALIZAR INTERFACE
+        ------------------------------------------------- */
+
         atualizarMenus();
 
 
+        /* -------------------------------------------------
+           ABRIR DASHBOARD
+        ------------------------------------------------- */
+
         abrirTela(
             'dashboardTela',
-            obterElemento('menuDashboard')
+            document.getElementById(
+                'menuDashboard'
+            )
         );
 
+
+        /* -------------------------------------------------
+           CARREGAR SISTEMA
+        ------------------------------------------------- */
 
         await carregarDashboard();
 
 
         console.log(
-            'Login realizado:',
-            usuarioLogado.email
+            'LOGIN CONCLUÍDO COM SUCESSO!'
         );
 
 
     }catch(error){
 
         console.error(
-            'Erro no login:',
+            'ERRO INESPERADO NO LOGIN:',
             error
         );
 
+
         alert(
-            'Erro ao realizar login.'
+            'Erro inesperado ao realizar o login. Veja o Console para detalhes.'
         );
+
+
+    }finally{
+
+        if(botao){
+
+            botao.disabled =
+            false;
+
+        }
+
+
+        if(textoBotao){
+
+            textoBotao.innerText =
+            'Entrar no Sistema';
+
+        }
+
     }
 
 }
-
 
 /* =========================================================
    LOGOUT
@@ -3951,6 +4163,97 @@ async function inicializarSistema(){
 
 }
 
+/* =========================================================
+   EVENTO DO FORMULÁRIO DE LOGIN
+========================================================= */
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+
+        const loginForm =
+        document.getElementById(
+            'loginForm'
+        );
+
+
+        if(!loginForm){
+
+            console.error(
+                'ERRO: formulário loginForm não encontrado.'
+            );
+
+            return;
+        }
+
+
+        loginForm.addEventListener(
+            'submit',
+            async function(event){
+
+                event.preventDefault();
+
+                console.log(
+                    'FORMULÁRIO DE LOGIN ENVIADO'
+                );
+
+                await login();
+
+            }
+        );
+
+    }
+);
+/* =========================================================
+   WINDOW LOAD
+========================================================= */
+
+window.addEventListener(
+    'load',
+    inicializarSistema
+);
+/* =========================================================
+   EVENTO DO FORMULÁRIO DE LOGIN
+========================================================= */
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+
+        const loginForm =
+        document.getElementById(
+            'loginForm'
+        );
+
+
+        if(!loginForm){
+
+            console.error(
+                'ERRO: formulário loginForm não encontrado.'
+            );
+
+            return;
+        }
+
+
+        loginForm.addEventListener(
+            'submit',
+            async function(event){
+
+                event.preventDefault();
+
+                console.log(
+                    'FORMULÁRIO DE LOGIN ENVIADO'
+                );
+
+                await login();
+
+            }
+        );
+
+    }
+);
+
 
 /* =========================================================
    WINDOW LOAD
@@ -3960,3 +4263,4 @@ window.addEventListener(
     'load',
     inicializarSistema
 );
+
