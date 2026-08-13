@@ -3358,3 +3358,143 @@ textarea:focus {
         #94a3b8;
 
 }
+/* =========================================================
+   CORREÇÃO DEFINITIVA — LOGO DA CONSULTA PÚBLICA
+   ========================================================= */
+
+/* Qualquer logo dentro da área pública */
+body:not(.login-mode) img[src*="monte-carlo"] {
+    width: 52px !important;
+    height: 52px !important;
+
+    max-width: 52px !important;
+    max-height: 52px !important;
+
+    min-width: 52px !important;
+    min-height: 52px !important;
+
+    object-fit: contain !important;
+
+    display: block !important;
+}
+
+
+/* Impede containers do logo de crescerem */
+body:not(.login-mode) .login-logo,
+body:not(.login-mode) .login-logo-imagem,
+body:not(.login-mode) .logo-imagem,
+body:not(.login-mode) .consulta-logo,
+body:not(.login-mode) .consulta-publica-logo {
+
+    width: 64px !important;
+    height: 64px !important;
+
+    max-width: 64px !important;
+    max-height: 64px !important;
+
+    min-width: 64px !important;
+    min-height: 64px !important;
+
+    overflow: hidden !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
+/* Se existir qualquer imagem dentro desses containers */
+body:not(.login-mode) .login-logo img,
+body:not(.login-mode) .login-logo-imagem img,
+body:not(.login-mode) .logo-imagem img,
+body:not(.login-mode) .consulta-logo img,
+body:not(.login-mode) .consulta-publica-logo img {
+
+    width: 52px !important;
+    height: 52px !important;
+
+    max-width: 52px !important;
+    max-height: 52px !important;
+
+    min-width: 52px !important;
+    min-height: 52px !important;
+
+    object-fit: contain !important;
+}
+
+
+/* =========================================================
+   PROTEÇÃO CONTRA REGRAS GENÉRICAS
+   ========================================================= */
+
+body:not(.login-mode) img {
+
+    max-width: 100%;
+
+}
+
+
+/* EXCEÇÃO: LOGO MONTE CARLO */
+body:not(.login-mode) img[src*="monte-carlo"] {
+
+    width: 52px !important;
+    height: 52px !important;
+
+    max-width: 52px !important;
+    max-height: 52px !important;
+
+    min-width: 52px !important;
+    min-height: 52px !important;
+
+    object-fit: contain !important;
+
+}
+
+
+/* =========================================================
+   CABEÇALHO DA CONSULTA
+   ========================================================= */
+
+body:not(.login-mode) .consulta-header,
+body:not(.login-mode) .consulta-publica-header {
+
+    padding-top: 24px !important;
+    padding-bottom: 20px !important;
+
+}
+
+
+/* Títulos muito grandes */
+body:not(.login-mode) h1 {
+
+    font-size: 30px !important;
+    line-height: 1.15 !important;
+
+}
+
+
+/* =========================================================
+   SEGURANÇA CONTRA LOGO GIGANTE
+   ========================================================= */
+
+/*
+   Caso o logo esteja sendo tratado como elemento de
+   background ou dentro de um container específico.
+*/
+
+body:not(.login-mode) [class*="logo"] {
+
+    max-height: 80px !important;
+
+}
+
+
+body:not(.login-mode) [class*="logo"] img {
+
+    max-height: 52px !important;
+    max-width: 52px !important;
+
+}
