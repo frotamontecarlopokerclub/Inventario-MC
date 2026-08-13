@@ -3359,142 +3359,231 @@ textarea:focus {
 
 }
 /* =========================================================
-   CORREÇÃO DEFINITIVA — LOGO DA CONSULTA PÚBLICA
+   CONSULTA DE INVENTÁRIO
+   LOGO COMO MARCA D'ÁGUA
    ========================================================= */
 
-/* Qualquer logo dentro da área pública */
-body:not(.login-mode) img[src*="monte-carlo"] {
-    width: 52px !important;
-    height: 52px !important;
 
-    max-width: 52px !important;
-    max-height: 52px !important;
+/* ---------------------------------------------------------
+   IDENTIFICA A TELA DE CONSULTA
+   --------------------------------------------------------- */
 
-    min-width: 52px !important;
-    min-height: 52px !important;
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) {
 
-    object-fit: contain !important;
-
-    display: block !important;
-}
-
-
-/* Impede containers do logo de crescerem */
-body:not(.login-mode) .login-logo,
-body:not(.login-mode) .login-logo-imagem,
-body:not(.login-mode) .logo-imagem,
-body:not(.login-mode) .consulta-logo,
-body:not(.login-mode) .consulta-publica-logo {
-
-    width: 64px !important;
-    height: 64px !important;
-
-    max-width: 64px !important;
-    max-height: 64px !important;
-
-    min-width: 64px !important;
-    min-height: 64px !important;
-
-    overflow: hidden !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-
-/* Se existir qualquer imagem dentro desses containers */
-body:not(.login-mode) .login-logo img,
-body:not(.login-mode) .login-logo-imagem img,
-body:not(.login-mode) .logo-imagem img,
-body:not(.login-mode) .consulta-logo img,
-body:not(.login-mode) .consulta-publica-logo img {
-
-    width: 52px !important;
-    height: 52px !important;
-
-    max-width: 52px !important;
-    max-height: 52px !important;
-
-    min-width: 52px !important;
-    min-height: 52px !important;
-
-    object-fit: contain !important;
-}
-
-
-/* =========================================================
-   PROTEÇÃO CONTRA REGRAS GENÉRICAS
-   ========================================================= */
-
-body:not(.login-mode) img {
-
-    max-width: 100%;
+    position: relative;
 
 }
 
 
-/* EXCEÇÃO: LOGO MONTE CARLO */
-body:not(.login-mode) img[src*="monte-carlo"] {
+/* ---------------------------------------------------------
+   ESCONDE O LOGO GIGANTE ORIGINAL
+   --------------------------------------------------------- */
 
-    width: 52px !important;
-    height: 52px !important;
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) img[src*="monte-carlo-logo-transparente"] {
 
-    max-width: 52px !important;
-    max-height: 52px !important;
-
-    min-width: 52px !important;
-    min-height: 52px !important;
-
-    object-fit: contain !important;
+    display: none !important;
 
 }
 
 
-/* =========================================================
+/* Caso o logo esteja sendo usado como background */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) [class*="logo"] {
+
+    background-image: none !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   MARCA D'ÁGUA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+)::before {
+
+    content: "";
+
+    position: fixed;
+
+    z-index: 0;
+
+    pointer-events: none;
+
+    width: 520px;
+    height: 520px;
+
+    left: 50%;
+    top: 53%;
+
+    transform:
+        translate(-50%, -50%);
+
+    background-image:
+        url("monte-carlo-logo-transparente.png");
+
+    background-repeat: no-repeat;
+
+    background-position: center;
+
+    background-size: contain;
+
+    opacity: .035;
+
+}
+
+
+/* ---------------------------------------------------------
+   TODO O CONTEÚDO FICA ACIMA DA MARCA D'ÁGUA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) > * {
+
+    position: relative;
+
+    z-index: 1;
+
+}
+
+
+/* ---------------------------------------------------------
    CABEÇALHO DA CONSULTA
-   ========================================================= */
+   --------------------------------------------------------- */
 
-body:not(.login-mode) .consulta-header,
-body:not(.login-mode) .consulta-publica-header {
-
-    padding-top: 24px !important;
-    padding-bottom: 20px !important;
-
-}
-
-
-/* Títulos muito grandes */
-body:not(.login-mode) h1 {
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) h1 {
 
     font-size: 30px !important;
+
     line-height: 1.15 !important;
 
-}
-
-
-/* =========================================================
-   SEGURANÇA CONTRA LOGO GIGANTE
-   ========================================================= */
-
-/*
-   Caso o logo esteja sendo tratado como elemento de
-   background ou dentro de um container específico.
-*/
-
-body:not(.login-mode) [class*="logo"] {
-
-    max-height: 80px !important;
+    margin-bottom: 8px !important;
 
 }
 
 
-body:not(.login-mode) [class*="logo"] img {
+/* ---------------------------------------------------------
+   CONTAINER DA CONSULTA
+   --------------------------------------------------------- */
 
-    max-height: 52px !important;
-    max-width: 52px !important;
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) main {
+
+    position: relative;
+
+    z-index: 2;
+
+}
+
+
+/* ---------------------------------------------------------
+   ÁREA DOS FILTROS
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) input,
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) select {
+
+    min-height: 42px !important;
+
+    height: 42px !important;
+
+    font-size: 12px !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   BOTÕES
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) button {
+
+    min-height: 40px !important;
+
+    height: 40px !important;
+
+    font-size: 12px !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   CARDS DA CONSULTA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) .consulta-item-card {
+
+    position: relative;
+
+    z-index: 3;
+
+}
+
+
+/* ---------------------------------------------------------
+   FOTOS
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) .consulta-foto {
+
+    height: 145px !important;
+
+    min-height: 145px !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   GRID
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #listaConsultaPublica {
+
+    position: relative;
+
+    z-index: 3;
+
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    )::before {
+
+        width: 300px;
+
+        height: 300px;
+
+        opacity: .025;
+
+    }
 
 }
