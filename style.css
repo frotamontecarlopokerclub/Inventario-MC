@@ -1401,7 +1401,7 @@ input[type="file"]::file-selector-button{
 }
 
 /* =========================================================
-   MOVIMENTAÇÃO
+   MOVIMENTACAO
 ========================================================= */
 
 .movimentacao-alerta{
@@ -1762,7 +1762,7 @@ input[type="file"]::file-selector-button{
     }
 }
 /* =========================================================
-   CONSULTA PÚBLICA — LAYOUT COMPACTO E CORPORATIVO
+   CONSULTA PUBLICA  LAYOUT COMPACTO E CORPORATIVO
 ========================================================= */
 
 #consultaPublicaTela {
@@ -1771,7 +1771,7 @@ input[type="file"]::file-selector-button{
 }
 
 
-/* Cabeçalho da consulta */
+/* Cabecalho da consulta */
 
 #consultaPublicaTela .consulta-publica-header {
     max-width: 1450px;
@@ -1854,7 +1854,7 @@ input[type="file"]::file-selector-button{
 }
 
 
-/* Conteúdo */
+/* Conteudo */
 
 .consulta-card-conteudo {
     padding: 14px 15px 16px;
@@ -1877,7 +1877,7 @@ input[type="file"]::file-selector-button{
 }
 
 
-/* Descrição */
+/* Descricao */
 
 .consulta-descricao {
     font-size: 12px;
@@ -1891,7 +1891,7 @@ input[type="file"]::file-selector-button{
 }
 
 
-/* Informações */
+/* Informacoes */
 
 .consulta-info-grid {
     display: grid;
@@ -1944,7 +1944,7 @@ input[type="file"]::file-selector-button{
 }
 
 
-/* Botão de ampliar */
+/* Botao de ampliar */
 
 .consulta-foto-expandir {
     width: 30px;
@@ -2055,5 +2055,1306 @@ input[type="file"]::file-selector-button{
         grid-template-columns:
             repeat(5, minmax(0, 1fr));
     }
+
+}
+/* =========================================================
+   MONTE CARLO — REFINAMENTO CORPORATIVO
+   VERSÃO COMPACTA / PREMIUM / ERP
+========================================================= */
+
+
+/* =========================================================
+   1. VARIÁVEIS VISUAIS
+========================================================= */
+
+:root {
+
+    --mc-navy: #0f172a;
+    --mc-navy-2: #162033;
+    --mc-blue: #2563eb;
+    --mc-blue-dark: #1d4ed8;
+
+    --mc-gold: #b8892d;
+    --mc-gold-light: #d5ad5b;
+
+    --mc-bg: #f4f6f9;
+    --mc-card: #ffffff;
+
+    --mc-border: #e2e8f0;
+    --mc-border-light: #edf1f5;
+
+    --mc-text: #0f172a;
+    --mc-text-secondary: #64748b;
+    --mc-text-muted: #94a3b8;
+
+    --mc-green: #16a34a;
+    --mc-red: #dc2626;
+    --mc-orange: #ea8a00;
+
+    --mc-radius: 12px;
+    --mc-shadow:
+        0 4px 18px rgba(15, 23, 42, .055);
+
+}
+
+
+/* =========================================================
+   2. SIDEBAR — CORPORATIVA E COMPACTA
+========================================================= */
+
+.sidebar {
+
+    width: 270px !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0b1322 0%,
+            #0f172a 100%
+        ) !important;
+
+    border-right:
+        1px solid
+        rgba(255,255,255,.055) !important;
+
+}
+
+
+/* Área do logo */
+
+.sidebar-logo {
+
+    height: 92px !important;
+
+    min-height: 92px !important;
+
+    padding:
+        18px 20px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    gap: 12px !important;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.07) !important;
+
+}
+
+
+/* Container do logo */
+
+.logo-imagem {
+
+    width: 48px !important;
+
+    height: 48px !important;
+
+    min-width: 48px !important;
+
+    max-width: 48px !important;
+
+    border-radius: 10px !important;
+
+    background:
+        rgba(255,255,255,.055) !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    overflow: hidden !important;
+
+}
+
+
+/* LOGO MONTE CARLO */
+
+.logo-imagem img {
+
+    width: 34px !important;
+
+    height: 34px !important;
+
+    max-width: 34px !important;
+
+    max-height: 34px !important;
+
+    object-fit: contain !important;
+
+    display: block !important;
+
+}
+
+
+/* Texto da marca */
+
+.logo-texto {
+
+    min-width: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    gap: 2px !important;
+
+}
+
+
+.logo-texto strong {
+
+    font-size: 13px !important;
+
+    line-height: 1.15 !important;
+
+    letter-spacing: .025em !important;
+
+    color: #f8fafc !important;
+
+    white-space: nowrap !important;
+
+}
+
+
+.logo-texto span {
+
+    font-size: 9px !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: .09em !important;
+
+    color: #94a3b8 !important;
+
+    white-space: nowrap !important;
+
+}
+
+
+/* =========================================================
+   3. MENU LATERAL
+========================================================= */
+
+.sidebar-menu {
+
+    padding:
+        18px 12px !important;
+
+}
+
+
+.sidebar-menu ul {
+
+    gap: 4px !important;
+
+}
+
+
+.menu-item {
+
+    min-height: 44px !important;
+
+    height: 44px !important;
+
+    padding:
+        0 13px !important;
+
+    margin-bottom: 3px !important;
+
+    border-radius: 9px !important;
+
+    font-size: 13px !important;
+
+    font-weight: 500 !important;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease !important;
+
+}
+
+
+.menu-item i {
+
+    width: 20px !important;
+
+    font-size: 15px !important;
+
+}
+
+
+.menu-item:hover {
+
+    background:
+        rgba(255,255,255,.055) !important;
+
+}
+
+
+.menu-item.active {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(37,99,235,.20),
+            rgba(37,99,235,.08)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0
+        #2563eb !important;
+
+}
+
+
+/* =========================================================
+   4. ÁREA PRINCIPAL
+========================================================= */
+
+.main-content {
+
+    margin-left: 270px !important;
+
+    background:
+        var(--mc-bg) !important;
+
+}
+
+
+/* =========================================================
+   5. HEADER SUPERIOR
+========================================================= */
+
+.topbar,
+.header {
+
+    min-height: 72px !important;
+
+    height: 72px !important;
+
+    padding:
+        0 30px !important;
+
+    background:
+        rgba(255,255,255,.96) !important;
+
+    border-bottom:
+        1px solid
+        var(--mc-border) !important;
+
+}
+
+
+/* =========================================================
+   6. TÍTULOS DAS PÁGINAS
+========================================================= */
+
+.page-content,
+.content {
+
+    padding:
+        26px 30px !important;
+
+}
+
+
+.page-title,
+.content h1 {
+
+    font-size: 27px !important;
+
+    line-height: 1.15 !important;
+
+    letter-spacing: -.025em !important;
+
+}
+
+
+.page-subtitle {
+
+    font-size: 13px !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+}
+
+
+/* =========================================================
+   7. CARDS GERAIS
+========================================================= */
+
+.card {
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        var(--mc-radius) !important;
+
+    box-shadow:
+        var(--mc-shadow) !important;
+
+}
+
+
+/* =========================================================
+   8. DASHBOARD — CARDS MAIS ELEGANTES
+========================================================= */
+
+.stat-card {
+
+    min-height: 112px !important;
+
+    padding:
+        18px !important;
+
+    border-radius:
+        13px !important;
+
+}
+
+
+.stat-card .stat-value {
+
+    font-size: 28px !important;
+
+    line-height: 1 !important;
+
+}
+
+
+.stat-card .stat-label {
+
+    font-size: 11px !important;
+
+}
+
+
+/* =========================================================
+   9. CONSULTA PÚBLICA
+========================================================= */
+
+#consultaPublicaTela {
+
+    min-height:
+        100vh !important;
+
+    padding:
+        28px 34px 40px !important;
+
+    background:
+        #f5f7fa !important;
+
+}
+
+
+/* Container */
+
+#consultaPublicaTela
+.consulta-publica-container {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto !important;
+
+}
+
+
+/* Cabeçalho */
+
+#consultaPublicaTela
+.consulta-publica-header {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto 20px !important;
+
+}
+
+
+/* =========================================================
+   10. LOGO DA CONSULTA PÚBLICA
+========================================================= */
+
+/*
+   Esta regra é propositalmente agressiva.
+   Impede que o logo Monte Carlo volte a ocupar
+   centenas de pixels.
+*/
+
+#consultaPublicaTela img {
+
+    max-width:
+        100% !important;
+
+}
+
+
+/* Caso exista um container específico */
+
+#consultaPublicaTela
+.login-logo,
+#consultaPublicaTela
+.consulta-logo,
+#consultaPublicaTela
+.logo-publico {
+
+    width:
+        64px !important;
+
+    height:
+        64px !important;
+
+    max-width:
+        64px !important;
+
+    max-height:
+        64px !important;
+
+    margin:
+        0 auto 14px !important;
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        center !important;
+
+    overflow:
+        hidden !important;
+
+}
+
+
+/* Imagem do logo */
+
+#consultaPublicaTela
+.login-logo img,
+#consultaPublicaTela
+.consulta-logo img,
+#consultaPublicaTela
+.logo-publico img {
+
+    width:
+        48px !important;
+
+    height:
+        48px !important;
+
+    max-width:
+        48px !important;
+
+    max-height:
+        48px !important;
+
+    object-fit:
+        contain !important;
+
+}
+
+
+/* =========================================================
+   11. TÍTULO DA CONSULTA
+========================================================= */
+
+#consultaPublicaTela h1 {
+
+    font-size:
+        30px !important;
+
+    line-height:
+        1.15 !important;
+
+    letter-spacing:
+        -.025em !important;
+
+    color:
+        var(--mc-text) !important;
+
+}
+
+
+#consultaPublicaTela
+.consulta-subtitle {
+
+    font-size:
+        13px !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+}
+
+
+/* =========================================================
+   12. FILTROS
+========================================================= */
+
+#consultaPublicaTela
+.consulta-filtros {
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        minmax(300px, 1fr)
+        230px
+        auto
+        auto !important;
+
+    gap:
+        9px !important;
+
+    margin:
+        18px auto 20px !important;
+
+    width:
+        min(1280px, 100%) !important;
+
+}
+
+
+/* Inputs */
+
+#consultaPublicaTela
+.consulta-filtros input,
+#consultaPublicaTela
+.consulta-filtros select {
+
+    height:
+        42px !important;
+
+    min-height:
+        42px !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        8px !important;
+
+    background:
+        #ffffff !important;
+
+    padding:
+        0 13px !important;
+
+    font-size:
+        12px !important;
+
+    color:
+        var(--mc-text) !important;
+
+    box-shadow:
+        0 1px 2px
+        rgba(15,23,42,.025) !important;
+
+}
+
+
+/* Botões */
+
+#consultaPublicaTela
+.consulta-filtros button {
+
+    height:
+        42px !important;
+
+    padding:
+        0 15px !important;
+
+    border-radius:
+        8px !important;
+
+    font-size:
+        12px !important;
+
+    font-weight:
+        600 !important;
+
+}
+
+
+/* =========================================================
+   13. CONTADOR
+========================================================= */
+
+#contadorConsultaPublica {
+
+    display:
+        inline-flex !important;
+
+    align-items:
+        center !important;
+
+    height:
+        28px !important;
+
+    padding:
+        0 10px !important;
+
+    border-radius:
+        6px !important;
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+    font-size:
+        11px !important;
+
+    font-weight:
+        600 !important;
+
+}
+
+
+/* =========================================================
+   14. GRID DOS ITENS
+========================================================= */
+
+#listaConsultaPublica {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto !important;
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        ) !important;
+
+    gap:
+        16px !important;
+
+}
+
+
+/* =========================================================
+   15. CARD DO ITEM
+========================================================= */
+
+.consulta-item-card {
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        12px !important;
+
+    overflow:
+        hidden !important;
+
+    box-shadow:
+        0 3px 14px
+        rgba(15,23,42,.045) !important;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease !important;
+
+}
+
+
+.consulta-item-card:hover {
+
+    transform:
+        translateY(-2px) !important;
+
+    border-color:
+        #d5dce6 !important;
+
+    box-shadow:
+        0 8px 24px
+        rgba(15,23,42,.075) !important;
+
+}
+
+
+/* =========================================================
+   16. FOTO DOS ITENS
+========================================================= */
+
+.consulta-foto {
+
+    width:
+        100% !important;
+
+    height:
+        145px !important;
+
+    min-height:
+        145px !important;
+
+    background:
+        #f1f5f9 !important;
+
+    overflow:
+        hidden !important;
+
+}
+
+
+.consulta-foto img {
+
+    width:
+        100% !important;
+
+    height:
+        100% !important;
+
+    object-fit:
+        cover !important;
+
+    display:
+        block !important;
+
+}
+
+
+/* Sem foto */
+
+.consulta-sem-foto {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        center !important;
+
+    flex-direction:
+        column !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+    font-size:
+        11px !important;
+
+}
+
+
+/* =========================================================
+   17. CONTEÚDO DOS CARDS
+========================================================= */
+
+.consulta-card-conteudo {
+
+    padding:
+        13px 14px 14px !important;
+
+}
+
+
+.consulta-card-topo {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        space-between !important;
+
+    gap:
+        8px !important;
+
+    margin-bottom:
+        7px !important;
+
+}
+
+
+.consulta-status {
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        600 !important;
+
+    color:
+        var(--mc-green) !important;
+
+}
+
+
+.consulta-tipo {
+
+    font-size:
+        9px !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+/* Nome */
+
+.consulta-item-nome {
+
+    margin:
+        0 0 12px !important;
+
+    font-size:
+        15px !important;
+
+    line-height:
+        1.3 !important;
+
+    font-weight:
+        700 !important;
+
+    color:
+        var(--mc-text) !important;
+
+}
+
+
+/* Descrição */
+
+.consulta-descricao {
+
+    margin:
+        0 0 12px !important;
+
+    font-size:
+        11px !important;
+
+    line-height:
+        1.45 !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+}
+
+
+/* =========================================================
+   18. INFORMAÇÕES DO ITEM
+========================================================= */
+
+.consulta-info-grid {
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        1fr 1.35fr !important;
+
+    gap:
+        7px !important;
+
+}
+
+
+.consulta-info {
+
+    min-width:
+        0 !important;
+
+    padding:
+        8px 9px !important;
+
+    background:
+        #f8fafc !important;
+
+    border:
+        1px solid
+        #edf1f5 !important;
+
+    border-radius:
+        7px !important;
+
+}
+
+
+.consulta-info-label {
+
+    display:
+        block !important;
+
+    margin-bottom:
+        3px !important;
+
+    font-size:
+        8px !important;
+
+    text-transform:
+        uppercase !important;
+
+    letter-spacing:
+        .06em !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+.consulta-quantidade {
+
+    font-size:
+        17px !important;
+
+    font-weight:
+        700 !important;
+
+}
+
+
+.consulta-info small {
+
+    font-size:
+        8px !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+.consulta-local {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    gap:
+        4px !important;
+
+    font-size:
+        10px !important;
+
+    line-height:
+        1.2 !important;
+
+    white-space:
+        normal !important;
+
+}
+
+
+/* =========================================================
+   19. BOTÃO DE AMPLIAR FOTO
+========================================================= */
+
+.consulta-foto-expandir {
+
+    width:
+        28px !important;
+
+    height:
+        28px !important;
+
+    right:
+        8px !important;
+
+    bottom:
+        8px !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        rgba(15,23,42,.72) !important;
+
+    color:
+        #ffffff !important;
+
+    backdrop-filter:
+        blur(5px) !important;
+
+}
+
+
+/* =========================================================
+   20. ÁREA VAZIA
+========================================================= */
+
+.consulta-vazia {
+
+    grid-column:
+        1 / -1 !important;
+
+    padding:
+        50px 20px !important;
+
+    text-align:
+        center !important;
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        12px !important;
+
+}
+
+
+/* =========================================================
+   21. MOBILE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            ) !important;
+
+    }
+
+}
+
+
+@media (max-width: 850px) {
+
+    .sidebar {
+
+        width:
+            250px !important;
+
+    }
+
+
+    .main-content {
+
+        margin-left:
+            250px !important;
+
+    }
+
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            ) !important;
+
+    }
+
+
+    #consultaPublicaTela
+    .consulta-filtros {
+
+        grid-template-columns:
+            1fr 1fr !important;
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .sidebar {
+
+        width:
+            250px !important;
+
+    }
+
+
+    .main-content {
+
+        margin-left:
+            0 !important;
+
+    }
+
+
+    #consultaPublicaTela {
+
+        padding:
+            18px 14px 25px !important;
+
+    }
+
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            1fr !important;
+
+    }
+
+
+    #consultaPublicaTela
+    .consulta-filtros {
+
+        grid-template-columns:
+            1fr !important;
+
+    }
+
+
+    .consulta-foto {
+
+        height:
+            180px !important;
+
+        min-height:
+            180px !important;
+
+    }
+
+}
+
+
+/* =========================================================
+   22. EVITAR LOGO GIGANTE EM QUALQUER SITUAÇÃO
+========================================================= */
+
+.sidebar img {
+
+    max-width:
+        34px !important;
+
+    max-height:
+        34px !important;
+
+}
+
+
+.sidebar .logo-imagem img {
+
+    width:
+        34px !important;
+
+    height:
+        34px !important;
+
+}
+
+
+/* =========================================================
+   23. POLIMENTO GERAL
+========================================================= */
+
+button,
+input,
+select,
+textarea {
+
+    font-family:
+        inherit !important;
+
+}
+
+
+button {
+
+    transition:
+        all .18s ease !important;
+
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+
+    outline:
+        none !important;
+
+    border-color:
+        #93b4f7 !important;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08) !important;
+
+}
+
+
+/* Scrollbar discreta */
+
+::-webkit-scrollbar {
+
+    width:
+        7px;
+
+    height:
+        7px;
+
+}
+
+
+::-webkit-scrollbar-track {
+
+    background:
+        #f1f5f9;
+
+}
+
+
+::-webkit-scrollbar-thumb {
+
+    background:
+        #cbd5e1;
+
+    border-radius:
+        10px;
+
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+
+    background:
+        #94a3b8;
 
 }
