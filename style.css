@@ -3686,3 +3686,916 @@ body:has(
     }
 
 }
+/* =========================================================
+   INVENTÁRIO CENTRAL
+   MOBILE CORPORATIVO — AJUSTE FINAL
+   ========================================================= */
+
+
+/* =========================================================
+   1. BASE MOBILE
+   ========================================================= */
+
+@media (max-width: 820px) {
+
+    body {
+        overflow-x: hidden !important;
+    }
+
+    .main {
+        width: 100% !important;
+        margin-left: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px 14px 34px !important;
+        box-sizing: border-box !important;
+    }
+
+    .tela {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 22px 14px 34px !important;
+        box-sizing: border-box !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       2. CABEÇALHO
+       ===================================================== */
+
+    .main-header {
+        height: 70px !important;
+        min-height: 70px !important;
+        padding: 0 16px 0 68px !important;
+    }
+
+    .header-titulo {
+        min-width: 0 !important;
+    }
+
+    .header-subtitulo {
+        font-size: 8px !important;
+        letter-spacing: .10em !important;
+        margin-bottom: 2px !important;
+    }
+
+    .header-titulo h1 {
+        font-size: 17px !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+    }
+
+    .header-usuario {
+        padding-left: 8px !important;
+    }
+
+    .header-avatar {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+
+    /* =====================================================
+       3. TÍTULO DAS TELAS
+       ===================================================== */
+
+    .page-title {
+        margin-bottom: 18px !important;
+        gap: 5px !important;
+    }
+
+    .page-title h2 {
+        font-size: 24px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -.5px !important;
+    }
+
+    .page-title p {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+
+    /* =====================================================
+       4. DASHBOARD — 2 × 2
+       ===================================================== */
+
+    .dashboard {
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 10px !important;
+
+        width: 100% !important;
+
+        margin-bottom: 14px !important;
+    }
+
+
+    .dash-card {
+        min-width: 0 !important;
+
+        min-height: 92px !important;
+
+        height: 92px !important;
+
+        padding: 14px !important;
+
+        border-radius: 14px !important;
+
+        gap: 10px !important;
+
+        box-shadow:
+            0 2px 10px rgba(16,24,40,.05) !important;
+    }
+
+
+    .dash-icon {
+        width: 38px !important;
+        height: 38px !important;
+
+        min-width: 38px !important;
+
+        flex: 0 0 38px !important;
+
+        border-radius: 11px !important;
+
+        font-size: 15px !important;
+    }
+
+
+    .dash-card h3 {
+        font-size: 24px !important;
+
+        margin: 0 0 3px !important;
+
+        letter-spacing: -.5px !important;
+    }
+
+
+    .dash-card p {
+        font-size: 9.5px !important;
+
+        line-height: 1.2 !important;
+    }
+
+
+    /* =====================================================
+       5. DASHBOARD — ÁREA DE DISTRIBUIÇÃO
+       ===================================================== */
+
+    .dashboard-advanced {
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 12px !important;
+
+        width: 100% !important;
+    }
+
+
+    .dashboard-table {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        border-radius: 14px !important;
+
+        overflow: hidden !important;
+    }
+
+
+    .dashboard-topo {
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 12px !important;
+
+        padding: 17px 16px 15px !important;
+    }
+
+
+    .dashboard-topo h2 {
+        font-size: 15px !important;
+
+        line-height: 1.25 !important;
+    }
+
+
+    .dashboard-filtros {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 8px !important;
+    }
+
+
+    .dashboard-filtros .input-wrapper,
+    .dashboard-filtros select {
+        width: 100% !important;
+
+        min-width: 0 !important;
+    }
+
+
+    .dashboard-filtros input,
+    .dashboard-filtros select {
+        height: 42px !important;
+
+        min-height: 42px !important;
+
+        font-size: 12px !important;
+    }
+
+
+    /* =====================================================
+       6. TABELA DO DASHBOARD
+       ===================================================== */
+
+    .dashboard-table .table-area {
+        width: 100% !important;
+
+        overflow-x: auto !important;
+    }
+
+
+    .dashboard-table .inventory-table {
+        min-width: 500px !important;
+    }
+
+
+    .dashboard-table .inventory-table th {
+        padding: 10px 12px !important;
+
+        font-size: 9px !important;
+    }
+
+
+    .dashboard-table .inventory-table td {
+        padding: 10px 12px !important;
+
+        font-size: 11px !important;
+    }
+
+
+    /* =====================================================
+       7. STATUS — 2 × 2
+       ===================================================== */
+
+    .dashboard-status-grid {
+
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 10px !important;
+
+        width: 100% !important;
+
+    }
+
+
+    .status-card {
+
+        min-width: 0 !important;
+
+        min-height: 110px !important;
+
+        height: 110px !important;
+
+        padding: 14px !important;
+
+        border-radius: 14px !important;
+
+        justify-content: center !important;
+
+    }
+
+
+    .status-icon {
+
+        width: 31px !important;
+
+        height: 31px !important;
+
+        min-width: 31px !important;
+
+        margin-bottom: 8px !important;
+
+        border-radius: 9px !important;
+
+        font-size: 12px !important;
+
+    }
+
+
+    .status-card h3 {
+
+        font-size: 23px !important;
+
+        margin-bottom: 3px !important;
+
+    }
+
+
+    .status-card p {
+
+        font-size: 9px !important;
+
+        line-height: 1.2 !important;
+
+    }
+
+
+    /* =====================================================
+       8. CADASTRO — CARD PRINCIPAL
+       ===================================================== */
+
+    #cadastroTela .card {
+
+        padding: 16px !important;
+
+        border-radius: 15px !important;
+
+    }
+
+
+    #cadastroTela .form-section {
+
+        padding: 18px 0 !important;
+
+    }
+
+
+    #cadastroTela .form-section-title {
+
+        margin-bottom: 14px !important;
+
+        font-size: 13px !important;
+
+    }
+
+
+    /* =====================================================
+       9. CONTROLE — ESTOQUE / PATRIMÔNIO
+       ===================================================== */
+
+    .controle-grid {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 9px !important;
+
+        width: 100% !important;
+
+    }
+
+
+    .controle-option {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+
+        display: flex !important;
+
+        flex-direction: row !important;
+
+        align-items: flex-start !important;
+
+        gap: 11px !important;
+
+        padding: 13px 14px !important;
+
+        min-height: 66px !important;
+
+        border-radius: 11px !important;
+
+    }
+
+
+    /* CORREÇÃO PRINCIPAL DO TEXTO ESPREMIDO */
+
+    .controle-option > div {
+
+        flex: 1 1 auto !important;
+
+        width: auto !important;
+
+        min-width: 0 !important;
+
+        display: grid !important;
+
+        grid-template-columns: auto 1fr !important;
+
+        align-items: center !important;
+
+        column-gap: 7px !important;
+
+        row-gap: 4px !important;
+
+    }
+
+
+    .controle-option input {
+
+        width: 18px !important;
+
+        height: 18px !important;
+
+        min-width: 18px !important;
+
+        flex: 0 0 18px !important;
+
+        margin-top: 1px !important;
+
+    }
+
+
+    .controle-option i {
+
+        width: 17px !important;
+
+        font-size: 14px !important;
+
+    }
+
+
+    .controle-option strong {
+
+        font-size: 12px !important;
+
+        line-height: 1.25 !important;
+
+        min-width: 0 !important;
+
+    }
+
+
+    .controle-option span {
+
+        grid-column: 1 / -1 !important;
+
+        flex-basis: auto !important;
+
+        font-size: 10px !important;
+
+        line-height: 1.4 !important;
+
+        margin: 0 !important;
+
+    }
+
+
+    /* =====================================================
+       10. FORMULÁRIOS
+       ===================================================== */
+
+    .grid-2,
+    .grid-3 {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 13px !important;
+
+    }
+
+
+    .input-group {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+    }
+
+
+    .input-group label {
+
+        font-size: 11px !important;
+
+        margin-bottom: 6px !important;
+
+    }
+
+
+    input,
+    select {
+
+        width: 100% !important;
+
+        height: 44px !important;
+
+        min-height: 44px !important;
+
+        font-size: 12px !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    textarea {
+
+        width: 100% !important;
+
+        min-height: 105px !important;
+
+        font-size: 12px !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    input[type="file"] {
+
+        height: auto !important;
+
+        min-height: 44px !important;
+
+        padding: 8px 10px !important;
+
+    }
+
+
+    /* =====================================================
+       11. BOTÕES DO CADASTRO
+       ===================================================== */
+
+    .form-actions {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr 1fr !important;
+
+        gap: 8px !important;
+
+        padding-top: 18px !important;
+
+    }
+
+
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+
+        width: 100% !important;
+
+        min-height: 42px !important;
+
+        height: 42px !important;
+
+        padding: 0 10px !important;
+
+        font-size: 11px !important;
+
+    }
+
+
+    /* =====================================================
+       12. ESTOQUE
+       ===================================================== */
+
+    .estoque-toolbar {
+
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 9px !important;
+
+    }
+
+
+    .estoque-busca {
+
+        width: 100% !important;
+
+        max-width: none !important;
+
+    }
+
+
+    .estoque-info {
+
+        width: fit-content !important;
+
+        font-size: 10px !important;
+
+    }
+
+
+    /* =====================================================
+       13. TABELA DE ESTOQUE
+       ===================================================== */
+
+    .inventory-table {
+
+        min-width: 680px !important;
+
+    }
+
+
+    /* =====================================================
+       14. MOVIMENTAÇÕES
+       ===================================================== */
+
+    #movimentacaoTela .grid-2,
+    #movimentacaoTela .grid-3 {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+
+    #movimentacaoTela .card {
+
+        padding: 16px !important;
+
+    }
+
+
+    /* =====================================================
+       15. HISTÓRICO
+       ===================================================== */
+
+    #historicoTela .table-area {
+
+        width: 100% !important;
+
+        overflow-x: auto !important;
+
+        -webkit-overflow-scrolling: touch;
+
+    }
+
+
+    /* =====================================================
+       16. SIDEBAR MOBILE
+       ===================================================== */
+
+    .mobile-menu-btn {
+
+        width: 42px !important;
+
+        height: 42px !important;
+
+        top: 14px !important;
+
+        left: 14px !important;
+
+        border-radius: 11px !important;
+
+        background: #fff !important;
+
+        border: 1px solid #e5e7eb !important;
+
+        box-shadow:
+            0 4px 12px rgba(16,24,40,.10) !important;
+
+        color: #182230 !important;
+
+    }
+
+
+    .sidebar {
+
+        width: 275px !important;
+
+        max-width: 82vw !important;
+
+    }
+
+
+    .sidebar-overlay {
+
+        z-index: 1100 !important;
+
+    }
+
+
+    .sidebar {
+
+        z-index: 1150 !important;
+
+    }
+
+
+    .mobile-menu-btn {
+
+        z-index: 1200 !important;
+
+    }
+
+
+    /* =====================================================
+       17. EVITA ESTOURO HORIZONTAL
+       ===================================================== */
+
+    .dashboard *,
+    .dashboard-advanced *,
+    #cadastroTela *,
+    #movimentacaoTela *,
+    #estoqueTela * {
+
+        max-width: 100%;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMARTPHONE PEQUENO
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+
+    .content {
+
+        padding: 18px 12px 28px !important;
+
+    }
+
+
+    .tela {
+
+        padding: 20px 12px 30px !important;
+
+    }
+
+
+    /* Dashboard continua 2 × 2 */
+
+    .dashboard {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .dash-card {
+
+        height: 86px !important;
+
+        min-height: 86px !important;
+
+        padding: 11px !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .dash-icon {
+
+        width: 34px !important;
+
+        height: 34px !important;
+
+        min-width: 34px !important;
+
+        flex-basis: 34px !important;
+
+        font-size: 13px !important;
+
+    }
+
+
+    .dash-card h3 {
+
+        font-size: 22px !important;
+
+    }
+
+
+    .dash-card p {
+
+        font-size: 8.5px !important;
+
+    }
+
+
+    /* Status também 2 × 2 */
+
+    .dashboard-status-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .status-card {
+
+        height: 100px !important;
+
+        min-height: 100px !important;
+
+        padding: 12px !important;
+
+    }
+
+
+    .status-icon {
+
+        width: 28px !important;
+
+        height: 28px !important;
+
+        min-width: 28px !important;
+
+        margin-bottom: 6px !important;
+
+    }
+
+
+    .status-card h3 {
+
+        font-size: 21px !important;
+
+    }
+
+
+    .status-card p {
+
+        font-size: 8.5px !important;
+
+    }
+
+
+    /* Cadastro */
+
+    #cadastroTela .card {
+
+        padding: 14px !important;
+
+    }
+
+
+    .controle-option {
+
+        min-height: 62px !important;
+
+        padding: 12px !important;
+
+    }
+
+
+    .controle-option strong {
+
+        font-size: 11.5px !important;
+
+    }
+
+
+    .controle-option span {
+
+        font-size: 9.5px !important;
+
+    }
+
+
+    .form-actions {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+}
