@@ -3359,71 +3359,45 @@ textarea:focus {
 
 }
 /* =========================================================
-   CONSULTA DE INVENTÁRIO
+   CONSULTA PÚBLICA — IDENTIDADE VISUAL
    LOGO COMO MARCA D'ÁGUA
    ========================================================= */
 
 
-/* ---------------------------------------------------------
-   IDENTIFICA A TELA DE CONSULTA
-   --------------------------------------------------------- */
+/* =========================================================
+   ÁREA PRINCIPAL DA CONSULTA
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
-) {
+) main {
 
-    position: relative;
+    position: relative !important;
+
+    isolation: isolate;
 
 }
 
 
-/* ---------------------------------------------------------
-   ESCONDE O LOGO GIGANTE ORIGINAL
-   --------------------------------------------------------- */
-
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) img[src*="monte-carlo-logo-transparente"] {
-
-    display: none !important;
-
-}
-
-
-/* Caso o logo esteja sendo usado como background */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) [class*="logo"] {
-
-    background-image: none !important;
-
-}
-
-
-/* ---------------------------------------------------------
+/* =========================================================
    MARCA D'ÁGUA
-   --------------------------------------------------------- */
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
-)::before {
+) main::before {
 
     content: "";
 
-    position: fixed;
+    position: absolute;
 
-    z-index: 0;
-
-    pointer-events: none;
-
-    width: 520px;
-    height: 520px;
+    width: 320px;
+    height: 320px;
 
     left: 50%;
-    top: 53%;
+    top: 50%;
 
-    transform:
-        translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 
     background-image:
         url("monte-carlo-logo-transparente.png");
@@ -3434,18 +3408,22 @@ body:has(
 
     background-size: contain;
 
-    opacity: .035;
+    opacity: 0.045;
+
+    pointer-events: none;
+
+    z-index: 0;
 
 }
 
 
-/* ---------------------------------------------------------
-   TODO O CONTEÚDO FICA ACIMA DA MARCA D'ÁGUA
-   --------------------------------------------------------- */
+/* =========================================================
+   CONTEÚDO DA CONSULTA ACIMA DA MARCA D'ÁGUA
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
-) > * {
+) main > * {
 
     position: relative;
 
@@ -3454,9 +3432,22 @@ body:has(
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
+   GARANTE QUE O LOGO ORIGINAL NÃO VOLTE A APARECER
+   ========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) img[src*="monte-carlo-logo-transparente"] {
+
+    display: none !important;
+
+}
+
+
+/* =========================================================
    CABEÇALHO DA CONSULTA
-   --------------------------------------------------------- */
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3471,24 +3462,9 @@ body:has(
 }
 
 
-/* ---------------------------------------------------------
-   CONTAINER DA CONSULTA
-   --------------------------------------------------------- */
-
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) main {
-
-    position: relative;
-
-    z-index: 2;
-
-}
-
-
-/* ---------------------------------------------------------
-   ÁREA DOS FILTROS
-   --------------------------------------------------------- */
+/* =========================================================
+   FILTROS
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3497,18 +3473,18 @@ body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) select {
 
-    min-height: 42px !important;
+    height: 44px !important;
 
-    height: 42px !important;
+    min-height: 44px !important;
 
-    font-size: 12px !important;
+    font-size: 13px !important;
 
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    BOTÕES
-   --------------------------------------------------------- */
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3518,14 +3494,14 @@ body:has(
 
     height: 40px !important;
 
-    font-size: 12px !important;
+    font-size: 13px !important;
 
 }
 
 
-/* ---------------------------------------------------------
-   CARDS DA CONSULTA
-   --------------------------------------------------------- */
+/* =========================================================
+   CARDS DOS ITENS
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3533,14 +3509,14 @@ body:has(
 
     position: relative;
 
-    z-index: 3;
+    z-index: 2;
 
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    FOTOS
-   --------------------------------------------------------- */
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3548,14 +3524,16 @@ body:has(
 
     height: 145px !important;
 
-    min-height: 145px !important;
+    max-height: 145px !important;
+
+    object-fit: cover !important;
 
 }
 
 
-/* ---------------------------------------------------------
-   GRID
-   --------------------------------------------------------- */
+/* =========================================================
+   GRID DE ITENS
+   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3563,26 +3541,26 @@ body:has(
 
     position: relative;
 
-    z-index: 3;
+    z-index: 2;
 
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    MOBILE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 @media (max-width: 700px) {
 
     body:has(
         input[placeholder*="Pesquisar item, categoria ou local"]
-    )::before {
+    ) main::before {
 
-        width: 300px;
+        width: 220px;
 
-        height: 300px;
+        height: 220px;
 
-        opacity: .025;
+        opacity: 0.035;
 
     }
 
