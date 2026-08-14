@@ -3359,14 +3359,14 @@ textarea:focus {
 
 }
 /* =========================================================
-   CONSULTA PÚBLICA — IDENTIDADE VISUAL
-   LOGO COMO MARCA D'ÁGUA
+   CONSULTA PÚBLICA — AJUSTE FINAL
+   MARCA D'ÁGUA + RESPONSIVIDADE
    ========================================================= */
 
 
-/* =========================================================
-   ÁREA PRINCIPAL DA CONSULTA
-   ========================================================= */
+/* ---------------------------------------------------------
+   ÁREA DA CONSULTA
+   --------------------------------------------------------- */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3374,14 +3374,29 @@ body:has(
 
     position: relative !important;
 
-    isolation: isolate;
+    isolation: isolate !important;
+
+    overflow: visible !important;
 
 }
 
 
-/* =========================================================
-   MARCA D'ÁGUA
-   ========================================================= */
+/* ---------------------------------------------------------
+   DESATIVA QUALQUER MARCA D'ÁGUA ANTIGA NO BODY
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+)::before {
+
+    content: none !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   MARCA D'ÁGUA NOVA
+   --------------------------------------------------------- */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3391,16 +3406,15 @@ body:has(
 
     position: absolute;
 
-    width: 320px;
-    height: 320px;
+    width: 360px;
+    height: 360px;
 
     left: 50%;
-    top: 50%;
+    top: 52%;
 
     transform: translate(-50%, -50%);
 
-    background-image:
-        url("monte-carlo-logo-transparente.png");
+    background-image: url("monte-carlo-logo-transparente.png");
 
     background-repeat: no-repeat;
 
@@ -3408,33 +3422,33 @@ body:has(
 
     background-size: contain;
 
-    opacity: 0.045;
+    opacity: 0.075;
 
     pointer-events: none;
 
-    z-index: 0;
+    z-index: -1;
 
 }
 
 
-/* =========================================================
-   CONTEÚDO DA CONSULTA ACIMA DA MARCA D'ÁGUA
-   ========================================================= */
+/* ---------------------------------------------------------
+   CONTEÚDO SEMPRE ACIMA DA MARCA D'ÁGUA
+   --------------------------------------------------------- */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) main > * {
 
-    position: relative;
+    position: relative !important;
 
-    z-index: 1;
+    z-index: 1 !important;
 
 }
 
 
-/* =========================================================
-   GARANTE QUE O LOGO ORIGINAL NÃO VOLTE A APARECER
-   ========================================================= */
+/* ---------------------------------------------------------
+   IMPEDE O LOGO ORIGINAL DE APARECER
+   --------------------------------------------------------- */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3446,7 +3460,7 @@ body:has(
 
 
 /* =========================================================
-   CABEÇALHO DA CONSULTA
+   AJUSTES VISUAIS DA CONSULTA
    ========================================================= */
 
 body:has(
@@ -3457,14 +3471,8 @@ body:has(
 
     line-height: 1.15 !important;
 
-    margin-bottom: 8px !important;
-
 }
 
-
-/* =========================================================
-   FILTROS
-   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3473,18 +3481,12 @@ body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) select {
 
-    height: 44px !important;
-
     min-height: 44px !important;
 
-    font-size: 13px !important;
+    height: 44px !important;
 
 }
 
-
-/* =========================================================
-   BOTÕES
-   ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
@@ -3492,24 +3494,20 @@ body:has(
 
     min-height: 40px !important;
 
-    height: 40px !important;
-
-    font-size: 13px !important;
-
 }
 
 
 /* =========================================================
-   CARDS DOS ITENS
+   CARDS
    ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) .consulta-item-card {
 
-    position: relative;
+    position: relative !important;
 
-    z-index: 2;
+    z-index: 2 !important;
 
 }
 
@@ -3522,6 +3520,8 @@ body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) .consulta-foto {
 
+    width: 100% !important;
+
     height: 145px !important;
 
     max-height: 145px !important;
@@ -3532,35 +3532,156 @@ body:has(
 
 
 /* =========================================================
-   GRID DE ITENS
+   LISTA
    ========================================================= */
 
 body:has(
     input[placeholder*="Pesquisar item, categoria ou local"]
 ) #listaConsultaPublica {
 
-    position: relative;
+    position: relative !important;
 
-    z-index: 2;
+    z-index: 2 !important;
 
 }
 
 
 /* =========================================================
-   MOBILE
+   CORREÇÃO DEFINITIVA PARA CELULAR
    ========================================================= */
 
 @media (max-width: 700px) {
 
+    /* Remove qualquer camada que possa cobrir a página */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) {
+
+        overflow-x: hidden !important;
+
+        overflow-y: auto !important;
+
+    }
+
+
+    /* A marca d'água fica menor no celular */
     body:has(
         input[placeholder*="Pesquisar item, categoria ou local"]
     ) main::before {
 
-        width: 220px;
+        width: 210px;
 
-        height: 220px;
+        height: 210px;
 
-        opacity: 0.035;
+        left: 50%;
+
+        top: 48%;
+
+        opacity: 0.055;
+
+        z-index: -1 !important;
+
+    }
+
+
+    /* Garante que o conteúdo seja visível */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) main,
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) main > * {
+
+        opacity: 1 !important;
+
+        visibility: visible !important;
+
+    }
+
+
+    /* Evita elementos gigantes */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) img {
+
+        max-width: 100%;
+
+    }
+
+
+    /* Título */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) h1 {
+
+        font-size: 24px !important;
+
+    }
+
+
+    /* Campos */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) input,
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) select {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        height: 44px !important;
+
+        min-height: 44px !important;
+
+    }
+
+
+    /* Botões */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) button {
+
+        min-height: 40px !important;
+
+        height: 40px !important;
+
+    }
+
+
+    /* Cards em uma coluna */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #listaConsultaPublica {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 16px !important;
+
+    }
+
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) .consulta-item-card {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+    }
+
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) .consulta-foto {
+
+        height: 190px !important;
+
+        max-height: 190px !important;
 
     }
 
