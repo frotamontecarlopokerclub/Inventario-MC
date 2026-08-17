@@ -4599,3 +4599,229 @@ body:has(
     }
 
 }
+/* =========================================================
+   CORREÇÃO DEFINITIVA — LOGIN / LOGOTIPO
+   GRUPO MONTE CARLO
+========================================================= */
+
+/* Remove qualquer estrutura antiga de login */
+body.login-mode .login-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+/* Área principal do login */
+body.login-mode .login-container {
+    width: 100% !important;
+    min-height: calc(100vh - 110px) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 40px 20px 60px !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Cartão */
+body.login-mode .login-card {
+    position: relative !important;
+
+    width: 100% !important;
+    max-width: 430px !important;
+
+    margin: 0 auto !important;
+
+    padding: 36px 40px 30px !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #e4e7ec !important;
+    border-radius: 20px !important;
+
+    box-shadow:
+        0 20px 45px rgba(16, 24, 40, 0.08) !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Logo */
+body.login-mode .login-logo {
+    width: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 0 22px !important;
+
+    gap: 10px !important;
+}
+
+/* Caixa do logo */
+body.login-mode .login-logo-imagem {
+    width: 78px !important;
+    height: 78px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 10px !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #e4e7ec !important;
+    border-radius: 18px !important;
+
+    box-sizing: border-box !important;
+
+    overflow: hidden !important;
+}
+
+/* Imagem */
+body.login-mode .login-logo-imagem img {
+    display: block !important;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    max-width: 100% !important;
+    max-height: 100% !important;
+
+    object-fit: contain !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Nome da empresa */
+body.login-mode .login-logo > span {
+    display: block !important;
+
+    color: #8b6a28 !important;
+
+    font-size: 10px !important;
+    font-weight: 800 !important;
+
+    letter-spacing: 1.6px !important;
+    text-transform: uppercase !important;
+}
+
+/* Título */
+body.login-mode .login-titulo {
+    width: 100% !important;
+
+    text-align: center !important;
+
+    margin: 0 0 26px !important;
+}
+
+body.login-mode .login-titulo h2 {
+    margin: 0 !important;
+
+    color: #101828 !important;
+
+    font-size: 26px !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+
+    letter-spacing: -0.6px !important;
+}
+
+body.login-mode .login-titulo p {
+    margin: 8px 0 0 !important;
+
+    color: #667085 !important;
+
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+}
+
+/* Formulário */
+body.login-mode .login-card form {
+    width: 100% !important;
+}
+
+/* Inputs */
+body.login-mode .login-card .input-group {
+    width: 100% !important;
+
+    margin-bottom: 17px !important;
+}
+
+/* Botão */
+body.login-mode .btn-login {
+    width: 100% !important;
+    height: 48px !important;
+
+    margin-top: 5px !important;
+}
+
+/* Rodapé */
+body.login-mode .login-footer {
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin-top: 22px !important;
+    padding-top: 18px !important;
+
+    border-top: 1px solid #eef1f4 !important;
+
+    color: #98a2b3 !important;
+
+    font-size: 10.5px !important;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    body.login-mode .main {
+        padding: 0 !important;
+    }
+
+    body.login-mode .login-container {
+        min-height: calc(100vh - 78px) !important;
+
+        padding:
+            28px 16px
+            40px !important;
+
+        align-items: flex-start !important;
+    }
+
+    body.login-mode .login-card {
+        max-width: 100% !important;
+
+        padding:
+            30px 22px 26px !important;
+
+        border-radius: 18px !important;
+    }
+
+    body.login-mode .login-logo-imagem {
+        width: 70px !important;
+        height: 70px !important;
+    }
+
+    body.login-mode .login-titulo h2 {
+        font-size: 23px !important;
+    }
+}
