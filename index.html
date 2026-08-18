@@ -529,51 +529,53 @@
                     <input
                         type="search"
                         id="buscaPublica"
+                        oninput="filtrarConsultaPublica()"
                         placeholder="Pesquisar item, categoria ou local..."
                         autocomplete="off"
+                        aria-label="Pesquisar inventário"
                     >
 
                 </div>
 
-
-                <select
-                    id="filtroLocalPublico"
-                    aria-label="Filtrar por local"
-                >
-
-                    <option value="">
-                        Todos os locais
-                    </option>
-
+                <select id="filtroLocalPublico" aria-label="Filtrar por local" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
+                    <option value="">Todos os locais</option>
                 </select>
 
+                <select id="filtroCategoriaPublico" aria-label="Filtrar por categoria" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
+                    <option value="">Todas as categorias</option>
+                </select>
 
-                <button
-                    type="button"
-                    class="btn-secondary"
-                    onclick="limparFiltrosConsultaPublica()"
-                >
+                <select id="ordenacaoPublica" aria-label="Ordenar resultados" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
+                    <option value="nome-asc">Nome: A–Z</option>
+                    <option value="nome-desc">Nome: Z–A</option>
+                    <option value="quantidade-desc">Maior quantidade</option>
+                    <option value="quantidade-asc">Menor quantidade</option>
+                    <option value="local-asc">Local: A–Z</option>
+                </select>
 
+                <button type="button" class="btn-secondary" onclick="limparFiltrosConsultaPublica()">
                     <i class="fa-solid fa-filter-circle-xmark"></i>
-
                     Limpar
-
                 </button>
 
-
-                <button
-                    type="button"
-                    id="btnAtualizarConsulta"
-                    class="btn-primary"
-                    onclick="atualizarConsultaPublica()"
-                >
-
+                <button type="button" id="btnAtualizarConsulta" class="btn-primary" onclick="atualizarConsultaPublica()">
                     <i class="fa-solid fa-rotate"></i>
-
                     Atualizar
-
                 </button>
 
+            </div>
+
+            <div class="consulta-publica-opcoes">
+                <div class="consulta-publica-view">
+                    <span>Visualização</span>
+                    <button type="button" class="consulta-view-btn active" id="consultaViewCards" onclick="alterarVisualizacaoConsulta('cards')" aria-label="Visualização em cards" title="Cards">
+                        <i class="fa-solid fa-grip"></i>
+                    </button>
+                    <button type="button" class="consulta-view-btn" id="consultaViewLista" onclick="alterarVisualizacaoConsulta('lista')" aria-label="Visualização em lista" title="Lista">
+                        <i class="fa-solid fa-list"></i>
+                    </button>
+                </div>
+                <span class="consulta-publica-dica"><i class="fa-solid fa-circle-info"></i> Clique na foto para ampliar.</span>
             </div>
 
 
@@ -607,6 +609,7 @@
                 class="consulta-publica-grid"
             ></div>
 
+            <div id="paginacaoConsultaPublica" class="consulta-publica-paginacao"></div>
 
             <div class="consulta-publica-footer">
 
