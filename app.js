@@ -6321,4 +6321,947 @@ window.exportarExcel =
 window.alternarTipoControle =
     alternarTipoControle;
 
+/* =========================================================
+   CONSULTA PÚBLICA — FILTROS + VISUALIZAÇÃO
+========================================================= */
 
+(function () {
+
+    'use strict';
+
+
+    /* =====================================================
+       REFERÊNCIAS
+    ===================================================== */
+
+    function el(id) {
+
+        return document.getElementById(id);
+
+    }
+
+
+    /* =====================================================
+       NORMALIZA TEXTO
+    ===================================================== */
+
+    function normalizarTexto(valor) {
+
+        return String(valor || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+
+    }
+
+
+    /* =====================================================
+       OBTÉM CATEGORIA DO ITEM
+    ===================================================== */
+
+    function obterCategoria(item) {
+
+        return (
+            item.categoria ||
+            item.tipoItem ||
+            item.tipo ||
+            item.category ||
+            item.categoria_item ||
+            ''
+        );
+
+    }
+
+
+    /* =====================================================
+       OBTÉM LOCAL DO ITEM
+    ===================================================== */
+
+    function obterLocal(item) {
+
+        return (
+            item.local_nome ||
+            item.localNome ||
+            item.local ||
+            item.localizacao ||
+            item.localizacao_nome ||
+            ''
+        );
+
+    }
+
+
+    /* =====================================================
+       OBTÉM NOME DO ITEM
+    ===================================================== */
+
+    function obterNome(item) {
+
+        return (
+            item.nome ||
+            item.nome_item ||
+            item.item_nome ||
+            item.name ||
+            'Item sem nome'
+        );
+
+    }
+
+
+    /* =====================================================
+       OBTÉM QUANTIDADE
+    ===================================================== */
+
+    function obterQuantidade(item) {
+
+        try {
+
+            if (
+                typeof quantidadeItem ===
+                'function'
+            ) {
+
+                return Number(
+                    quantidadeItem(item)
+                ) || 0;
+
+            }
+
+        } catch (erro) {
+
+            console.warn(
+                'Não foi possível usar quantidadeItem:',
+                erro
+            );
+
+        }
+
+
+        return Number(
+            item.quantidade ||
+            item.quantidadeLote ||
+            item.qtd ||
+            item.quantity ||
+            0
+        ) || 0;
+
+    }
+
+
+    /* =====================================================
+       OBTÉM ITENS DISPONÍVEIS
+    ===================================================== */
+
+    function obterItensConsulta() {
+
+        if (
+            Array.isArray(window.itens)
+        ) {
+
+            return window.itens.filter(
+                item =>
+                    normalizarTexto(
+                        item.status
+                    ) === 'ativo'
+            );
+
+        }
+
+
+        return [];
+
+    }
+
+
+    /* =====================================================
+       POPULA LOCAIS
+    ===================================================== */
+
+    function popularLocaisConsulta() {
+
+        const select =
+            el('filtroLocalPublico');
+
+
+        if (!select) {
+            return;
+        }
+
+
+        const itensAtivos =
+            obterItensConsulta();
+
+
+        const locais = new Map();
+
+
+        itensAtivos.forEach(
+            item => {
+
+                const local =
+                    obterLocal(item);
+
+                if (!local) {
+                    return;
+                }
+
+
+                const chave =
+                    normalizarTexto(local);
+
+
+                if (!locais.has(chave)) {
+
+                    locais.set(
+                        chave,
+                        local
+                    );
+
+                }
+
+            }
+        );
+
+
+        const valorAtual =
+            select.value;
+
+
+        select.innerHTML =
+            '<option value="">Todos os locais</option>';
+
+
+        Array.from(
+            locais.values()
+        )
+        .sort(
+            (a, b) =>
+                String(a)
+                    .localeCompare(
+                        String(b),
+                        'pt-BR',
+                        {
+                            sensitivity:
+                                'base'
+                        }
+                    )
+        )
+        .forEach(
+            local => {
+
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+                option.value =
+                    normalizarTexto(local);
+
+                option.textContent =
+                    local;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        if (
+            valorAtual &&
+            Array.from(
+                select.options
+            )
+            .some(
+                option =>
+                    option.value ===
+                    valorAtual
+            )
+        ) {
+
+            select.value =
+                valorAtual;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       POPULA CATEGORIAS
+    ===================================================== */
+
+    function popularCategoriasConsulta() {
+
+        const select =
+            el('filtroCategoriaPublico');
+
+
+        if (!select) {
+            return;
+        }
+
+
+        const itensAtivos =
+            obterItensConsulta();
+
+
+        const categorias = new Map();
+
+
+        itensAtivos.forEach(
+            item => {
+
+                const categoria =
+                    obterCategoria(item);
+
+                if (!categoria) {
+                    return;
+                }
+
+
+                const chave =
+                    normalizarTexto(
+                        categoria
+                    );
+
+
+                if (!categorias.has(chave)) {
+
+                    categorias.set(
+                        chave,
+                        categoria
+                    );
+
+                }
+
+            }
+        );
+
+
+        const valorAtual =
+            select.value;
+
+
+        select.innerHTML =
+            '<option value="">Todas as categorias</option>';
+
+
+        Array.from(
+            categorias.values()
+        )
+        .sort(
+            (a, b) =>
+                String(a)
+                    .localeCompare(
+                        String(b),
+                        'pt-BR',
+                        {
+                            sensitivity:
+                                'base'
+                        }
+                    )
+        )
+        .forEach(
+            categoria => {
+
+                const option =
+                    document.createElement(
+                        'option'
+                    );
+
+                option.value =
+                    normalizarTexto(
+                        categoria
+                    );
+
+                option.textContent =
+                    categoria;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        if (
+            valorAtual &&
+            Array.from(
+                select.options
+            )
+            .some(
+                option =>
+                    option.value ===
+                    valorAtual
+            )
+        ) {
+
+            select.value =
+                valorAtual;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       ORDENAÇÃO
+    ===================================================== */
+
+    function ordenarItensConsulta(lista) {
+
+        const select =
+            el('ordenacaoPublica');
+
+
+        const ordem =
+            select
+                ? select.value
+                : 'nome-asc';
+
+
+        const resultado =
+            [...lista];
+
+
+        resultado.sort(
+            (a, b) => {
+
+                const nomeA =
+                    obterNome(a);
+
+                const nomeB =
+                    obterNome(b);
+
+
+                const localA =
+                    obterLocal(a);
+
+                const localB =
+                    obterLocal(b);
+
+
+                const qtdA =
+                    obterQuantidade(a);
+
+                const qtdB =
+                    obterQuantidade(b);
+
+
+                if (
+                    ordem ===
+                    'nome-desc'
+                ) {
+
+                    return String(nomeB)
+                        .localeCompare(
+                            String(nomeA),
+                            'pt-BR',
+                            {
+                                sensitivity:
+                                    'base'
+                            }
+                        );
+
+                }
+
+
+                if (
+                    ordem ===
+                    'quantidade-desc'
+                ) {
+
+                    return qtdB - qtdA;
+
+                }
+
+
+                if (
+                    ordem ===
+                    'quantidade-asc'
+                ) {
+
+                    return qtdA - qtdB;
+
+                }
+
+
+                if (
+                    ordem ===
+                    'local-asc'
+                ) {
+
+                    return String(localA)
+                        .localeCompare(
+                            String(localB),
+                            'pt-BR',
+                            {
+                                sensitivity:
+                                    'base'
+                            }
+                        );
+
+                }
+
+
+                return String(nomeA)
+                    .localeCompare(
+                        String(nomeB),
+                        'pt-BR',
+                        {
+                            sensitivity:
+                                'base'
+                        }
+                    );
+
+            }
+        );
+
+
+        return resultado;
+
+    }
+
+
+    /* =====================================================
+       APLICA FILTROS
+    ===================================================== */
+
+    function obterItensFiltradosConsulta() {
+
+        const busca =
+            normalizarTexto(
+                el('buscaPublica')
+                    ? el('buscaPublica').value
+                    : ''
+            );
+
+
+        const localSelecionado =
+            normalizarTexto(
+                el('filtroLocalPublico')
+                    ? el('filtroLocalPublico').value
+                    : ''
+            );
+
+
+        const categoriaSelecionada =
+            normalizarTexto(
+                el('filtroCategoriaPublico')
+                    ? el('filtroCategoriaPublico').value
+                    : ''
+            );
+
+
+        let lista =
+            obterItensConsulta();
+
+
+        lista =
+            lista.filter(
+                item => {
+
+                    const nome =
+                        normalizarTexto(
+                            obterNome(item)
+                        );
+
+
+                    const categoria =
+                        normalizarTexto(
+                            obterCategoria(item)
+                        );
+
+
+                    const local =
+                        normalizarTexto(
+                            obterLocal(item)
+                        );
+
+
+                    const correspondeBusca =
+                        !busca ||
+                        nome.includes(busca) ||
+                        categoria.includes(busca) ||
+                        local.includes(busca);
+
+
+                    const correspondeLocal =
+                        !localSelecionado ||
+                        local ===
+                        localSelecionado;
+
+
+                    const correspondeCategoria =
+                        !categoriaSelecionada ||
+                        categoria ===
+                        categoriaSelecionada;
+
+
+                    return (
+                        correspondeBusca &&
+                        correspondeLocal &&
+                        correspondeCategoria
+                    );
+
+                }
+            );
+
+
+        return ordenarItensConsulta(
+            lista
+        );
+
+    }
+
+
+    /* =====================================================
+       ATUALIZA CONTADOR
+    ===================================================== */
+
+    function atualizarContadorConsulta(
+        quantidade
+    ) {
+
+        const contador =
+            el('contadorConsultaPublica');
+
+
+        if (contador) {
+
+            contador.textContent =
+                quantidade;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       FILTRAGEM
+    ===================================================== */
+
+    function aplicarFiltrosConsultaPublica() {
+
+        popularLocaisConsulta();
+
+        popularCategoriasConsulta();
+
+        const lista =
+            obterItensFiltradosConsulta();
+
+
+        atualizarContadorConsulta(
+            lista.length
+        );
+
+
+        /*
+         * Se a função original de renderização
+         * estiver disponível, ela será usada
+         * através do fluxo normal do sistema.
+         */
+
+        if (
+            typeof window.renderizarConsultaPublicaProfissional ===
+            'function'
+        ) {
+
+            window.renderizarConsultaPublicaProfissional(
+                lista
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       VISUALIZAÇÃO
+    ===================================================== */
+
+    function configurarVisualizacaoConsulta() {
+
+        const grid =
+            el('listaConsultaPublica');
+
+
+        if (!grid) {
+            return;
+        }
+
+
+        const botaoGrid =
+            el('btnViewGrid');
+
+        const botaoLista =
+            el('btnViewList');
+
+
+        if (
+            !botaoGrid ||
+            !botaoLista
+        ) {
+
+            return;
+
+        }
+
+
+        function selecionar(tipo) {
+
+            if (
+                tipo === 'list'
+            ) {
+
+                grid.classList.add(
+                    'list-view'
+                );
+
+                botaoLista.classList.add(
+                    'active'
+                );
+
+                botaoGrid.classList.remove(
+                    'active'
+                );
+
+                localStorage.setItem(
+                    'consultaVisualizacao',
+                    'list'
+                );
+
+            } else {
+
+                grid.classList.remove(
+                    'list-view'
+                );
+
+                botaoGrid.classList.add(
+                    'active'
+                );
+
+                botaoLista.classList.remove(
+                    'active'
+                );
+
+                localStorage.setItem(
+                    'consultaVisualizacao',
+                    'grid'
+                );
+
+            }
+
+        }
+
+
+        botaoGrid.onclick =
+            function () {
+
+                selecionar('grid');
+
+            };
+
+
+        botaoLista.onclick =
+            function () {
+
+                selecionar('list');
+
+            };
+
+
+        const salva =
+            localStorage.getItem(
+                'consultaVisualizacao'
+            );
+
+
+        selecionar(
+            salva === 'list'
+                ? 'list'
+                : 'grid'
+        );
+
+    }
+
+
+    /* =====================================================
+       EVENTOS DOS FILTROS
+    ===================================================== */
+
+    function configurarEventosConsulta() {
+
+        const busca =
+            el('buscaPublica');
+
+
+        const local =
+            el('filtroLocalPublico');
+
+
+        const categoria =
+            el('filtroCategoriaPublico');
+
+
+        const ordenacao =
+            el('ordenacaoPublica');
+
+
+        if (busca) {
+
+            busca.addEventListener(
+                'input',
+                function () {
+
+                    if (
+                        typeof window
+                            .filtrarConsultaPublicaProfissional ===
+                        'function'
+                    ) {
+
+                        window
+                            .filtrarConsultaPublicaProfissional();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if (local) {
+
+            local.addEventListener(
+                'change',
+                function () {
+
+                    if (
+                        typeof window
+                            .filtrarConsultaPublicaProfissional ===
+                        'function'
+                    ) {
+
+                        window
+                            .filtrarConsultaPublicaProfissional();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if (categoria) {
+
+            categoria.addEventListener(
+                'change',
+                function () {
+
+                    if (
+                        typeof window
+                            .filtrarConsultaPublicaProfissional ===
+                        'function'
+                    ) {
+
+                        window
+                            .filtrarConsultaPublicaProfissional();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if (ordenacao) {
+
+            ordenacao.addEventListener(
+                'change',
+                function () {
+
+                    if (
+                        typeof window
+                            .filtrarConsultaPublicaProfissional ===
+                        'function'
+                    ) {
+
+                        window
+                            .filtrarConsultaPublicaProfissional();
+
+                    }
+
+                }
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EXPÕE FUNÇÕES
+    ===================================================== */
+
+    window.popularLocaisConsulta =
+        popularLocaisConsulta;
+
+
+    window.popularCategoriasConsulta =
+        popularCategoriasConsulta;
+
+
+    window.obterItensFiltradosConsulta =
+        obterItensFiltradosConsulta;
+
+
+    window.configurarVisualizacaoConsulta =
+        configurarVisualizacaoConsulta;
+
+
+    window.configurarEventosConsulta =
+        configurarEventosConsulta;
+
+
+    /* =====================================================
+       INICIALIZAÇÃO
+    ===================================================== */
+
+    function iniciarConsultaProfissional() {
+
+        configurarVisualizacaoConsulta();
+
+        configurarEventosConsulta();
+
+        popularLocaisConsulta();
+
+        popularCategoriasConsulta();
+
+    }
+
+
+    if (
+        document.readyState ===
+        'loading'
+    ) {
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            iniciarConsultaProfissional
+        );
+
+    } else {
+
+        iniciarConsultaProfissional();
+
+    }
+
+
+})();
