@@ -4185,10 +4185,30 @@ async function carregarConsultaPublica() {
                 ? data
                 : [];
 
+        /*
+           Consolida ITEM + LOCAL.
+        */
+
         itensConsultaPublica =
             consolidarItensConsultaPublica(
                 itensConsultaPublica
             );
+
+        /*
+           Monta automaticamente as categorias.
+        */
+
+        carregarCategoriasConsultaPublica();
+
+        /*
+           Reinicia a paginação.
+        */
+
+        paginaConsultaPublica = 1;
+
+        /*
+           Renderiza.
+        */
 
         renderizarConsultaPublica();
 
@@ -4349,10 +4369,464 @@ function consolidarItensConsultaPublica(
     );
 
 }
+/* =========================================================
+   PAGINAÇÃO DA CONSULTA PÚBLICA
+========================================================= */
+
+let paginaConsultaPublica = 1;
+
+const itensPorPaginaConsultaPublica = 24;
 
 
 /* =========================================================
-   RENDERIZAR CONSULTA
+   CARREGAR CATEGORIAS AUTOMATICAMENTE
+========================================================= */
+
+function carregarCategoriasConsultaPublica() {
+
+    let select =
+        document.getElementById(
+            'filtroCategoriaPublico'
+        );
+
+    /*
+       Se o select ainda não existir,
+       criamos automaticamente.
+    */
+
+    if (!select) {
+
+        const toolbar =
+            document.querySelector(
+                '.consulta-publica-toolbar'
+            );
+
+        const localSelect =
+            document.getElementById(
+                'filtroLocalPublico'
+            );
+
+        if (
+            toolbar &&
+            localSelect
+        ) {
+
+            select =
+                document.createElement(
+                    'select'
+                );
+
+            select.id =
+                'filtroCategoriaPublico';
+
+            select.setAttribute(
+                'aria-label',
+                'Filtrar por categoria'
+            );
+
+            localSelect.insertAdjacentElement(
+                'afterend',
+                select
+            );
+
+        }
+
+    }
+
+    if (!select) {
+        return;
+    }
+
+    /*
+       Descobre todas as categorias existentes.
+    */
+
+    const categorias =
+        [
+            ...new Set(
+                itensConsultaPublica
+                    .map(
+                        item =>
+                            String(
+                                item.tipo ||
+                                ''
+                            )
+                            .trim()
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort(
+            (a, b) =>
+                a.localeCompare(
+                    b,
+                    'pt-BR'
+                )
+        );
+
+    /*
+       Monta o select.
+    */
+
+    select.innerHTML = `
+
+        <option value="">
+            Todas as categorias
+        </option>
+
+    `;
+
+    categorias.forEach(
+        categoria => {
+
+            select.innerHTML += `
+
+                <option
+                    value="${escaparHTML(categoria)}"
+                >
+
+                    ${escaparHTML(
+                        categoria
+                    )}
+
+                </option>
+
+            `;
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   PAGINAÇÃO — CONTROLES
+========================================================= */
+
+function renderizarPaginacaoConsultaPublica(
+    totalItens
+) {
+
+    let paginacao =
+        document.getElementById(
+            'paginacaoConsultaPublica'
+        );
+
+    const lista =
+        document.getElementById(
+            'listaConsultaPublica'
+        );
+
+    if (!lista) {
+        return;
+    }
+
+    /*
+       Cria o container automaticamente
+       caso ainda não exista no HTML.
+    */
+
+    if (!paginacao) {
+
+        paginacao =
+            document.createElement(
+                'div'
+            );
+
+        paginacao.id =
+            'paginacaoConsultaPublica';
+
+        paginacao.className =
+            'consulta-paginacao';
+
+        lista.insertAdjacentElement(
+            'afterend',
+            paginacao
+        );
+
+    }
+
+    const totalPaginas =
+        Math.ceil(
+            totalItens /
+            itensPorPaginaConsultaPublica
+        );
+
+    /*
+       Se couber tudo em uma página,
+       não mostra paginação.
+    */
+
+    if (
+        totalPaginas <= 1
+    ) {
+
+        paginacao.innerHTML =
+            '';
+
+        return;
+
+    }
+
+    /*
+       Garante que a página atual
+       nunca fique fora do limite.
+    */
+
+    if (
+        paginaConsultaPublica >
+        totalPaginas
+    ) {
+
+        paginaConsultaPublica =
+            totalPaginas;
+
+    }
+
+    let html = '';
+
+    /*
+       Botão anterior.
+    */
+
+    html += `
+
+        <button
+            type="button"
+            class="consulta-pagina-btn"
+            ${paginaConsultaPublica === 1 ? 'disabled' : ''}
+            onclick="mudarPaginaConsultaPublica(${paginaConsultaPublica - 1})"
+            title="Página anterior"
+        >
+
+            <i
+                class="fa-solid fa-chevron-left"
+            ></i>
+
+        </button>
+
+    `;
+
+    /*
+       Define as páginas que serão mostradas.
+    */
+
+    const paginas =
+        [];
+
+    paginas.push(1);
+
+    for (
+        let i =
+            paginaConsultaPublica - 2;
+        i <=
+            paginaConsultaPublica + 2;
+        i++
+    ) {
+
+        if (
+            i > 1 &&
+            i < totalPaginas
+        ) {
+
+            paginas.push(i);
+
+        }
+
+    }
+
+    if (
+        totalPaginas > 1
+    ) {
+
+        paginas.push(
+            totalPaginas
+        );
+
+    }
+
+    const paginasUnicas =
+        [
+            ...new Set(
+                paginas
+            )
+        ]
+        .sort(
+            (a, b) =>
+                a - b
+        );
+
+    let anterior =
+        null;
+
+    paginasUnicas.forEach(
+        numero => {
+
+            if (
+                anterior !== null &&
+                numero -
+                    anterior >
+                    1
+            ) {
+
+                html += `
+
+                    <span
+                        class="consulta-pagina-reticencias"
+                    >
+                        ...
+                    </span>
+
+                `;
+
+            }
+
+            html += `
+
+                <button
+                    type="button"
+                    class="consulta-pagina-btn ${
+                        numero ===
+                        paginaConsultaPublica
+                            ? 'active'
+                            : ''
+                    }"
+                    onclick="mudarPaginaConsultaPublica(${numero})"
+                >
+
+                    ${numero}
+
+                </button>
+
+            `;
+
+            anterior =
+                numero;
+
+        }
+    );
+
+    /*
+       Botão próximo.
+    */
+
+    html += `
+
+        <button
+            type="button"
+            class="consulta-pagina-btn"
+            ${
+                paginaConsultaPublica ===
+                totalPaginas
+                    ? 'disabled'
+                    : ''
+            }
+            onclick="mudarPaginaConsultaPublica(${paginaConsultaPublica + 1})"
+            title="Próxima página"
+        >
+
+            <i
+                class="fa-solid fa-chevron-right"
+            ></i>
+
+        </button>
+
+    `;
+
+    /*
+       Informação.
+    */
+
+    const inicio =
+        (
+            (
+                paginaConsultaPublica -
+                1
+            ) *
+            itensPorPaginaConsultaPublica
+        ) +
+        1;
+
+    const fim =
+        Math.min(
+            paginaConsultaPublica *
+                itensPorPaginaConsultaPublica,
+            totalItens
+        );
+
+    html += `
+
+        <span
+            class="consulta-pagina-info"
+        >
+
+            Exibindo
+            <strong>
+                ${inicio}-${fim}
+            </strong>
+            de
+            <strong>
+                ${totalItens}
+            </strong>
+
+        </span>
+
+    `;
+
+    paginacao.innerHTML =
+        html;
+
+}
+
+
+/* =========================================================
+   MUDAR PÁGINA
+========================================================= */
+
+function mudarPaginaConsultaPublica(
+    pagina
+) {
+
+    const totalPaginas =
+        Math.ceil(
+            itensConsultaPublica.length /
+            itensPorPaginaConsultaPublica
+        );
+
+    if (
+        pagina < 1 ||
+        pagina > totalPaginas
+    ) {
+
+        return;
+
+    }
+
+    paginaConsultaPublica =
+        pagina;
+
+    renderizarConsultaPublica();
+
+    const lista =
+        document.getElementById(
+            'listaConsultaPublica'
+        );
+
+    if (lista) {
+
+        lista.scrollIntoView({
+            behavior:
+                'smooth',
+            block:
+                'start'
+        });
+
+    }
+
+}
+
+/* =========================================================
+   RENDERIZAR CONSULTA PÚBLICA
 ========================================================= */
 
 function renderizarConsultaPublica() {
@@ -4366,6 +4840,10 @@ function renderizarConsultaPublica() {
         return;
     }
 
+    /*
+       PESQUISA
+    */
+
     const busca =
         document
             .getElementById(
@@ -4376,6 +4854,10 @@ function renderizarConsultaPublica() {
             .toLowerCase() ||
         '';
 
+    /*
+       LOCAL
+    */
+
     const localFiltro =
         document
             .getElementById(
@@ -4384,7 +4866,35 @@ function renderizarConsultaPublica() {
             ?.value ||
         '';
 
-    const itensFiltrados =
+    /*
+       CATEGORIA
+    */
+
+    const categoriaFiltro =
+        document
+            .getElementById(
+                'filtroCategoriaPublico'
+            )
+            ?.value ||
+        '';
+
+    /*
+       ORDENAÇÃO
+    */
+
+    const ordenacao =
+        document
+            .getElementById(
+                'ordenacaoPublico'
+            )
+            ?.value ||
+        'az';
+
+    /*
+       FILTRAGEM
+    */
+
+    let itensFiltrados =
         itensConsultaPublica.filter(
             item => {
 
@@ -4416,13 +4926,67 @@ function renderizarConsultaPublica() {
                         localFiltro
                     );
 
+                const correspondeCategoria =
+                    !categoriaFiltro ||
+                    String(
+                        item.tipo ||
+                        ''
+                    ) ===
+                    String(
+                        categoriaFiltro
+                    );
+
                 return (
                     correspondeBusca &&
-                    correspondeLocal
+                    correspondeLocal &&
+                    correspondeCategoria
                 );
 
             }
         );
+
+    /*
+       ORDENAÇÃO
+    */
+
+    itensFiltrados.sort(
+        (a, b) => {
+
+            const nomeA =
+                String(
+                    a.nome ||
+                    ''
+                );
+
+            const nomeB =
+                String(
+                    b.nome ||
+                    ''
+                );
+
+            if (
+                ordenacao ===
+                'za'
+            ) {
+
+                return nomeB.localeCompare(
+                    nomeA,
+                    'pt-BR'
+                );
+
+            }
+
+            return nomeA.localeCompare(
+                nomeB,
+                'pt-BR'
+            );
+
+        }
+    );
+
+    /*
+       CONTADOR
+    */
 
     const contador =
         document.getElementById(
@@ -4435,6 +4999,10 @@ function renderizarConsultaPublica() {
             itensFiltrados.length;
 
     }
+
+    /*
+       NENHUM RESULTADO
+    */
 
     if (
         itensFiltrados.length ===
@@ -4458,20 +5026,71 @@ function renderizarConsultaPublica() {
                 </h3>
 
                 <p>
-                    Tente alterar a pesquisa
-                    ou o local selecionado.
+                    Tente alterar a pesquisa,
+                    categoria ou local.
                 </p>
 
             </div>
 
         `;
 
+        renderizarPaginacaoConsultaPublica(
+            0
+        );
+
         return;
+
     }
 
-    container.innerHTML = '';
+    /*
+       PAGINAÇÃO
+    */
 
-    itensFiltrados.forEach(
+    const totalPaginas =
+        Math.ceil(
+            itensFiltrados.length /
+            itensPorPaginaConsultaPublica
+        );
+
+    if (
+        paginaConsultaPublica >
+        totalPaginas
+    ) {
+
+        paginaConsultaPublica =
+            1;
+
+    }
+
+    const inicio =
+        (
+            paginaConsultaPublica -
+            1
+        ) *
+        itensPorPaginaConsultaPublica;
+
+    const fim =
+        inicio +
+        itensPorPaginaConsultaPublica;
+
+    const itensDaPagina =
+        itensFiltrados.slice(
+            inicio,
+            fim
+        );
+
+    /*
+       LIMPA A GRADE
+    */
+
+    container.innerHTML =
+        '';
+
+    /*
+       MONTA OS CARDS
+    */
+
+    itensDaPagina.forEach(
         item => {
 
             const card =
@@ -4491,6 +5110,10 @@ function renderizarConsultaPublica() {
                 quantidadeItem(
                     item
                 );
+
+            /*
+               FOTO
+            */
 
             const foto =
                 item.foto_url
@@ -4541,6 +5164,10 @@ function renderizarConsultaPublica() {
 
                     `;
 
+            /*
+               DESCRIÇÃO
+            */
+
             const descricao =
                 item.descricao
                     ? `
@@ -4557,6 +5184,10 @@ function renderizarConsultaPublica() {
 
                     `
                     : '';
+
+            /*
+               CARD
+            */
 
             card.innerHTML = `
 
@@ -4678,8 +5309,15 @@ function renderizarConsultaPublica() {
         }
     );
 
-}
+    /*
+       PAGINAÇÃO
+    */
 
+    renderizarPaginacaoConsultaPublica(
+        itensFiltrados.length
+    );
+
+}
 
 /* =========================================================
    FILTROS DA CONSULTA
@@ -4704,18 +5342,50 @@ function limparFiltrosConsultaPublica() {
             'filtroLocalPublico'
         );
 
+    const categoria =
+        document.getElementById(
+            'filtroCategoriaPublico'
+        );
+
+    const ordenacao =
+        document.getElementById(
+            'ordenacaoPublico'
+        );
+
     if (busca) {
-        busca.value = '';
+
+        busca.value =
+            '';
+
     }
 
     if (local) {
-        local.value = '';
+
+        local.value =
+            '';
+
     }
+
+    if (categoria) {
+
+        categoria.value =
+            '';
+
+    }
+
+    if (ordenacao) {
+
+        ordenacao.value =
+            'az';
+
+    }
+
+    paginaConsultaPublica =
+        1;
 
     renderizarConsultaPublica();
 
 }
-
 
 async function atualizarConsultaPublica() {
 
@@ -5492,6 +6162,48 @@ document.addEventListener(
             );
 
         }
+        const filtroCategoria =
+    document.getElementById(
+        'filtroCategoriaPublico'
+    );
+
+if (filtroCategoria) {
+
+    filtroCategoria.addEventListener(
+        'change',
+        () => {
+
+            paginaConsultaPublica =
+                1;
+
+            renderizarConsultaPublica();
+
+        }
+    );
+
+}
+
+
+const ordenacaoPublica =
+    document.getElementById(
+        'ordenacaoPublico'
+    );
+
+if (ordenacaoPublica) {
+
+    ordenacaoPublica.addEventListener(
+        'change',
+        () => {
+
+            paginaConsultaPublica =
+                1;
+
+            renderizarConsultaPublica();
+
+        }
+    );
+
+}
 
         const quantidadeMov =
             document.getElementById(
