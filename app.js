@@ -6322,7 +6322,8 @@ window.alternarTipoControle =
     alternarTipoControle;
 
 /* =========================================================
-   CONSULTA PÚBLICA — FILTROS + VISUALIZAÇÃO
+   CONSULTA PÚBLICA — AJUSTES FINAIS
+   GRUPO MONTE CARLO
 ========================================================= */
 
 (function () {
@@ -6335,17 +6336,15 @@ window.alternarTipoControle =
     ===================================================== */
 
     function el(id) {
-
         return document.getElementById(id);
-
     }
 
 
     /* =====================================================
-       NORMALIZA TEXTO
+       NORMALIZAR TEXTO
     ===================================================== */
 
-    function normalizarTexto(valor) {
+    function normalizarConsulta(valor) {
 
         return String(valor || '')
             .normalize('NFD')
@@ -6357,125 +6356,7 @@ window.alternarTipoControle =
 
 
     /* =====================================================
-       OBTÉM CATEGORIA DO ITEM
-    ===================================================== */
-
-    function obterCategoria(item) {
-
-        return (
-            item.categoria ||
-            item.tipoItem ||
-            item.tipo ||
-            item.category ||
-            item.categoria_item ||
-            ''
-        );
-
-    }
-
-
-    /* =====================================================
-       OBTÉM LOCAL DO ITEM
-    ===================================================== */
-
-    function obterLocal(item) {
-
-        return (
-            item.local_nome ||
-            item.localNome ||
-            item.local ||
-            item.localizacao ||
-            item.localizacao_nome ||
-            ''
-        );
-
-    }
-
-
-    /* =====================================================
-       OBTÉM NOME DO ITEM
-    ===================================================== */
-
-    function obterNome(item) {
-
-        return (
-            item.nome ||
-            item.nome_item ||
-            item.item_nome ||
-            item.name ||
-            'Item sem nome'
-        );
-
-    }
-
-
-    /* =====================================================
-       OBTÉM QUANTIDADE
-    ===================================================== */
-
-    function obterQuantidade(item) {
-
-        try {
-
-            if (
-                typeof quantidadeItem ===
-                'function'
-            ) {
-
-                return Number(
-                    quantidadeItem(item)
-                ) || 0;
-
-            }
-
-        } catch (erro) {
-
-            console.warn(
-                'Não foi possível usar quantidadeItem:',
-                erro
-            );
-
-        }
-
-
-        return Number(
-            item.quantidade ||
-            item.quantidadeLote ||
-            item.qtd ||
-            item.quantity ||
-            0
-        ) || 0;
-
-    }
-
-
-    /* =====================================================
-       OBTÉM ITENS DISPONÍVEIS
-    ===================================================== */
-
-    function obterItensConsulta() {
-
-        if (
-            Array.isArray(window.itens)
-        ) {
-
-            return window.itens.filter(
-                item =>
-                    normalizarTexto(
-                        item.status
-                    ) === 'ativo'
-            );
-
-        }
-
-
-        return [];
-
-    }
-
-
-    /* =====================================================
-       POPULA LOCAIS
+       POPULAR LOCAIS
     ===================================================== */
 
     function popularLocaisConsulta() {
@@ -6483,49 +6364,67 @@ window.alternarTipoControle =
         const select =
             el('filtroLocalPublico');
 
-
         if (!select) {
             return;
         }
 
 
-        const itensAtivos =
-            obterItensConsulta();
+        const valorAtual =
+            select.value;
 
 
-        const locais = new Map();
+        const locais =
+            new Map();
 
 
-        itensAtivos.forEach(
-            item => {
+        /*
+           Utiliza os dados reais da consulta pública.
+        */
 
-                const local =
-                    obterLocal(item);
+        if (
+            Array.isArray(
+                itensConsultaPublica
+            )
+        ) {
 
-                if (!local) {
-                    return;
-                }
+            itensConsultaPublica.forEach(
+                item => {
+
+                    const localId =
+                        item.local_id;
+
+                    if (
+                        localId === null ||
+                        localId === undefined ||
+                        localId === ''
+                    ) {
+                        return;
+                    }
 
 
-                const chave =
-                    normalizarTexto(local);
+                    const nome =
+                        nomeLocal(
+                            localId
+                        );
 
 
-                if (!locais.has(chave)) {
+                    if (
+                        !nome ||
+                        nome === 'SEM LOCAL'
+                    ) {
+                        return;
+                    }
+
 
                     locais.set(
-                        chave,
-                        local
+                        String(localId),
+                        nome
                     );
 
                 }
+            );
 
-            }
-        );
-
-
-        const valorAtual =
-            select.value;
+        }
 
 
         select.innerHTML =
@@ -6533,33 +6432,35 @@ window.alternarTipoControle =
 
 
         Array.from(
-            locais.values()
+            locais.entries()
         )
         .sort(
             (a, b) =>
-                String(a)
-                    .localeCompare(
-                        String(b),
-                        'pt-BR',
-                        {
-                            sensitivity:
-                                'base'
-                        }
-                    )
+                String(a[1]).localeCompare(
+                    String(b[1]),
+                    'pt-BR',
+                    {
+                        sensitivity:
+                            'base'
+                    }
+                )
         )
         .forEach(
-            local => {
+            ([id, nome]) => {
 
                 const option =
                     document.createElement(
                         'option'
                     );
 
+
                 option.value =
-                    normalizarTexto(local);
+                    id;
+
 
                 option.textContent =
-                    local;
+                    nome;
+
 
                 select.appendChild(
                     option
@@ -6573,8 +6474,7 @@ window.alternarTipoControle =
             valorAtual &&
             Array.from(
                 select.options
-            )
-            .some(
+            ).some(
                 option =>
                     option.value ===
                     valorAtual
@@ -6590,7 +6490,7 @@ window.alternarTipoControle =
 
 
     /* =====================================================
-       POPULA CATEGORIAS
+       POPULAR CATEGORIAS
     ===================================================== */
 
     function popularCategoriasConsulta() {
@@ -6598,51 +6498,52 @@ window.alternarTipoControle =
         const select =
             el('filtroCategoriaPublico');
 
-
         if (!select) {
             return;
         }
 
 
-        const itensAtivos =
-            obterItensConsulta();
-
-
-        const categorias = new Map();
-
-
-        itensAtivos.forEach(
-            item => {
-
-                const categoria =
-                    obterCategoria(item);
-
-                if (!categoria) {
-                    return;
-                }
-
-
-                const chave =
-                    normalizarTexto(
-                        categoria
-                    );
-
-
-                if (!categorias.has(chave)) {
-
-                    categorias.set(
-                        chave,
-                        categoria
-                    );
-
-                }
-
-            }
-        );
-
-
         const valorAtual =
             select.value;
+
+
+        const categorias =
+            new Map();
+
+
+        if (
+            Array.isArray(
+                itensConsultaPublica
+            )
+        ) {
+
+            itensConsultaPublica.forEach(
+                item => {
+
+                    const categoria =
+                        String(
+                            item.tipo ||
+                            ''
+                        )
+                        .trim();
+
+
+                    if (!categoria) {
+                        return;
+                    }
+
+
+                    categorias.set(
+                        normalizarConsulta(
+                            categoria
+                        ),
+                        categoria
+                    );
+
+                }
+            );
+
+        }
 
 
         select.innerHTML =
@@ -6654,15 +6555,14 @@ window.alternarTipoControle =
         )
         .sort(
             (a, b) =>
-                String(a)
-                    .localeCompare(
-                        String(b),
-                        'pt-BR',
-                        {
-                            sensitivity:
-                                'base'
-                        }
-                    )
+                String(a).localeCompare(
+                    String(b),
+                    'pt-BR',
+                    {
+                        sensitivity:
+                            'base'
+                    }
+                )
         )
         .forEach(
             categoria => {
@@ -6672,13 +6572,14 @@ window.alternarTipoControle =
                         'option'
                     );
 
+
                 option.value =
-                    normalizarTexto(
-                        categoria
-                    );
+                    categoria;
+
 
                 option.textContent =
                     categoria;
+
 
                 select.appendChild(
                     option
@@ -6692,8 +6593,7 @@ window.alternarTipoControle =
             valorAtual &&
             Array.from(
                 select.options
-            )
-            .some(
+            ).some(
                 option =>
                     option.value ===
                     valorAtual
@@ -6709,349 +6609,88 @@ window.alternarTipoControle =
 
 
     /* =====================================================
-       ORDENAÇÃO
-    ===================================================== */
-
-    function ordenarItensConsulta(lista) {
-
-        const select =
-            el('ordenacaoPublica');
-
-
-        const ordem =
-            select
-                ? select.value
-                : 'nome-asc';
-
-
-        const resultado =
-            [...lista];
-
-
-        resultado.sort(
-            (a, b) => {
-
-                const nomeA =
-                    obterNome(a);
-
-                const nomeB =
-                    obterNome(b);
-
-
-                const localA =
-                    obterLocal(a);
-
-                const localB =
-                    obterLocal(b);
-
-
-                const qtdA =
-                    obterQuantidade(a);
-
-                const qtdB =
-                    obterQuantidade(b);
-
-
-                if (
-                    ordem ===
-                    'nome-desc'
-                ) {
-
-                    return String(nomeB)
-                        .localeCompare(
-                            String(nomeA),
-                            'pt-BR',
-                            {
-                                sensitivity:
-                                    'base'
-                            }
-                        );
-
-                }
-
-
-                if (
-                    ordem ===
-                    'quantidade-desc'
-                ) {
-
-                    return qtdB - qtdA;
-
-                }
-
-
-                if (
-                    ordem ===
-                    'quantidade-asc'
-                ) {
-
-                    return qtdA - qtdB;
-
-                }
-
-
-                if (
-                    ordem ===
-                    'local-asc'
-                ) {
-
-                    return String(localA)
-                        .localeCompare(
-                            String(localB),
-                            'pt-BR',
-                            {
-                                sensitivity:
-                                    'base'
-                            }
-                        );
-
-                }
-
-
-                return String(nomeA)
-                    .localeCompare(
-                        String(nomeB),
-                        'pt-BR',
-                        {
-                            sensitivity:
-                                'base'
-                        }
-                    );
-
-            }
-        );
-
-
-        return resultado;
-
-    }
-
-
-    /* =====================================================
-       APLICA FILTROS
-    ===================================================== */
-
-    function obterItensFiltradosConsulta() {
-
-        const busca =
-            normalizarTexto(
-                el('buscaPublica')
-                    ? el('buscaPublica').value
-                    : ''
-            );
-
-
-        const localSelecionado =
-            normalizarTexto(
-                el('filtroLocalPublico')
-                    ? el('filtroLocalPublico').value
-                    : ''
-            );
-
-
-        const categoriaSelecionada =
-            normalizarTexto(
-                el('filtroCategoriaPublico')
-                    ? el('filtroCategoriaPublico').value
-                    : ''
-            );
-
-
-        let lista =
-            obterItensConsulta();
-
-
-        lista =
-            lista.filter(
-                item => {
-
-                    const nome =
-                        normalizarTexto(
-                            obterNome(item)
-                        );
-
-
-                    const categoria =
-                        normalizarTexto(
-                            obterCategoria(item)
-                        );
-
-
-                    const local =
-                        normalizarTexto(
-                            obterLocal(item)
-                        );
-
-
-                    const correspondeBusca =
-                        !busca ||
-                        nome.includes(busca) ||
-                        categoria.includes(busca) ||
-                        local.includes(busca);
-
-
-                    const correspondeLocal =
-                        !localSelecionado ||
-                        local ===
-                        localSelecionado;
-
-
-                    const correspondeCategoria =
-                        !categoriaSelecionada ||
-                        categoria ===
-                        categoriaSelecionada;
-
-
-                    return (
-                        correspondeBusca &&
-                        correspondeLocal &&
-                        correspondeCategoria
-                    );
-
-                }
-            );
-
-
-        return ordenarItensConsulta(
-            lista
-        );
-
-    }
-
-
-    /* =====================================================
-       ATUALIZA CONTADOR
-    ===================================================== */
-
-    function atualizarContadorConsulta(
-        quantidade
-    ) {
-
-        const contador =
-            el('contadorConsultaPublica');
-
-
-        if (contador) {
-
-            contador.textContent =
-                quantidade;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       FILTRAGEM
-    ===================================================== */
-
-    function aplicarFiltrosConsultaPublica() {
-
-        popularLocaisConsulta();
-
-        popularCategoriasConsulta();
-
-        const lista =
-            obterItensFiltradosConsulta();
-
-
-        atualizarContadorConsulta(
-            lista.length
-        );
-
-
-        /*
-         * Se a função original de renderização
-         * estiver disponível, ela será usada
-         * através do fluxo normal do sistema.
-         */
-
-        if (
-            typeof window.renderizarConsultaPublicaProfissional ===
-            'function'
-        ) {
-
-            window.renderizarConsultaPublicaProfissional(
-                lista
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       VISUALIZAÇÃO
+       VISUALIZAÇÃO — CARDS / LISTA
     ===================================================== */
 
     function configurarVisualizacaoConsulta() {
 
-        const grid =
-            el('listaConsultaPublica');
+        const container =
+            el(
+                'listaConsultaPublica'
+            );
 
 
-        if (!grid) {
-            return;
-        }
+        const botaoCards =
+            el(
+                'consultaViewCards'
+            );
 
-
-        const botaoGrid =
-            el('btnViewGrid');
 
         const botaoLista =
-            el('btnViewList');
+            el(
+                'consultaViewLista'
+            );
 
 
         if (
-            !botaoGrid ||
+            !container ||
+            !botaoCards ||
             !botaoLista
         ) {
-
             return;
-
         }
 
 
-        function selecionar(tipo) {
+        function aplicarVisualizacao(
+            tipo
+        ) {
 
             if (
-                tipo === 'list'
+                tipo ===
+                'lista'
             ) {
 
-                grid.classList.add(
+                container.classList.add(
                     'list-view'
                 );
+
 
                 botaoLista.classList.add(
                     'active'
                 );
 
-                botaoGrid.classList.remove(
+
+                botaoCards.classList.remove(
                     'active'
                 );
+
 
                 localStorage.setItem(
                     'consultaVisualizacao',
-                    'list'
+                    'lista'
                 );
+
 
             } else {
 
-                grid.classList.remove(
+                container.classList.remove(
                     'list-view'
                 );
 
-                botaoGrid.classList.add(
+
+                botaoCards.classList.add(
                     'active'
                 );
+
 
                 botaoLista.classList.remove(
                     'active'
                 );
 
+
                 localStorage.setItem(
                     'consultaVisualizacao',
-                    'grid'
+                    'cards'
                 );
 
             }
@@ -7059,10 +6698,12 @@ window.alternarTipoControle =
         }
 
 
-        botaoGrid.onclick =
+        botaoCards.onclick =
             function () {
 
-                selecionar('grid');
+                aplicarVisualizacao(
+                    'cards'
+                );
 
             };
 
@@ -7070,7 +6711,9 @@ window.alternarTipoControle =
         botaoLista.onclick =
             function () {
 
-                selecionar('list');
+                aplicarVisualizacao(
+                    'lista'
+                );
 
             };
 
@@ -7081,35 +6724,88 @@ window.alternarTipoControle =
             );
 
 
-        selecionar(
-            salva === 'list'
-                ? 'list'
-                : 'grid'
+        aplicarVisualizacao(
+            salva === 'lista'
+                ? 'lista'
+                : 'cards'
         );
 
     }
 
 
     /* =====================================================
-       EVENTOS DOS FILTROS
+       OBSERVAR ATUALIZAÇÃO DA CONSULTA
     ===================================================== */
 
-    function configurarEventosConsulta() {
+    function observarConsulta() {
+
+        const container =
+            el(
+                'listaConsultaPublica'
+            );
+
+
+        if (!container) {
+            return;
+        }
+
+
+        /*
+           Quando os cards forem renderizados,
+           atualizamos automaticamente os filtros.
+        */
+
+        const observer =
+            new MutationObserver(
+                function () {
+
+                    popularLocaisConsulta();
+
+                    popularCategoriasConsulta();
+
+                }
+            );
+
+
+        observer.observe(
+            container,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       EVENTOS
+    ===================================================== */
+
+    function configurarEventos() {
 
         const busca =
-            el('buscaPublica');
+            el(
+                'buscaPublica'
+            );
 
 
         const local =
-            el('filtroLocalPublico');
+            el(
+                'filtroLocalPublico'
+            );
 
 
         const categoria =
-            el('filtroCategoriaPublico');
+            el(
+                'filtroCategoriaPublico'
+            );
 
 
         const ordenacao =
-            el('ordenacaoPublica');
+            el(
+                'ordenacaoPublica'
+            );
 
 
         if (busca) {
@@ -7118,16 +6814,10 @@ window.alternarTipoControle =
                 'input',
                 function () {
 
-                    if (
-                        typeof window
-                            .filtrarConsultaPublicaProfissional ===
-                        'function'
-                    ) {
+                    paginaConsultaPublica =
+                        1;
 
-                        window
-                            .filtrarConsultaPublicaProfissional();
-
-                    }
+                    renderizarConsultaPublica();
 
                 }
             );
@@ -7141,16 +6831,10 @@ window.alternarTipoControle =
                 'change',
                 function () {
 
-                    if (
-                        typeof window
-                            .filtrarConsultaPublicaProfissional ===
-                        'function'
-                    ) {
+                    paginaConsultaPublica =
+                        1;
 
-                        window
-                            .filtrarConsultaPublicaProfissional();
-
-                    }
+                    renderizarConsultaPublica();
 
                 }
             );
@@ -7164,16 +6848,10 @@ window.alternarTipoControle =
                 'change',
                 function () {
 
-                    if (
-                        typeof window
-                            .filtrarConsultaPublicaProfissional ===
-                        'function'
-                    ) {
+                    paginaConsultaPublica =
+                        1;
 
-                        window
-                            .filtrarConsultaPublicaProfissional();
-
-                    }
+                    renderizarConsultaPublica();
 
                 }
             );
@@ -7187,16 +6865,10 @@ window.alternarTipoControle =
                 'change',
                 function () {
 
-                    if (
-                        typeof window
-                            .filtrarConsultaPublicaProfissional ===
-                        'function'
-                    ) {
+                    paginaConsultaPublica =
+                        1;
 
-                        window
-                            .filtrarConsultaPublicaProfissional();
-
-                    }
+                    renderizarConsultaPublica();
 
                 }
             );
@@ -7207,42 +6879,20 @@ window.alternarTipoControle =
 
 
     /* =====================================================
-       EXPÕE FUNÇÕES
-    ===================================================== */
-
-    window.popularLocaisConsulta =
-        popularLocaisConsulta;
-
-
-    window.popularCategoriasConsulta =
-        popularCategoriasConsulta;
-
-
-    window.obterItensFiltradosConsulta =
-        obterItensFiltradosConsulta;
-
-
-    window.configurarVisualizacaoConsulta =
-        configurarVisualizacaoConsulta;
-
-
-    window.configurarEventosConsulta =
-        configurarEventosConsulta;
-
-
-    /* =====================================================
        INICIALIZAÇÃO
     ===================================================== */
 
-    function iniciarConsultaProfissional() {
+    function iniciar() {
 
         configurarVisualizacaoConsulta();
 
-        configurarEventosConsulta();
+        configurarEventos();
 
         popularLocaisConsulta();
 
         popularCategoriasConsulta();
+
+        observarConsulta();
 
     }
 
@@ -7254,12 +6904,12 @@ window.alternarTipoControle =
 
         document.addEventListener(
             'DOMContentLoaded',
-            iniciarConsultaProfissional
+            iniciar
         );
 
     } else {
 
-        iniciarConsultaProfissional();
+        iniciar();
 
     }
 
