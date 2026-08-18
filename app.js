@@ -163,27 +163,22 @@ async function login(event) {
 
     }
 
-
     const email =
         document
             .getElementById('email')
             ?.value
             ?.trim() || '';
 
-
     const password =
         document
             .getElementById('password')
             ?.value || '';
 
-
     const botao =
         document.getElementById('btnLogin');
 
-
     const textoOriginal =
         botao?.innerHTML;
-
 
     if (!email || !password) {
 
@@ -195,7 +190,6 @@ async function login(event) {
 
     }
 
-
     try {
 
         if (botao) {
@@ -206,7 +200,6 @@ async function login(event) {
                 '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
 
         }
-
 
         const {
             data,
@@ -220,7 +213,6 @@ async function login(event) {
                     password
 
                 });
-
 
         if (error) {
 
@@ -238,23 +230,18 @@ async function login(event) {
 
         }
 
-
         usuarioLogado =
             data.user;
 
-
         await verificarPerfil();
-
 
         document.body
             .classList
             .remove('login-mode');
 
-
         atualizarMenus();
 
         atualizarUsuarioInterface();
-
 
         abrirTela(
             'dashboardTela',
@@ -263,12 +250,9 @@ async function login(event) {
             )
         );
 
-
         await carregarDashboard();
 
-
         return false;
-
 
     } catch (erro) {
 
@@ -282,7 +266,6 @@ async function login(event) {
         );
 
         return false;
-
 
     } finally {
 
@@ -322,21 +305,17 @@ async function logout() {
 
     }
 
-
     usuarioLogado = null;
 
     perfilUsuario = null;
-
 
     document.body
         .classList
         .add('login-mode');
 
-
     atualizarMenus();
 
     atualizarUsuarioInterface();
-
 
     abrirTela(
         'loginTela'
@@ -359,7 +338,6 @@ async function verificarPerfil() {
 
     }
 
-
     try {
 
         const {
@@ -375,7 +353,6 @@ async function verificarPerfil() {
                 )
                 .maybeSingle();
 
-
         if (error) {
 
             console.error(
@@ -390,7 +367,6 @@ async function verificarPerfil() {
 
         }
 
-
         perfilUsuario =
             String(
                 data?.perfil ||
@@ -398,7 +374,6 @@ async function verificarPerfil() {
             )
             .trim()
             .toLowerCase();
-
 
     } catch (erro) {
 
@@ -426,49 +401,41 @@ function atualizarMenus() {
             'menuLogin'
         );
 
-
     const dashboardMenu =
         document.getElementById(
             'menuDashboard'
         );
-
 
     const cadastroMenu =
         document.getElementById(
             'menuCadastro'
         );
 
-
     const movimentacaoMenu =
         document.getElementById(
             'menuMovimentacao'
         );
-
 
     const estoqueMenu =
         document.getElementById(
             'menuEstoque'
         );
 
-
     const historicoMenu =
         document.getElementById(
             'menuHistorico'
         );
-
 
     const logoutMenu =
         document.getElementById(
             'menuLogout'
         );
 
-
     /*
        IMPORTANTE:
        Alguns desses elementos podem não existir
        no HTML. Por isso usamos verificações.
     */
-
 
     if (!usuarioLogado) {
 
@@ -479,14 +446,12 @@ function atualizarMenus() {
 
         }
 
-
         if (dashboardMenu) {
 
             dashboardMenu.style.display =
                 'none';
 
         }
-
 
         if (cadastroMenu) {
 
@@ -495,14 +460,12 @@ function atualizarMenus() {
 
         }
 
-
         if (movimentacaoMenu) {
 
             movimentacaoMenu.style.display =
                 'none';
 
         }
-
 
         if (estoqueMenu) {
 
@@ -511,14 +474,12 @@ function atualizarMenus() {
 
         }
 
-
         if (historicoMenu) {
 
             historicoMenu.style.display =
                 'none';
 
         }
-
 
         if (logoutMenu) {
 
@@ -527,11 +488,9 @@ function atualizarMenus() {
 
         }
 
-
         return;
 
     }
-
 
     if (loginMenu) {
 
@@ -540,14 +499,12 @@ function atualizarMenus() {
 
     }
 
-
     if (dashboardMenu) {
 
         dashboardMenu.style.display =
             'flex';
 
     }
-
 
     if (estoqueMenu) {
 
@@ -556,7 +513,6 @@ function atualizarMenus() {
 
     }
 
-
     if (historicoMenu) {
 
         historicoMenu.style.display =
@@ -564,14 +520,12 @@ function atualizarMenus() {
 
     }
 
-
     if (logoutMenu) {
 
         logoutMenu.style.display =
             'flex';
 
     }
-
 
     if (
         perfilUsuario ===
@@ -584,7 +538,6 @@ function atualizarMenus() {
                 'none';
 
         }
-
 
         if (movimentacaoMenu) {
 
@@ -601,7 +554,6 @@ function atualizarMenus() {
                 'flex';
 
         }
-
 
         if (movimentacaoMenu) {
 
@@ -625,11 +577,9 @@ function atualizarUsuarioInterface() {
         usuarioLogado?.email ||
         'Visitante';
 
-
     const perfil =
         perfilUsuario ||
         'Acesso restrito';
-
 
     const campos = [
 
@@ -655,7 +605,6 @@ function atualizarUsuarioInterface() {
 
     ];
 
-
     campos.forEach(
         ([id, valor]) => {
 
@@ -663,7 +612,6 @@ function atualizarUsuarioInterface() {
                 document.getElementById(
                     id
                 );
-
 
             if (elemento) {
 
@@ -675,12 +623,10 @@ function atualizarUsuarioInterface() {
         }
     );
 
-
     const sidebarUsuario =
         document.getElementById(
             'usuarioSidebar'
         );
-
 
     if (sidebarUsuario) {
 
@@ -691,12 +637,10 @@ function atualizarUsuarioInterface() {
 
     }
 
-
     const headerUsuario =
         document.getElementById(
             'headerUsuario'
         );
-
 
     if (headerUsuario) {
 
@@ -721,18 +665,15 @@ function carregarLocais() {
             'local'
         );
 
-
     const destinoSelect =
         document.getElementById(
             'destino'
         );
 
-
     if (localSelect) {
 
         localSelect.innerHTML =
             '<option value="">Selecione o Local</option>';
-
 
         LOCAIS.forEach(
             local => {
@@ -748,12 +689,10 @@ function carregarLocais() {
 
     }
 
-
     if (destinoSelect) {
 
         destinoSelect.innerHTML =
             '<option value="">Selecione o Destino</option>';
-
 
         LOCAIS.forEach(
             local => {
@@ -769,12 +708,10 @@ function carregarLocais() {
 
     }
 
-
     const totalLocais =
         document.getElementById(
             'totalLocais'
         );
-
 
     if (totalLocais) {
 
@@ -798,18 +735,15 @@ function alternarTipoControle() {
         )?.value ||
         'estoque';
 
-
     const quantidadeGroup =
         document.getElementById(
             'quantidadeCadastroGroup'
         );
 
-
     const patrimonioGroup =
         document.getElementById(
             'patrimonioCadastroGroup'
         );
-
 
     if (
         tipo ===
@@ -822,7 +756,6 @@ function alternarTipoControle() {
                 'none';
 
         }
-
 
         if (patrimonioGroup) {
 
@@ -839,7 +772,6 @@ function alternarTipoControle() {
                 'block';
 
         }
-
 
         if (patrimonioGroup) {
 
@@ -866,7 +798,6 @@ async function salvarItem(event) {
 
     }
 
-
     if (!usuarioLogado) {
 
         alert(
@@ -876,7 +807,6 @@ async function salvarItem(event) {
         return false;
 
     }
-
 
     if (
         perfilUsuario ===
@@ -891,13 +821,11 @@ async function salvarItem(event) {
 
     }
 
-
     const nome =
         document.getElementById(
             'nome'
         )?.value
         ?.trim() || '';
-
 
     const tipo =
         document.getElementById(
@@ -906,19 +834,16 @@ async function salvarItem(event) {
         ?.trim() ||
         nome;
 
-
     const descricao =
         document.getElementById(
             'descricao'
         )?.value
         ?.trim() || '';
 
-
     const localId =
         document.getElementById(
             'local'
         )?.value || '';
-
 
     const status =
         document.getElementById(
@@ -926,12 +851,10 @@ async function salvarItem(event) {
         )?.value ||
         'Ativo';
 
-
     const quantidadeInput =
         document.getElementById(
             'quantidadeLote'
         )?.value;
-
 
     const quantidade =
         Math.max(
@@ -943,13 +866,11 @@ async function salvarItem(event) {
             )
         );
 
-
     const tipoControle =
         document.querySelector(
             'input[name="tipoControle"]:checked'
         )?.value ||
         'estoque';
-
 
     const patrimonio =
         document.getElementById(
@@ -957,12 +878,10 @@ async function salvarItem(event) {
         )?.value
         ?.trim() || '';
 
-
     const arquivo =
         document.getElementById(
             'foto'
         )?.files?.[0];
-
 
     if (!nome) {
 
@@ -974,7 +893,6 @@ async function salvarItem(event) {
 
     }
 
-
     if (!localId) {
 
         alert(
@@ -984,7 +902,6 @@ async function salvarItem(event) {
         return false;
 
     }
-
 
     if (
         tipoControle ===
@@ -1000,12 +917,155 @@ async function salvarItem(event) {
 
     }
 
+    let fotoUrl = '';
+
+    try {
+
+        if (arquivo) {
+
+            const nomeArquivo =
+                `${Date.now()}_${arquivo.name.replace(/\s+/g, '_')}`;
+
+            const {
+                error:
+                uploadError
+            } =
+                await supabaseClient
+                    .storage
+                    .from('inventario')
+                    .upload(
+                        nomeArquivo,
+                        arquivo
+                    );
+
+            if (uploadError) {
+
+                console.error(
+                    'ERRO UPLOAD:',
+                    uploadError
+                );
+
+                alert(
+                    'Não foi possível enviar a foto.'
+                );
+
+                return false;
+
+            }
+
+            const {
+                data:
+                publicData
+            } =
+                supabaseClient
+                    .storage
+                    .from('inventario')
+                    .getPublicUrl(
+                        nomeArquivo
+                    );
+
+            fotoUrl =
+                publicData?.publicUrl ||
+                '';
+
+        }
+
+
+        const dados = {
+
+            nome,
+
+            tipo,
+
+            descricao,
+
+            local_id:
+                Number(localId),
+
+            quantidade,
+
+            status,
+
+            patrimonio:
+                patrimonio || null,
+
+            foto_url:
+                fotoUrl || null,
+
+            tipo_controle:
+                tipoControle
+
+        };
+
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from('itens')
+                .insert(dados)
+                .select()
+                .single();
+
+
+        if (error) {
+
+            console.error(
+                'ERRO AO SALVAR ITEM:',
+                error
+            );
+
+            alert(
+                'Não foi possível salvar o item.\n\n' +
+                error.message
+            );
+
+            return false;
+
+        }
+
+
+        itens.push(data);
+
+
+        alert(
+            'Item cadastrado com sucesso!'
+        );
+
+
+        limparFormularioCadastro();
+
+
+        await carregarDashboard();
+
+        await carregarEstoque();
+
+        return false;
+
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO AO CADASTRAR:',
+            erro
+        );
+
+        alert(
+            'Erro ao cadastrar o item.'
+        );
+
+        return false;
+
+    }
+
+}
+    }
 
     try {
 
         let fotoUrl =
             '';
-
 
         /* =================================================
            UPLOAD DA FOTO
@@ -1537,17 +1597,23 @@ function renderizarItens() {
             const foto =
                 item.foto_url
                     ? `
+
                         <img
                             src="${escaparHTML(item.foto_url)}"
                             alt="Foto"
                             class="foto-tabela"
                             onclick="abrirModalFoto('${escaparHTML(item.foto_url)}')"
                         >
+
                     `
                     : `
+
                         <div class="sem-foto">
+
                             <i class="fa-solid fa-image"></i>
+
                         </div>
+
                     `;
 
 
@@ -1592,44 +1658,63 @@ function renderizarItens() {
             tr.innerHTML = `
 
                 <td>
+
                     ${foto}
+
                 </td>
 
+
                 <td>
+
                     ${escaparHTML(
                         patrimonio
                     )}
+
                 </td>
 
+
                 <td>
+
                     ${escaparHTML(
                         tipo
                     )}
+
                 </td>
 
+
                 <td>
+
                     ${escaparHTML(
                         nome
                     )}
+
                 </td>
 
+
                 <td>
+
                     ${escaparHTML(
                         descricao
                     )}
+
                 </td>
 
+
                 <td>
+
                     ${escaparHTML(
                         local
                     )}
 
                     <small>
+
                         ${quantidade}
                         unidade(s)
+
                     </small>
 
                 </td>
+
 
                 <td>
 
@@ -1645,6 +1730,7 @@ function renderizarItens() {
 
                 </td>
 
+
                 <td>
 
                     <div class="acoes-tabela">
@@ -1658,6 +1744,7 @@ function renderizarItens() {
                             <i class="fa-solid fa-pen"></i>
 
                         </button>
+
 
                         <button
                             class="btn-icon btn-excluir"
@@ -2016,6 +2103,24 @@ async function excluirItem(id) {
     }
 
 }
+        console.error(
+            'ERRO AO EXCLUIR ITEM:',
+            erro
+        );
+
+
+        alert(
+            'Erro ao excluir o item.\n\n' +
+            (
+                erro?.message ||
+                'Erro desconhecido.'
+            )
+        );
+
+
+    }
+
+}
 
 
 /* =========================================================
@@ -2118,8 +2223,21 @@ async function carregarDashboard() {
 
     try {
 
+        /*
+           =====================================================
+           1. CARREGAR ITENS
+           =====================================================
+        */
+
         await carregarItens();
 
+
+        /*
+           =====================================================
+           2. TOTAL DE ITENS
+           Soma a quantidade real dos itens.
+           =====================================================
+        */
 
         const totalItens =
             itens.reduce(
@@ -2133,42 +2251,6 @@ async function carregarDashboard() {
                     ),
                 0
             );
-
-
-        const totalMov =
-            document.getElementById(
-                'totalMov'
-            );
-
-
-        if (totalMov) {
-
-            const {
-                count,
-                error
-            } =
-                await supabaseClient
-                    .from('movimentacoes')
-                    .select(
-                        '*',
-                        {
-                            count:
-                                'exact',
-                                head:
-                                    true
-                        }
-                    );
-
-
-            if (!error) {
-
-                totalMov.innerText =
-                    count ||
-                    0;
-
-            }
-
-        }
 
 
         const totalItensElement =
@@ -2185,6 +2267,68 @@ async function carregarDashboard() {
         }
 
 
+        /*
+           =====================================================
+           3. TOTAL DE MOVIMENTAÇÕES
+           =====================================================
+        */
+
+        const totalMov =
+            document.getElementById(
+                'totalMov'
+            );
+
+
+        if (totalMov) {
+
+            const {
+                count,
+                error
+            } =
+                await supabaseClient
+                    .from(
+                        'movimentacoes'
+                    )
+                    .select(
+                        '*',
+                        {
+                            count:
+                                'exact',
+                            head:
+                                true
+                        }
+                    );
+
+
+            if (error) {
+
+                console.error(
+                    'Erro ao contar movimentações:',
+                    error
+                );
+
+
+                totalMov.innerText =
+                    '0';
+
+            } else {
+
+                totalMov.innerText =
+                    count ||
+                    0;
+
+            }
+
+        }
+
+
+        /*
+           =====================================================
+           4. TOTAL DE ITENS BAIXADOS
+           Soma a quantidade real dos itens baixados.
+           =====================================================
+        */
+
         const totalBaixados =
             document.getElementById(
                 'totalBaixados'
@@ -2193,30 +2337,311 @@ async function carregarDashboard() {
 
         if (totalBaixados) {
 
-            totalBaixados.innerText =
-                itens.filter(
-                    item =>
-                        item.status ===
-                        'Baixado'
-                )
-                .reduce(
+            const baixados =
+                itens.reduce(
                     (
                         total,
                         item
-                    ) =>
-                        total +
-                        quantidadeItem(
-                            item
-                        ),
+                    ) => {
+
+                        const status =
+                            typeof normalizarTexto ===
+                            'function'
+                                ? normalizarTexto(
+                                    item.status
+                                )
+                                : String(
+                                    item.status ||
+                                    ''
+                                )
+                                    .toLowerCase()
+                                    .trim();
+
+
+                        if (
+                            status ===
+                            'baixado'
+                        ) {
+
+                            return (
+                                total +
+                                quantidadeItem(
+                                    item
+                                )
+                            );
+
+                        }
+
+
+                        return total;
+
+                    },
                     0
                 );
 
+
+            totalBaixados.innerText =
+                baixados;
+
         }
+
+
+        /*
+           =====================================================
+           5. TOTAL DE LOCAIS
+           =====================================================
+        */
+
+        const totalLocais =
+            document.getElementById(
+                'totalLocais'
+            );
+
+
+        if (totalLocais) {
+
+            /*
+               Remove locais duplicados
+               e considera somente registros
+               válidos.
+            */
+
+            const locaisValidos =
+                Array.isArray(
+                    LOCAIS
+                )
+                    ? LOCAIS.filter(
+                        local =>
+                            local &&
+                            local.id !==
+                                undefined &&
+                            local.nome &&
+                            String(
+                                local.nome
+                            ).trim()
+                    )
+                    : [];
+
+
+            const locaisUnicos =
+                new Set(
+                    locaisValidos.map(
+                        local =>
+                            String(
+                                local.id
+                            )
+                    )
+                );
+
+
+            totalLocais.innerText =
+                locaisUnicos.size;
+
+        }
+
+
+        /*
+           =====================================================
+           6. INDICADORES AVANÇADOS
+           =====================================================
+        */
+
+        if (
+            typeof atualizarDashboardAvancado ===
+            'function'
+        ) {
+
+            atualizarDashboardAvancado();
+
+        }
+
+
+        /*
+           =====================================================
+           7. GERAR RELATÓRIO POR ITEM E LOCAL
+           =====================================================
+        */
+
+        if (
+            typeof gerarRelatorioLocais ===
+            'function'
+        ) {
+
+            gerarRelatorioLocais();
+
+        }
+
+
+        /*
+           =====================================================
+           8. CARREGAR FILTRO DE LOCAIS
+           
+           IMPORTANTE:
+           Isso acontece DEPOIS de carregar os dados
+           e depois que a tela do dashboard já possui
+           os elementos necessários.
+           =====================================================
+        */
+
+        if (
+            typeof carregarFiltroLocaisDashboard ===
+            'function'
+        ) {
+
+            carregarFiltroLocaisDashboard();
+
+        }
+
+
+        /*
+           =====================================================
+           9. APLICAR FILTROS
+           =====================================================
+        */
+
+        if (
+            typeof filtrarDashboard ===
+            'function'
+        ) {
+
+            filtrarDashboard();
+
+        }
+
+
+        /*
+           =====================================================
+           10. CARREGAR HISTÓRICO
+           =====================================================
+        */
+
+        if (
+            typeof carregarHistorico ===
+            'function'
+        ) {
+
+            await carregarHistorico();
+
+        }
+
+
+        /*
+           =====================================================
+           FINAL
+           =====================================================
+        */
+
+        console.log(
+            'Dashboard carregado com sucesso.'
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO AO CARREGAR DASHBOARD:',
+            erro
+        );
+
+
+        /*
+           Não deixa a tela quebrar
+           caso alguma informação secundária
+           apresente erro.
+        */
+
+        const totalItensElement =
+            document.getElementById(
+                'totalItens'
+            );
+
+
+        if (
+            totalItensElement &&
+            (
+                !totalItensElement.innerText ||
+                totalItensElement.innerText ===
+                    'undefined'
+            )
+        ) {
+
+            totalItensElement.innerText =
+                '0';
+
+        }
+
+
+        const totalLocais =
+            document.getElementById(
+                'totalLocais'
+            );
+
+
+        if (
+            totalLocais &&
+            (
+                !totalLocais.innerText ||
+                totalLocais.innerText ===
+                    'undefined'
+            )
+        ) {
+
+            totalLocais.innerText =
+                '0';
+
+        }
+
+
+        const totalMov =
+            document.getElementById(
+                'totalMov'
+            );
+
+
+        if (
+            totalMov &&
+            (
+                !totalMov.innerText ||
+                totalMov.innerText ===
+                    'undefined'
+            )
+        ) {
+
+            totalMov.innerText =
+                '0';
+
+        }
+
+
+        const totalBaixados =
+            document.getElementById(
+                'totalBaixados'
+            );
+
+
+        if (
+            totalBaixados &&
+            (
+                !totalBaixados.innerText ||
+                totalBaixados.innerText ===
+                    'undefined'
+            )
+        ) {
+
+            totalBaixados.innerText =
+                '0';
+
+        }
+
+    }
+
+}
 
 
         atualizarDashboardAvancado();
 
         gerarRelatorioLocais();
+
 
     } catch (erro) {
 
@@ -2228,6 +2653,8 @@ async function carregarDashboard() {
     }
 
 }
+
+
 /* =========================================================
    DASHBOARD — STATUS
 ========================================================= */
@@ -2514,10 +2941,13 @@ function gerarRelatorioLocais() {
             tr.innerHTML = `
 
                 <td>
+
                     ${escaparHTML(
                         registro.item
                     )}
+
                 </td>
+
 
                 <td
                     data-local="${escaparHTML(
@@ -2532,10 +2962,13 @@ function gerarRelatorioLocais() {
 
                 </td>
 
+
                 <td>
 
                     <strong>
+
                         ${registro.quantidade}
+
                     </strong>
 
                 </td>
@@ -2649,10 +3082,27 @@ function carregarFiltroLocaisDashboard() {
 
     if (!select) {
 
+        console.warn(
+            'Filtro de local do Dashboard não encontrado.'
+        );
+
         return;
 
     }
 
+
+    /*
+       Guarda a seleção atual.
+    */
+
+    const valorAtual =
+        select.value ||
+        '';
+
+
+    /*
+       Limpa o campo.
+    */
 
     select.innerHTML = `
 
@@ -2663,42 +3113,156 @@ function carregarFiltroLocaisDashboard() {
     `;
 
 
-    [...LOCAIS]
+    /*
+       Garante que LOCAIS exista.
+    */
+
+    if (
+        !Array.isArray(
+            LOCAIS
+        )
+    ) {
+
+        console.warn(
+            'LOCAIS não é um array.'
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Cria uma cópia antes de ordenar.
+       Assim não modifica o array original.
+    */
+
+    const locais =
+        [
+            ...LOCAIS
+        ]
+        .filter(
+            local =>
+                local &&
+                local.nome &&
+                String(
+                    local.nome
+                ).trim()
+        )
         .sort(
             (
                 a,
                 b
             ) =>
-                a.nome.localeCompare(
-                    b.nome,
-                    'pt-BR'
+                String(
+                    a.nome
                 )
-        )
-        .forEach(
-            local => {
-
-                select.innerHTML += `
-
-                    <option
-                        value="${escaparHTML(
-                            local.nome
-                                .toLowerCase()
-                        )}"
-                    >
-
-                        ${escaparHTML(
-                            local.nome
-                        )}
-
-                    </option>
-
-                `;
-
-            }
+                .localeCompare(
+                    String(
+                        b.nome
+                    ),
+                    'pt-BR',
+                    {
+                        sensitivity:
+                            'base'
+                    }
+                )
         );
 
-}
 
+    /*
+       Evita locais duplicados.
+    */
+
+    const locaisProcessados =
+        new Set();
+
+
+    locais.forEach(
+        local => {
+
+            const nome =
+                String(
+                    local.nome
+                ).trim();
+
+
+            const valor =
+                nome
+                    .toLowerCase()
+                    .normalize(
+                        'NFD'
+                    )
+                    .replace(
+                        /[\u0300-\u036f]/g,
+                        ''
+                    );
+
+
+            /*
+               Evita duplicação.
+            */
+
+            if (
+                locaisProcessados.has(
+                    valor
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            locaisProcessados.add(
+                valor
+            );
+
+
+            const option =
+                document.createElement(
+                    'option'
+                );
+
+
+            option.value =
+                valor;
+
+
+            option.textContent =
+                nome;
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    /*
+       Restaura a seleção anterior,
+       se ela ainda existir.
+    */
+
+    if (
+        valorAtual &&
+        Array.from(
+            select.options
+        ).some(
+            option =>
+                option.value ===
+                valorAtual
+        )
+    ) {
+
+        select.value =
+            valorAtual;
+
+    }
+
+}
 
 /* =========================================================
    HISTÓRICO
@@ -2836,6 +3400,7 @@ async function carregarHistorico() {
 
                     </td>
 
+
                     <td>
 
                         ${escaparHTML(
@@ -2843,6 +3408,7 @@ async function carregarHistorico() {
                         )}
 
                     </td>
+
 
                     <td>
 
@@ -2852,6 +3418,7 @@ async function carregarHistorico() {
 
                     </td>
 
+
                     <td>
 
                         ${escaparHTML(
@@ -2860,6 +3427,7 @@ async function carregarHistorico() {
                         )}
 
                     </td>
+
 
                     <td>
 
@@ -2997,12 +3565,10 @@ function preencherOrigemAutomaticamente() {
             );
 
 
-        const atual =
-            parseInt(
-                quantidadeCampo.value ||
-                '1',
-                10
-            );
+        const atual = Number(
+            quantidadeCampo.value ||
+            0
+        );
 
 
         if (
@@ -3015,990 +3581,12 @@ function preencherOrigemAutomaticamente() {
 
         }
 
-
-        quantidadeCampo.max =
-            estoque;
-
     }
 
 
     atualizarResumoMovimentacao();
 
 }
-
-
-/* =========================================================
-   ATUALIZAR RESUMO DA MOVIMENTAÇÃO
-========================================================= */
-
-function atualizarResumoMovimentacao() {
-
-    const itemSelect =
-        document.getElementById(
-            'itemMov'
-        );
-
-
-    const destinoSelect =
-        document.getElementById(
-            'destino'
-        );
-
-
-    const quantidadeInput =
-        document.getElementById(
-            'quantidadeMov'
-        );
-
-
-    const resumo =
-        document.getElementById(
-            'resumoMovimentacao'
-        );
-
-
-    if (!resumo) {
-
-        return;
-
-    }
-
-
-    const item =
-        itens.find(
-            registro =>
-                String(
-                    registro.id
-                ) ===
-                String(
-                    itemSelect?.value
-                )
-        );
-
-
-    if (!item) {
-
-        resumo.innerHTML =
-            '';
-
-        return;
-
-    }
-
-
-    const origem =
-        nomeLocal(
-            item.local_id
-        );
-
-
-    const destino =
-        destinoSelect?.value
-            ? nomeLocal(
-                destinoSelect.value
-            )
-            : 'Selecione o destino';
-
-
-    const quantidade =
-        Math.max(
-            1,
-            parseInt(
-                quantidadeInput?.value ||
-                '1',
-                10
-            )
-        );
-
-
-    resumo.innerHTML = `
-
-        <div class="mov-resumo">
-
-            <div>
-
-                <small>
-                    Origem
-                </small>
-
-                <strong>
-                    ${escaparHTML(
-                        origem
-                    )}
-                </strong>
-
-            </div>
-
-            <div class="mov-seta">
-
-                <i
-                    class="fa-solid fa-arrow-right"
-                ></i>
-
-            </div>
-
-            <div>
-
-                <small>
-                    Destino
-                </small>
-
-                <strong>
-                    ${escaparHTML(
-                        destino
-                    )}
-                </strong>
-
-            </div>
-
-            <div>
-
-                <small>
-                    Quantidade
-                </small>
-
-                <strong>
-                    ${quantidade}
-                    unidade(s)
-                </strong>
-
-            </div>
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================================
-   MOVIMENTAR ITEM
-========================================================= */
-
-async function movimentarItem(event) {
-
-    if (event) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-    }
-
-
-    if (!usuarioLogado) {
-
-        alert(
-            'Faça login primeiro.'
-        );
-
-        return false;
-
-    }
-
-
-    if (
-        perfilUsuario ===
-        'consulta'
-    ) {
-
-        alert(
-            'Usuário sem permissão para movimentar itens.'
-        );
-
-        return false;
-
-    }
-
-
-    const itemId =
-        document.getElementById(
-            'itemMov'
-        )?.value ||
-        '';
-
-
-    const destinoId =
-        document.getElementById(
-            'destino'
-        )?.value ||
-        '';
-
-
-    const quantidade =
-        Math.max(
-            1,
-            parseInt(
-                document.getElementById(
-                    'quantidadeMov'
-                )?.value ||
-                '1',
-                10
-            )
-        );
-
-
-    const observacao =
-        document.getElementById(
-            'observacaoMov'
-        )?.value
-        ?.trim() ||
-        '';
-
-
-    const statusNovo =
-        document.getElementById(
-            'statusMov'
-        )?.value ||
-        '';
-
-
-    if (!itemId) {
-
-        alert(
-            'Selecione o patrimônio/item.'
-        );
-
-        return false;
-
-    }
-
-
-    if (!destinoId) {
-
-        alert(
-            'Selecione o destino.'
-        );
-
-        return false;
-
-    }
-
-
-    const item =
-        itens.find(
-            registro =>
-                Number(
-                    registro.id
-                ) ===
-                Number(itemId)
-        );
-
-
-    if (!item) {
-
-        alert(
-            'Item não encontrado.'
-        );
-
-        return false;
-
-    }
-
-
-    const origemId =
-        Number(
-            item.local_id
-        );
-
-
-    const destino =
-        Number(
-            destinoId
-        );
-
-
-    if (
-        origemId ===
-        destino
-    ) {
-
-        alert(
-            'O destino precisa ser diferente do local atual.'
-        );
-
-        return false;
-
-    }
-
-
-    const estoqueAtual =
-        quantidadeItem(
-            item
-        );
-
-
-    if (
-        quantidade >
-        estoqueAtual
-    ) {
-
-        alert(
-            `Quantidade indisponível.\n\n` +
-            `Estoque atual: ${estoqueAtual} unidade(s).`
-        );
-
-        return false;
-
-    }
-
-
-    try {
-
-        /*
-           =================================================
-           CASO 1:
-           MOVIMENTAÇÃO DE TODO O ESTOQUE
-           =================================================
-        */
-
-        if (
-            quantidade ===
-            estoqueAtual
-        ) {
-
-            const dadosAtualizacao = {
-
-                local_id:
-                    destino
-
-            };
-
-
-            if (statusNovo) {
-
-                dadosAtualizacao.status =
-                    statusNovo;
-
-            }
-
-
-            const {
-                error:
-                    erroUpdate
-            } =
-                await supabaseClient
-                    .from('itens')
-                    .update(
-                        dadosAtualizacao
-                    )
-                    .eq(
-                        'id',
-                        item.id
-                    );
-
-
-            if (erroUpdate) {
-
-                throw erroUpdate;
-
-            }
-
-
-            const {
-                error:
-                    erroHistorico
-            } =
-                await supabaseClient
-                    .from('movimentacoes')
-                    .insert([{
-
-                        item_id:
-                            Number(
-                                item.id
-                            ),
-
-                        origem_id:
-                            origemId,
-
-                        destino_id:
-                            destino,
-
-                        quantidade:
-                            quantidade,
-
-                        observacao:
-                            observacao,
-
-                        data:
-                            new Date()
-                                .toISOString()
-
-                    }]);
-
-
-            if (erroHistorico) {
-
-                console.error(
-                    'ERRO HISTÓRICO:',
-                    erroHistorico
-                );
-
-            }
-
-        }
-
-
-        /*
-           =================================================
-           CASO 2:
-           MOVIMENTAÇÃO PARCIAL
-           =================================================
-        */
-
-        else {
-
-            /*
-               Reduzimos a quantidade na origem.
-            */
-
-            const novaQuantidadeOrigem =
-                estoqueAtual -
-                quantidade;
-
-
-            const {
-                error:
-                    erroOrigem
-            } =
-                await supabaseClient
-                    .from('itens')
-                    .update({
-
-                        quantidade:
-                            novaQuantidadeOrigem
-
-                    })
-                    .eq(
-                        'id',
-                        item.id
-                    );
-
-
-            if (erroOrigem) {
-
-                throw erroOrigem;
-
-            }
-
-
-            /*
-               Procuramos estoque igual no destino.
-            */
-
-            const {
-                data:
-                    destinoExistente,
-                error:
-                    erroBuscaDestino
-            } =
-                await supabaseClient
-                    .from('itens')
-                    .select('*')
-                    .eq(
-                        'nome',
-                        item.nome
-                    )
-                    .eq(
-                        'local_id',
-                        destino
-                    )
-                    .is(
-                        'patrimonio',
-                        null
-                    )
-                    .maybeSingle();
-
-
-            if (erroBuscaDestino) {
-
-                throw erroBuscaDestino;
-
-            }
-
-
-            if (destinoExistente) {
-
-                const quantidadeDestino =
-                    quantidadeItem(
-                        destinoExistente
-                    );
-
-
-                const {
-                    error:
-                        erroDestino
-                } =
-                    await supabaseClient
-                        .from('itens')
-                        .update({
-
-                            quantidade:
-                                quantidadeDestino +
-                                quantidade
-
-                        })
-                        .eq(
-                            'id',
-                            destinoExistente.id
-                        );
-
-
-                if (erroDestino) {
-
-                    throw erroDestino;
-
-                }
-
-            } else {
-
-                const {
-                    error:
-                        erroNovoDestino
-                } =
-                    await supabaseClient
-                        .from('itens')
-                        .insert([{
-
-                            patrimonio:
-                                null,
-
-                            nome:
-                                item.nome,
-
-                            tipo:
-                                item.tipo,
-
-                            descricao:
-                                item.descricao,
-
-                            local_id:
-                                destino,
-
-                            quantidade:
-                                quantidade,
-
-                            status:
-                                statusNovo ||
-                                item.status ||
-                                'Ativo',
-
-                            foto_url:
-                                item.foto_url ||
-                                null
-
-                        }]);
-
-
-                if (erroNovoDestino) {
-
-                    throw erroNovoDestino;
-
-                }
-
-            }
-
-
-            /*
-               Se todo o estoque saiu da origem,
-               removemos o registro zerado.
-            */
-
-            if (
-                novaQuantidadeOrigem <=
-                0
-            ) {
-
-                await supabaseClient
-                    .from('itens')
-                    .delete()
-                    .eq(
-                        'id',
-                        item.id
-                    );
-
-            }
-
-
-            /*
-               =================================================
-               HISTÓRICO
-               =================================================
-            */
-
-            const {
-                error:
-                    erroHistorico
-            } =
-                await supabaseClient
-                    .from('movimentacoes')
-                    .insert([{
-
-                        item_id:
-                            Number(
-                                item.id
-                            ),
-
-                        origem_id:
-                            origemId,
-
-                        destino_id:
-                            destino,
-
-                        quantidade:
-                            quantidade,
-
-                        observacao:
-                            observacao,
-
-                        data:
-                            new Date()
-                                .toISOString()
-
-                    }]);
-
-
-            if (erroHistorico) {
-
-                console.error(
-                    'ERRO HISTÓRICO:',
-                    erroHistorico
-                );
-
-            }
-
-        }
-
-
-        alert(
-            'Movimentação realizada com sucesso!'
-        );
-
-
-        const itemMov =
-            document.getElementById(
-                'itemMov'
-            );
-
-
-        const destinoCampo =
-            document.getElementById(
-                'destino'
-            );
-
-
-        const quantidadeCampo =
-            document.getElementById(
-                'quantidadeMov'
-            );
-
-
-        const observacaoCampo =
-            document.getElementById(
-                'observacaoMov'
-            );
-
-
-        const statusCampo =
-            document.getElementById(
-                'statusMov'
-            );
-
-
-        const origemCampo =
-            document.getElementById(
-                'origemAtual'
-            ) ||
-            document.getElementById(
-                'origemNome'
-            );
-
-
-        if (itemMov) {
-
-            itemMov.value =
-                '';
-
-        }
-
-
-        if (destinoCampo) {
-
-            destinoCampo.value =
-                '';
-
-        }
-
-
-        if (quantidadeCampo) {
-
-            quantidadeCampo.value =
-                1;
-
-        }
-
-
-        if (observacaoCampo) {
-
-            observacaoCampo.value =
-                '';
-
-        }
-
-
-        if (statusCampo) {
-
-            statusCampo.value =
-                '';
-
-        }
-
-
-        if (origemCampo) {
-
-            origemCampo.value =
-                '';
-
-        }
-
-
-        const resumo =
-            document.getElementById(
-                'resumoMovimentacao'
-            );
-
-
-        if (resumo) {
-
-            resumo.innerHTML =
-                '';
-
-        }
-
-
-        await carregarDashboard();
-
-        await carregarHistorico();
-
-
-        return false;
-
-
-    } catch (erro) {
-
-        console.error(
-            'ERRO AO MOVIMENTAR:',
-            erro
-        );
-
-
-        alert(
-            'Erro ao movimentar o item.\n\n' +
-            (
-                erro?.message ||
-                'Erro desconhecido.'
-            )
-        );
-
-
-        return false;
-
-    }
-
-}
-/* =========================================================
-   CONSULTA PÚBLICA DE INVENTÁRIO
-   SEM LOGIN
-========================================================= */
-
-
-/* =========================================================
-   ABRIR CONSULTA PÚBLICA
-========================================================= */
-
-function abrirConsultaPublica() {
-
-    /*
-       A consulta pública NÃO cria sessão,
-       NÃO altera usuarioLogado e
-       NÃO interfere no login administrativo.
-    */
-
-    const loginTela =
-        document.getElementById(
-            'loginTela'
-        );
-
-    const consultaTela =
-        document.getElementById(
-            'consultaPublicaTela'
-        );
-
-
-    if (!consultaTela) {
-
-        console.error(
-            'Tela consultaPublicaTela não encontrada no HTML.'
-        );
-
-        alert(
-            'A tela de consulta pública não foi encontrada.'
-        );
-
-        return;
-
-    }
-
-
-    /*
-       Esconde todas as telas.
-    */
-
-    document
-        .querySelectorAll('.tela')
-        .forEach(
-            tela => {
-
-                tela.classList.remove(
-                    'activeTela'
-                );
-
-            }
-        );
-
-
-    /*
-       Abre a consulta.
-    */
-
-    consultaTela.classList.add(
-        'activeTela'
-    );
-
-
-    /*
-       No modo público, a sidebar administrativa
-       permanece escondida.
-    */
-
-    document.body
-        .classList
-        .add(
-            'public-mode'
-        );
-
-
-    const sidebar =
-        document.getElementById(
-            'sidebar'
-        );
-
-
-    if (sidebar) {
-
-        sidebar.classList.remove(
-            'open'
-        );
-
-        sidebar.style.display =
-            'none';
-
-    }
-
-
-    /*
-       Carrega os locais do filtro.
-    */
-
-    carregarLocaisConsultaPublica();
-
-
-    /*
-       Carrega os itens ativos.
-    */
-
-    carregarConsultaPublica();
-
-}
-
-
-/* =========================================================
-   VOLTAR PARA LOGIN
-========================================================= */
-
-function voltarParaLogin() {
-
-    const consultaTela =
-        document.getElementById(
-            'consultaPublicaTela'
-        );
-
-
-    if (consultaTela) {
-
-        consultaTela.classList.remove(
-            'activeTela'
-        );
-
-    }
-
-
-    document.body
-        .classList
-        .remove(
-            'public-mode'
-        );
-
-
-    const sidebar =
-        document.getElementById(
-            'sidebar'
-        );
-
-
-    if (sidebar) {
-
-        sidebar.style.display =
-            '';
-
-        sidebar.classList.remove(
-            'open'
-        );
-
-    }
-
-
-    abrirTela(
-        'loginTela'
-    );
-
-}
-
-
-/* =========================================================
-   CARREGAR LOCAIS DA CONSULTA PÚBLICA
-========================================================= */
-
-function carregarLocaisConsultaPublica() {
-
-    const select =
-        document.getElementById(
-            'filtroLocalPublico'
-        );
-
-
-    if (!select) {
-
-        return;
-
-    }
-
-
-    select.innerHTML = `
-
-        <option value="">
-            Todos os locais
-        </option>
-
     `;
 
 
@@ -4606,6 +4194,7 @@ function renderizarConsultaPublica() {
 
                         </span>
 
+
                         <span
                             class="consulta-tipo"
                         >
@@ -4650,6 +4239,7 @@ function renderizarConsultaPublica() {
 
                             </span>
 
+
                             <strong
                                 class="consulta-quantidade"
                             >
@@ -4658,8 +4248,11 @@ function renderizarConsultaPublica() {
 
                             </strong>
 
+
                             <small>
+
                                 unidade(s)
+
                             </small>
 
                         </div>
@@ -4676,6 +4269,7 @@ function renderizarConsultaPublica() {
                                 Localização
 
                             </span>
+
 
                             <strong
                                 class="consulta-local"
@@ -4996,9 +4590,7 @@ function abrirTela(
         document.getElementById(
             idTela
         );
-
-
-    if (!tela) {
+            if (!tela) {
 
         console.error(
             'Tela não encontrada:',
@@ -5106,6 +4698,7 @@ function abrirTela(
             .add(
                 'public-mode'
             );
+
 
         carregarLocaisConsultaPublica();
 
@@ -5599,6 +5192,7 @@ window.addEventListener(
 
                             atualizarUsuarioInterface();
 
+
                         } else {
 
                             usuarioLogado =
@@ -5746,65 +5340,86 @@ document.addEventListener(
 window.login =
     login;
 
+
 window.logout =
     logout;
+
 
 window.abrirTela =
     abrirTela;
 
+
 window.abrirConsultaPublica =
     abrirConsultaPublica;
+
 
 window.voltarParaLogin =
     voltarParaLogin;
 
+
 window.carregarConsultaPublica =
     carregarConsultaPublica;
+
 
 window.atualizarConsultaPublica =
     atualizarConsultaPublica;
 
+
 window.filtrarConsultaPublica =
     filtrarConsultaPublica;
+
 
 window.limparFiltrosConsultaPublica =
     limparFiltrosConsultaPublica;
 
+
 window.abrirModalFoto =
     abrirModalFoto;
+
 
 window.fecharModalFoto =
     fecharModalFoto;
 
+
 window.toggleSidebar =
     toggleSidebar;
+
 
 window.salvarItem =
     salvarItem;
 
+
 window.editarItem =
     editarItem;
+
 
 window.excluirItem =
     excluirItem;
 
+
 window.movimentarItem =
     movimentarItem;
+
 
 window.preencherOrigemAutomaticamente =
     preencherOrigemAutomaticamente;
 
+
 window.atualizarResumoMovimentacao =
     atualizarResumoMovimentacao;
+
 
 window.filtrarItens =
     filtrarItens;
 
+
 window.filtrarDashboard =
     filtrarDashboard;
 
+
 window.exportarExcel =
     exportarExcel;
+
 
 window.alternarTipoControle =
     alternarTipoControle;
