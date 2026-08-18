@@ -83,7 +83,10 @@ const LOCAIS = [
 
 function escaparHTML(valor) {
 
-    if (valor === null || valor === undefined) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
         return '';
     }
 
@@ -148,8 +151,6 @@ function classeStatus(status) {
     return mapa[status] || '';
 
 }
-
-
 /* =========================================================
    LOGIN
 ========================================================= */
@@ -157,11 +158,10 @@ function classeStatus(status) {
 async function login(event) {
 
     if (event) {
-
         event.preventDefault();
         event.stopPropagation();
-
     }
+
 
     const email =
         document
@@ -169,16 +169,20 @@ async function login(event) {
             ?.value
             ?.trim() || '';
 
+
     const password =
         document
             .getElementById('password')
             ?.value || '';
 
+
     const botao =
         document.getElementById('btnLogin');
 
+
     const textoOriginal =
         botao?.innerHTML;
+
 
     if (!email || !password) {
 
@@ -190,6 +194,7 @@ async function login(event) {
 
     }
 
+
     try {
 
         if (botao) {
@@ -200,6 +205,7 @@ async function login(event) {
                 '<i class="fa-solid fa-spinner fa-spin"></i> Entrando...';
 
         }
+
 
         const {
             data,
@@ -213,6 +219,7 @@ async function login(event) {
                     password
 
                 });
+
 
         if (error) {
 
@@ -230,18 +237,23 @@ async function login(event) {
 
         }
 
+
         usuarioLogado =
             data.user;
 
+
         await verificarPerfil();
+
 
         document.body
             .classList
             .remove('login-mode');
 
+
         atualizarMenus();
 
         atualizarUsuarioInterface();
+
 
         abrirTela(
             'dashboardTela',
@@ -250,9 +262,12 @@ async function login(event) {
             )
         );
 
+
         await carregarDashboard();
 
+
         return false;
+
 
     } catch (erro) {
 
@@ -266,6 +281,7 @@ async function login(event) {
         );
 
         return false;
+
 
     } finally {
 
@@ -305,17 +321,21 @@ async function logout() {
 
     }
 
+
     usuarioLogado = null;
 
     perfilUsuario = null;
+
 
     document.body
         .classList
         .add('login-mode');
 
+
     atualizarMenus();
 
     atualizarUsuarioInterface();
+
 
     abrirTela(
         'loginTela'
@@ -338,6 +358,7 @@ async function verificarPerfil() {
 
     }
 
+
     try {
 
         const {
@@ -353,6 +374,7 @@ async function verificarPerfil() {
                 )
                 .maybeSingle();
 
+
         if (error) {
 
             console.error(
@@ -367,6 +389,7 @@ async function verificarPerfil() {
 
         }
 
+
         perfilUsuario =
             String(
                 data?.perfil ||
@@ -374,6 +397,7 @@ async function verificarPerfil() {
             )
             .trim()
             .toLowerCase();
+
 
     } catch (erro) {
 
@@ -401,41 +425,48 @@ function atualizarMenus() {
             'menuLogin'
         );
 
+
     const dashboardMenu =
         document.getElementById(
             'menuDashboard'
         );
+
 
     const cadastroMenu =
         document.getElementById(
             'menuCadastro'
         );
 
+
     const movimentacaoMenu =
         document.getElementById(
             'menuMovimentacao'
         );
+
 
     const estoqueMenu =
         document.getElementById(
             'menuEstoque'
         );
 
+
     const historicoMenu =
         document.getElementById(
             'menuHistorico'
         );
+
 
     const logoutMenu =
         document.getElementById(
             'menuLogout'
         );
 
+
     /*
-       IMPORTANTE:
-       Alguns desses elementos podem não existir
+       Alguns elementos podem não existir
        no HTML. Por isso usamos verificações.
     */
+
 
     if (!usuarioLogado) {
 
@@ -446,12 +477,14 @@ function atualizarMenus() {
 
         }
 
+
         if (dashboardMenu) {
 
             dashboardMenu.style.display =
                 'none';
 
         }
+
 
         if (cadastroMenu) {
 
@@ -460,12 +493,14 @@ function atualizarMenus() {
 
         }
 
+
         if (movimentacaoMenu) {
 
             movimentacaoMenu.style.display =
                 'none';
 
         }
+
 
         if (estoqueMenu) {
 
@@ -474,12 +509,14 @@ function atualizarMenus() {
 
         }
 
+
         if (historicoMenu) {
 
             historicoMenu.style.display =
                 'none';
 
         }
+
 
         if (logoutMenu) {
 
@@ -488,9 +525,11 @@ function atualizarMenus() {
 
         }
 
+
         return;
 
     }
+
 
     if (loginMenu) {
 
@@ -499,12 +538,14 @@ function atualizarMenus() {
 
     }
 
+
     if (dashboardMenu) {
 
         dashboardMenu.style.display =
             'flex';
 
     }
+
 
     if (estoqueMenu) {
 
@@ -513,6 +554,7 @@ function atualizarMenus() {
 
     }
 
+
     if (historicoMenu) {
 
         historicoMenu.style.display =
@@ -520,12 +562,14 @@ function atualizarMenus() {
 
     }
 
+
     if (logoutMenu) {
 
         logoutMenu.style.display =
             'flex';
 
     }
+
 
     if (
         perfilUsuario ===
@@ -538,6 +582,7 @@ function atualizarMenus() {
                 'none';
 
         }
+
 
         if (movimentacaoMenu) {
 
@@ -554,6 +599,7 @@ function atualizarMenus() {
                 'flex';
 
         }
+
 
         if (movimentacaoMenu) {
 
@@ -577,9 +623,11 @@ function atualizarUsuarioInterface() {
         usuarioLogado?.email ||
         'Visitante';
 
+
     const perfil =
         perfilUsuario ||
         'Acesso restrito';
+
 
     const campos = [
 
@@ -605,6 +653,7 @@ function atualizarUsuarioInterface() {
 
     ];
 
+
     campos.forEach(
         ([id, valor]) => {
 
@@ -612,6 +661,7 @@ function atualizarUsuarioInterface() {
                 document.getElementById(
                     id
                 );
+
 
             if (elemento) {
 
@@ -623,10 +673,12 @@ function atualizarUsuarioInterface() {
         }
     );
 
+
     const sidebarUsuario =
         document.getElementById(
             'usuarioSidebar'
         );
+
 
     if (sidebarUsuario) {
 
@@ -637,10 +689,12 @@ function atualizarUsuarioInterface() {
 
     }
 
+
     const headerUsuario =
         document.getElementById(
             'headerUsuario'
         );
+
 
     if (headerUsuario) {
 
@@ -665,15 +719,18 @@ function carregarLocais() {
             'local'
         );
 
+
     const destinoSelect =
         document.getElementById(
             'destino'
         );
 
+
     if (localSelect) {
 
         localSelect.innerHTML =
             '<option value="">Selecione o Local</option>';
+
 
         LOCAIS.forEach(
             local => {
@@ -689,10 +746,12 @@ function carregarLocais() {
 
     }
 
+
     if (destinoSelect) {
 
         destinoSelect.innerHTML =
             '<option value="">Selecione o Destino</option>';
+
 
         LOCAIS.forEach(
             local => {
@@ -708,10 +767,12 @@ function carregarLocais() {
 
     }
 
+
     const totalLocais =
         document.getElementById(
             'totalLocais'
         );
+
 
     if (totalLocais) {
 
@@ -735,15 +796,18 @@ function alternarTipoControle() {
         )?.value ||
         'estoque';
 
+
     const quantidadeGroup =
         document.getElementById(
             'quantidadeCadastroGroup'
         );
 
+
     const patrimonioGroup =
         document.getElementById(
             'patrimonioCadastroGroup'
         );
+
 
     if (
         tipo ===
@@ -756,6 +820,7 @@ function alternarTipoControle() {
                 'none';
 
         }
+
 
         if (patrimonioGroup) {
 
@@ -773,6 +838,7 @@ function alternarTipoControle() {
 
         }
 
+
         if (patrimonioGroup) {
 
             patrimonioGroup.style.display =
@@ -783,8 +849,6 @@ function alternarTipoControle() {
     }
 
 }
-
-
 /* =========================================================
    SALVAR CADASTRO
 ========================================================= */
@@ -794,9 +858,11 @@ async function salvarItem(event) {
     if (event) {
 
         event.preventDefault();
+
         event.stopPropagation();
 
     }
+
 
     if (!usuarioLogado) {
 
@@ -807,6 +873,7 @@ async function salvarItem(event) {
         return false;
 
     }
+
 
     if (
         perfilUsuario ===
@@ -821,11 +888,13 @@ async function salvarItem(event) {
 
     }
 
+
     const nome =
         document.getElementById(
             'nome'
         )?.value
         ?.trim() || '';
+
 
     const tipo =
         document.getElementById(
@@ -834,16 +903,19 @@ async function salvarItem(event) {
         ?.trim() ||
         nome;
 
+
     const descricao =
         document.getElementById(
             'descricao'
         )?.value
         ?.trim() || '';
 
+
     const localId =
         document.getElementById(
             'local'
         )?.value || '';
+
 
     const status =
         document.getElementById(
@@ -851,10 +923,12 @@ async function salvarItem(event) {
         )?.value ||
         'Ativo';
 
+
     const quantidadeInput =
         document.getElementById(
             'quantidadeLote'
         )?.value;
+
 
     const quantidade =
         Math.max(
@@ -866,11 +940,13 @@ async function salvarItem(event) {
             )
         );
 
+
     const tipoControle =
         document.querySelector(
             'input[name="tipoControle"]:checked'
         )?.value ||
         'estoque';
+
 
     const patrimonio =
         document.getElementById(
@@ -878,10 +954,12 @@ async function salvarItem(event) {
         )?.value
         ?.trim() || '';
 
+
     const arquivo =
         document.getElementById(
             'foto'
         )?.files?.[0];
+
 
     if (!nome) {
 
@@ -893,6 +971,7 @@ async function salvarItem(event) {
 
     }
 
+
     if (!localId) {
 
         alert(
@@ -902,6 +981,7 @@ async function salvarItem(event) {
         return false;
 
     }
+
 
     if (
         tipoControle ===
@@ -917,155 +997,12 @@ async function salvarItem(event) {
 
     }
 
-    let fotoUrl = '';
-
-    try {
-
-        if (arquivo) {
-
-            const nomeArquivo =
-                `${Date.now()}_${arquivo.name.replace(/\s+/g, '_')}`;
-
-            const {
-                error:
-                uploadError
-            } =
-                await supabaseClient
-                    .storage
-                    .from('inventario')
-                    .upload(
-                        nomeArquivo,
-                        arquivo
-                    );
-
-            if (uploadError) {
-
-                console.error(
-                    'ERRO UPLOAD:',
-                    uploadError
-                );
-
-                alert(
-                    'Não foi possível enviar a foto.'
-                );
-
-                return false;
-
-            }
-
-            const {
-                data:
-                publicData
-            } =
-                supabaseClient
-                    .storage
-                    .from('inventario')
-                    .getPublicUrl(
-                        nomeArquivo
-                    );
-
-            fotoUrl =
-                publicData?.publicUrl ||
-                '';
-
-        }
-
-
-        const dados = {
-
-            nome,
-
-            tipo,
-
-            descricao,
-
-            local_id:
-                Number(localId),
-
-            quantidade,
-
-            status,
-
-            patrimonio:
-                patrimonio || null,
-
-            foto_url:
-                fotoUrl || null,
-
-            tipo_controle:
-                tipoControle
-
-        };
-
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from('itens')
-                .insert(dados)
-                .select()
-                .single();
-
-
-        if (error) {
-
-            console.error(
-                'ERRO AO SALVAR ITEM:',
-                error
-            );
-
-            alert(
-                'Não foi possível salvar o item.\n\n' +
-                error.message
-            );
-
-            return false;
-
-        }
-
-
-        itens.push(data);
-
-
-        alert(
-            'Item cadastrado com sucesso!'
-        );
-
-
-        limparFormularioCadastro();
-
-
-        await carregarDashboard();
-
-        await carregarEstoque();
-
-        return false;
-
-
-    } catch (erro) {
-
-        console.error(
-            'ERRO AO CADASTRAR:',
-            erro
-        );
-
-        alert(
-            'Erro ao cadastrar o item.'
-        );
-
-        return false;
-
-    }
-
-}
-    }
 
     try {
 
         let fotoUrl =
             '';
+
 
         /* =================================================
            UPLOAD DA FOTO
@@ -2103,25 +2040,6 @@ async function excluirItem(id) {
     }
 
 }
-        console.error(
-            'ERRO AO EXCLUIR ITEM:',
-            erro
-        );
-
-
-        alert(
-            'Erro ao excluir o item.\n\n' +
-            (
-                erro?.message ||
-                'Erro desconhecido.'
-            )
-        );
-
-
-    }
-
-}
-
 
 /* =========================================================
    CARREGAR ITENS PARA MOVIMENTAÇÃO
@@ -2224,9 +2142,7 @@ async function carregarDashboard() {
     try {
 
         /*
-           =====================================================
-           1. CARREGAR ITENS
-           =====================================================
+           Primeiro carregamos os itens.
         */
 
         await carregarItens();
@@ -2234,8 +2150,7 @@ async function carregarDashboard() {
 
         /*
            =====================================================
-           2. TOTAL DE ITENS
-           Soma a quantidade real dos itens.
+           TOTAL DE ITENS
            =====================================================
         */
 
@@ -2269,7 +2184,7 @@ async function carregarDashboard() {
 
         /*
            =====================================================
-           3. TOTAL DE MOVIMENTAÇÕES
+           TOTAL DE MOVIMENTAÇÕES
            =====================================================
         */
 
@@ -2303,7 +2218,7 @@ async function carregarDashboard() {
             if (error) {
 
                 console.error(
-                    'Erro ao contar movimentações:',
+                    'ERRO AO CONTAR MOVIMENTAÇÕES:',
                     error
                 );
 
@@ -2324,8 +2239,7 @@ async function carregarDashboard() {
 
         /*
            =====================================================
-           4. TOTAL DE ITENS BAIXADOS
-           Soma a quantidade real dos itens baixados.
+           TOTAL DE ITENS BAIXADOS
            =====================================================
         */
 
@@ -2345,17 +2259,12 @@ async function carregarDashboard() {
                     ) => {
 
                         const status =
-                            typeof normalizarTexto ===
-                            'function'
-                                ? normalizarTexto(
-                                    item.status
-                                )
-                                : String(
-                                    item.status ||
-                                    ''
-                                )
-                                    .toLowerCase()
-                                    .trim();
+                            String(
+                                item.status ||
+                                ''
+                            )
+                            .trim()
+                            .toLowerCase();
 
 
                         if (
@@ -2388,7 +2297,7 @@ async function carregarDashboard() {
 
         /*
            =====================================================
-           5. TOTAL DE LOCAIS
+           TOTAL DE LOCAIS
            =====================================================
         */
 
@@ -2400,12 +2309,6 @@ async function carregarDashboard() {
 
         if (totalLocais) {
 
-            /*
-               Remove locais duplicados
-               e considera somente registros
-               válidos.
-            */
-
             const locaisValidos =
                 Array.isArray(
                     LOCAIS
@@ -2413,240 +2316,57 @@ async function carregarDashboard() {
                     ? LOCAIS.filter(
                         local =>
                             local &&
-                            local.id !==
-                                undefined &&
-                            local.nome &&
-                            String(
-                                local.nome
-                            ).trim()
+                            local.nome
                     )
                     : [];
 
 
-            const locaisUnicos =
-                new Set(
-                    locaisValidos.map(
-                        local =>
-                            String(
-                                local.id
-                            )
-                    )
-                );
-
-
             totalLocais.innerText =
-                locaisUnicos.size;
+                locaisValidos.length;
 
         }
 
 
         /*
            =====================================================
-           6. INDICADORES AVANÇADOS
+           STATUS AVANÇADOS
            =====================================================
         */
 
-        if (
-            typeof atualizarDashboardAvancado ===
-            'function'
-        ) {
-
-            atualizarDashboardAvancado();
-
-        }
+        atualizarDashboardAvancado();
 
 
         /*
            =====================================================
-           7. GERAR RELATÓRIO POR ITEM E LOCAL
+           RELATÓRIO POR LOCAL
            =====================================================
         */
 
-        if (
-            typeof gerarRelatorioLocais ===
-            'function'
-        ) {
-
-            gerarRelatorioLocais();
-
-        }
+        gerarRelatorioLocais();
 
 
         /*
            =====================================================
-           8. CARREGAR FILTRO DE LOCAIS
-           
-           IMPORTANTE:
-           Isso acontece DEPOIS de carregar os dados
-           e depois que a tela do dashboard já possui
-           os elementos necessários.
+           FILTRO DE LOCAIS
            =====================================================
         */
 
-        if (
-            typeof carregarFiltroLocaisDashboard ===
-            'function'
-        ) {
-
-            carregarFiltroLocaisDashboard();
-
-        }
+        carregarFiltroLocaisDashboard();
 
 
         /*
            =====================================================
-           9. APLICAR FILTROS
+           APLICA FILTROS ATUAIS
            =====================================================
         */
 
-        if (
-            typeof filtrarDashboard ===
-            'function'
-        ) {
-
-            filtrarDashboard();
-
-        }
-
-
-        /*
-           =====================================================
-           10. CARREGAR HISTÓRICO
-           =====================================================
-        */
-
-        if (
-            typeof carregarHistorico ===
-            'function'
-        ) {
-
-            await carregarHistorico();
-
-        }
-
-
-        /*
-           =====================================================
-           FINAL
-           =====================================================
-        */
-
-        console.log(
-            'Dashboard carregado com sucesso.'
-        );
+        filtrarDashboard();
 
 
     } catch (erro) {
 
         console.error(
             'ERRO AO CARREGAR DASHBOARD:',
-            erro
-        );
-
-
-        /*
-           Não deixa a tela quebrar
-           caso alguma informação secundária
-           apresente erro.
-        */
-
-        const totalItensElement =
-            document.getElementById(
-                'totalItens'
-            );
-
-
-        if (
-            totalItensElement &&
-            (
-                !totalItensElement.innerText ||
-                totalItensElement.innerText ===
-                    'undefined'
-            )
-        ) {
-
-            totalItensElement.innerText =
-                '0';
-
-        }
-
-
-        const totalLocais =
-            document.getElementById(
-                'totalLocais'
-            );
-
-
-        if (
-            totalLocais &&
-            (
-                !totalLocais.innerText ||
-                totalLocais.innerText ===
-                    'undefined'
-            )
-        ) {
-
-            totalLocais.innerText =
-                '0';
-
-        }
-
-
-        const totalMov =
-            document.getElementById(
-                'totalMov'
-            );
-
-
-        if (
-            totalMov &&
-            (
-                !totalMov.innerText ||
-                totalMov.innerText ===
-                    'undefined'
-            )
-        ) {
-
-            totalMov.innerText =
-                '0';
-
-        }
-
-
-        const totalBaixados =
-            document.getElementById(
-                'totalBaixados'
-            );
-
-
-        if (
-            totalBaixados &&
-            (
-                !totalBaixados.innerText ||
-                totalBaixados.innerText ===
-                    'undefined'
-            )
-        ) {
-
-            totalBaixados.innerText =
-                '0';
-
-        }
-
-    }
-
-}
-
-
-        atualizarDashboardAvancado();
-
-        gerarRelatorioLocais();
-
-
-    } catch (erro) {
-
-        console.error(
-            'ERRO DASHBOARD:',
             erro
         );
 
@@ -2664,7 +2384,8 @@ function atualizarDashboardAvancado() {
     const totalAtivos =
         itens.filter(
             item =>
-                item.status === 'Ativo'
+                item.status ===
+                'Ativo'
         )
         .reduce(
             (
@@ -2672,7 +2393,9 @@ function atualizarDashboardAvancado() {
                 item
             ) =>
                 total +
-                quantidadeItem(item),
+                quantidadeItem(
+                    item
+                ),
             0
         );
 
@@ -2689,7 +2412,9 @@ function atualizarDashboardAvancado() {
                 item
             ) =>
                 total +
-                quantidadeItem(item),
+                quantidadeItem(
+                    item
+                ),
             0
         );
 
@@ -2706,7 +2431,9 @@ function atualizarDashboardAvancado() {
                 item
             ) =>
                 total +
-                quantidadeItem(item),
+                quantidadeItem(
+                    item
+                ),
             0
         );
 
@@ -2723,7 +2450,9 @@ function atualizarDashboardAvancado() {
                 item
             ) =>
                 total +
-                quantidadeItem(item),
+                quantidadeItem(
+                    item
+                ),
             0
         );
 
@@ -2837,7 +2566,9 @@ function gerarRelatorioLocais() {
                 `${tipo}||${local}`;
 
 
-            if (!agrupado[chave]) {
+            if (
+                !agrupado[chave]
+            ) {
 
                 agrupado[chave] = {
 
@@ -2875,26 +2606,34 @@ function gerarRelatorioLocais() {
             b
         ) => {
 
-            const local =
+            const comparacaoLocal =
                 a.local.localeCompare(
                     b.local,
-                    'pt-BR'
+                    'pt-BR',
+                    {
+                        sensitivity:
+                            'base'
+                    }
                 );
 
 
             if (
-                local !==
+                comparacaoLocal !==
                 0
             ) {
 
-                return local;
+                return comparacaoLocal;
 
             }
 
 
             return a.item.localeCompare(
                 b.item,
-                'pt-BR'
+                'pt-BR',
+                {
+                    sensitivity:
+                        'base'
+                }
             );
 
         }
@@ -2938,6 +2677,20 @@ function gerarRelatorioLocais() {
                 );
 
 
+            /*
+               Normaliza o local usado
+               pelo filtro.
+            */
+
+            const localNormalizado =
+                String(
+                    registro.local ||
+                    ''
+                )
+                .trim()
+                .toLowerCase();
+
+
             tr.innerHTML = `
 
                 <td>
@@ -2951,8 +2704,7 @@ function gerarRelatorioLocais() {
 
                 <td
                     data-local="${escaparHTML(
-                        registro.local
-                            .toLowerCase()
+                        localNormalizado
                     )}"
                 >
 
@@ -3083,7 +2835,7 @@ function carregarFiltroLocaisDashboard() {
     if (!select) {
 
         console.warn(
-            'Filtro de local do Dashboard não encontrado.'
+            'Elemento #filtroLocalDashboard não encontrado.'
         );
 
         return;
@@ -3133,8 +2885,8 @@ function carregarFiltroLocaisDashboard() {
 
 
     /*
-       Cria uma cópia antes de ordenar.
-       Assim não modifica o array original.
+       Ordena uma cópia.
+       Não altera o array original.
     */
 
     const locais =
@@ -3189,19 +2941,8 @@ function carregarFiltroLocaisDashboard() {
 
             const valor =
                 nome
-                    .toLowerCase()
-                    .normalize(
-                        'NFD'
-                    )
-                    .replace(
-                        /[\u0300-\u036f]/g,
-                        ''
-                    );
+                    .toLowerCase();
 
-
-            /*
-               Evita duplicação.
-            */
 
             if (
                 locaisProcessados.has(
@@ -3242,8 +2983,7 @@ function carregarFiltroLocaisDashboard() {
 
 
     /*
-       Restaura a seleção anterior,
-       se ela ainda existir.
+       Restaura a seleção anterior.
     */
 
     if (
@@ -3264,6 +3004,7 @@ function carregarFiltroLocaisDashboard() {
 
 }
 
+
 /* =========================================================
    HISTÓRICO
 ========================================================= */
@@ -3277,7 +3018,9 @@ async function carregarHistorico() {
             error
         } =
             await supabaseClient
-                .from('movimentacoes')
+                .from(
+                    'movimentacoes'
+                )
                 .select('*')
                 .order(
                     'data',
@@ -3340,6 +3083,8 @@ async function carregarHistorico() {
                 </tr>
 
             `;
+
+            return;
 
         }
 
@@ -3473,7 +3218,6 @@ async function carregarHistorico() {
 
 }
 
-
 /* =========================================================
    PREENCHER ORIGEM AUTOMATICAMENTE
 ========================================================= */
@@ -3481,114 +3225,854 @@ async function carregarHistorico() {
 function preencherOrigemAutomaticamente() {
 
     const selectItem =
-        document.getElementById(
-            'itemMov'
-        );
-
+        document.getElementById('itemMov');
 
     const origemInput =
-        document.getElementById(
-            'origemAtual'
-        ) ||
-        document.getElementById(
-            'origemNome'
-        );
+        document.getElementById('origemAtual') ||
+        document.getElementById('origemNome');
 
-
-    if (
-        !selectItem ||
-        !origemInput
-    ) {
-
+    if (!selectItem || !origemInput) {
         return;
-
     }
-
 
     const itemId =
         selectItem.value;
 
-
     if (!itemId) {
 
-        origemInput.value =
-            '';
+        origemInput.value = '';
 
         atualizarResumoMovimentacao();
 
         return;
-
     }
-
 
     const item =
         itens.find(
             registro =>
-                String(
-                    registro.id
-                ) ===
-                String(
-                    itemId
-                )
+                String(registro.id) ===
+                String(itemId)
         );
-
 
     if (!item) {
 
-        origemInput.value =
-            '';
+        origemInput.value = '';
 
         atualizarResumoMovimentacao();
 
         return;
-
     }
 
-
     origemInput.value =
-        nomeLocal(
-            item.local_id
-        );
-
+        nomeLocal(item.local_id);
 
     const quantidadeCampo =
         document.getElementById(
             'quantidadeMov'
         );
 
-
     if (quantidadeCampo) {
 
         const estoque =
-            quantidadeItem(
-                item
+            quantidadeItem(item);
+
+        const atual =
+            parseInt(
+                quantidadeCampo.value || '1',
+                10
             );
 
-
-        const atual = Number(
-            quantidadeCampo.value ||
-            0
-        );
-
-
-        if (
-            atual >
-            estoque
-        ) {
+        if (atual > estoque) {
 
             quantidadeCampo.value =
                 estoque;
 
         }
 
-    }
+        quantidadeCampo.max =
+            estoque;
 
+    }
 
     atualizarResumoMovimentacao();
 
 }
+
+
+/* =========================================================
+   RESUMO DA MOVIMENTAÇÃO
+========================================================= */
+
+function atualizarResumoMovimentacao() {
+
+    const itemSelect =
+        document.getElementById(
+            'itemMov'
+        );
+
+    const destinoSelect =
+        document.getElementById(
+            'destino'
+        );
+
+    const quantidadeInput =
+        document.getElementById(
+            'quantidadeMov'
+        );
+
+    const resumo =
+        document.getElementById(
+            'resumoMovimentacao'
+        );
+
+    if (!resumo) {
+        return;
+    }
+
+    const item =
+        itens.find(
+            registro =>
+                String(registro.id) ===
+                String(itemSelect?.value)
+        );
+
+    if (!item) {
+
+        resumo.innerHTML = '';
+
+        return;
+    }
+
+    const origem =
+        nomeLocal(
+            item.local_id
+        );
+
+    const destino =
+        destinoSelect?.value
+            ? nomeLocal(
+                destinoSelect.value
+            )
+            : 'Selecione o destino';
+
+    const quantidade =
+        Math.max(
+            1,
+            parseInt(
+                quantidadeInput?.value || '1',
+                10
+            )
+        );
+
+    resumo.innerHTML = `
+
+        <div class="mov-resumo">
+
+            <div>
+
+                <small>
+                    Origem
+                </small>
+
+                <strong>
+                    ${escaparHTML(
+                        origem
+                    )}
+                </strong>
+
+            </div>
+
+            <div class="mov-seta">
+
+                <i
+                    class="fa-solid fa-arrow-right"
+                ></i>
+
+            </div>
+
+            <div>
+
+                <small>
+                    Destino
+                </small>
+
+                <strong>
+                    ${escaparHTML(
+                        destino
+                    )}
+                </strong>
+
+            </div>
+
+            <div>
+
+                <small>
+                    Quantidade
+                </small>
+
+                <strong>
+                    ${quantidade}
+                    unidade(s)
+                </strong>
+
+            </div>
+
+        </div>
+
     `;
 
+}
+
+
+/* =========================================================
+   MOVIMENTAR ITEM
+========================================================= */
+
+async function movimentarItem(event) {
+
+    if (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+    }
+
+    if (!usuarioLogado) {
+
+        alert(
+            'Faça login primeiro.'
+        );
+
+        return false;
+    }
+
+    if (
+        perfilUsuario ===
+        'consulta'
+    ) {
+
+        alert(
+            'Usuário sem permissão para movimentar itens.'
+        );
+
+        return false;
+    }
+
+    const itemId =
+        document.getElementById(
+            'itemMov'
+        )?.value || '';
+
+    const destinoId =
+        document.getElementById(
+            'destino'
+        )?.value || '';
+
+    const quantidade =
+        Math.max(
+            1,
+            parseInt(
+                document.getElementById(
+                    'quantidadeMov'
+                )?.value || '1',
+                10
+            )
+        );
+
+    const observacao =
+        document.getElementById(
+            'observacaoMov'
+        )?.value
+        ?.trim() || '';
+
+    const statusNovo =
+        document.getElementById(
+            'statusMov'
+        )?.value || '';
+
+    if (!itemId) {
+
+        alert(
+            'Selecione o patrimônio/item.'
+        );
+
+        return false;
+    }
+
+    if (!destinoId) {
+
+        alert(
+            'Selecione o destino.'
+        );
+
+        return false;
+    }
+
+    const item =
+        itens.find(
+            registro =>
+                Number(registro.id) ===
+                Number(itemId)
+        );
+
+    if (!item) {
+
+        alert(
+            'Item não encontrado.'
+        );
+
+        return false;
+    }
+
+    const origemId =
+        Number(item.local_id);
+
+    const destino =
+        Number(destinoId);
+
+    if (
+        origemId ===
+        destino
+    ) {
+
+        alert(
+            'O destino precisa ser diferente do local atual.'
+        );
+
+        return false;
+    }
+
+    const estoqueAtual =
+        quantidadeItem(item);
+
+    if (
+        quantidade >
+        estoqueAtual
+    ) {
+
+        alert(
+            `Quantidade indisponível.\n\n` +
+            `Estoque atual: ${estoqueAtual} unidade(s).`
+        );
+
+        return false;
+    }
+
+    try {
+
+        /*
+           MOVIMENTAÇÃO TOTAL
+        */
+
+        if (
+            quantidade ===
+            estoqueAtual
+        ) {
+
+            const dadosAtualizacao = {
+
+                local_id:
+                    destino
+
+            };
+
+            if (statusNovo) {
+
+                dadosAtualizacao.status =
+                    statusNovo;
+
+            }
+
+            const {
+                error:
+                    erroUpdate
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .update(
+                        dadosAtualizacao
+                    )
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+            if (erroUpdate) {
+                throw erroUpdate;
+            }
+
+            const {
+                error:
+                    erroHistorico
+            } =
+                await supabaseClient
+                    .from(
+                        'movimentacoes'
+                    )
+                    .insert([{
+
+                        item_id:
+                            Number(item.id),
+
+                        origem_id:
+                            origemId,
+
+                        destino_id:
+                            destino,
+
+                        quantidade:
+                            quantidade,
+
+                        observacao:
+                            observacao,
+
+                        data:
+                            new Date()
+                                .toISOString()
+
+                    }]);
+
+            if (erroHistorico) {
+
+                console.error(
+                    'ERRO HISTÓRICO:',
+                    erroHistorico
+                );
+
+            }
+
+        }
+
+        /*
+           MOVIMENTAÇÃO PARCIAL
+        */
+
+        else {
+
+            const novaQuantidadeOrigem =
+                estoqueAtual -
+                quantidade;
+
+            const {
+                error:
+                    erroOrigem
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .update({
+
+                        quantidade:
+                            novaQuantidadeOrigem
+
+                    })
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+            if (erroOrigem) {
+                throw erroOrigem;
+            }
+
+            const {
+                data:
+                    destinoExistente,
+                error:
+                    erroBuscaDestino
+            } =
+                await supabaseClient
+                    .from('itens')
+                    .select('*')
+                    .eq(
+                        'nome',
+                        item.nome
+                    )
+                    .eq(
+                        'local_id',
+                        destino
+                    )
+                    .is(
+                        'patrimonio',
+                        null
+                    )
+                    .maybeSingle();
+
+            if (erroBuscaDestino) {
+                throw erroBuscaDestino;
+            }
+
+            if (destinoExistente) {
+
+                const quantidadeDestino =
+                    quantidadeItem(
+                        destinoExistente
+                    );
+
+                const {
+                    error:
+                        erroDestino
+                } =
+                    await supabaseClient
+                        .from('itens')
+                        .update({
+
+                            quantidade:
+                                quantidadeDestino +
+                                quantidade
+
+                        })
+                        .eq(
+                            'id',
+                            destinoExistente.id
+                        );
+
+                if (erroDestino) {
+                    throw erroDestino;
+                }
+
+            } else {
+
+                const {
+                    error:
+                        erroNovoDestino
+                } =
+                    await supabaseClient
+                        .from('itens')
+                        .insert([{
+
+                            patrimonio:
+                                null,
+
+                            nome:
+                                item.nome,
+
+                            tipo:
+                                item.tipo,
+
+                            descricao:
+                                item.descricao,
+
+                            local_id:
+                                destino,
+
+                            quantidade:
+                                quantidade,
+
+                            status:
+                                statusNovo ||
+                                item.status ||
+                                'Ativo',
+
+                            foto_url:
+                                item.foto_url ||
+                                null
+
+                        }]);
+
+                if (erroNovoDestino) {
+                    throw erroNovoDestino;
+                }
+
+            }
+
+            if (
+                novaQuantidadeOrigem <=
+                0
+            ) {
+
+                await supabaseClient
+                    .from('itens')
+                    .delete()
+                    .eq(
+                        'id',
+                        item.id
+                    );
+
+            }
+
+            const {
+                error:
+                    erroHistorico
+            } =
+                await supabaseClient
+                    .from(
+                        'movimentacoes'
+                    )
+                    .insert([{
+
+                        item_id:
+                            Number(item.id),
+
+                        origem_id:
+                            origemId,
+
+                        destino_id:
+                            destino,
+
+                        quantidade:
+                            quantidade,
+
+                        observacao:
+                            observacao,
+
+                        data:
+                            new Date()
+                                .toISOString()
+
+                    }]);
+
+            if (erroHistorico) {
+
+                console.error(
+                    'ERRO HISTÓRICO:',
+                    erroHistorico
+                );
+
+            }
+
+        }
+
+        alert(
+            'Movimentação realizada com sucesso!'
+        );
+
+        const itemMov =
+            document.getElementById(
+                'itemMov'
+            );
+
+        const destinoCampo =
+            document.getElementById(
+                'destino'
+            );
+
+        const quantidadeCampo =
+            document.getElementById(
+                'quantidadeMov'
+            );
+
+        const observacaoCampo =
+            document.getElementById(
+                'observacaoMov'
+            );
+
+        const statusCampo =
+            document.getElementById(
+                'statusMov'
+            );
+
+        const origemCampo =
+            document.getElementById(
+                'origemAtual'
+            ) ||
+            document.getElementById(
+                'origemNome'
+            );
+
+        if (itemMov) {
+            itemMov.value = '';
+        }
+
+        if (destinoCampo) {
+            destinoCampo.value = '';
+        }
+
+        if (quantidadeCampo) {
+            quantidadeCampo.value = 1;
+        }
+
+        if (observacaoCampo) {
+            observacaoCampo.value = '';
+        }
+
+        if (statusCampo) {
+            statusCampo.value = '';
+        }
+
+        if (origemCampo) {
+            origemCampo.value = '';
+        }
+
+        const resumo =
+            document.getElementById(
+                'resumoMovimentacao'
+            );
+
+        if (resumo) {
+            resumo.innerHTML = '';
+        }
+
+        await carregarDashboard();
+
+        await carregarHistorico();
+
+        return false;
+
+    } catch (erro) {
+
+        console.error(
+            'ERRO AO MOVIMENTAR:',
+            erro
+        );
+
+        alert(
+            'Erro ao movimentar o item.\n\n' +
+            (
+                erro?.message ||
+                'Erro desconhecido.'
+            )
+        );
+
+        return false;
+    }
+
+}
+
+
+/* =========================================================
+   CONSULTA PÚBLICA
+========================================================= */
+
+function abrirConsultaPublica() {
+
+    const consultaTela =
+        document.getElementById(
+            'consultaPublicaTela'
+        );
+
+    if (!consultaTela) {
+
+        console.error(
+            'Tela consultaPublicaTela não encontrada no HTML.'
+        );
+
+        alert(
+            'A tela de consulta pública não foi encontrada.'
+        );
+
+        return;
+    }
+
+    document
+        .querySelectorAll('.tela')
+        .forEach(
+            tela => {
+
+                tela.classList.remove(
+                    'activeTela'
+                );
+
+            }
+        );
+
+    consultaTela.classList.add(
+        'activeTela'
+    );
+
+    document.body
+        .classList
+        .remove(
+            'login-mode'
+        );
+
+    document.body
+        .classList
+        .add(
+            'public-mode'
+        );
+
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+    if (sidebar) {
+
+        sidebar.classList.remove(
+            'open'
+        );
+
+        sidebar.style.display =
+            'none';
+
+    }
+
+    carregarLocaisConsultaPublica();
+
+    carregarConsultaPublica();
+
+}
+
+
+/* =========================================================
+   VOLTAR PARA LOGIN
+========================================================= */
+
+function voltarParaLogin() {
+
+    const consultaTela =
+        document.getElementById(
+            'consultaPublicaTela'
+        );
+
+    if (consultaTela) {
+
+        consultaTela.classList.remove(
+            'activeTela'
+        );
+
+    }
+
+    document.body
+        .classList
+        .remove(
+            'public-mode'
+        );
+
+    const sidebar =
+        document.getElementById(
+            'sidebar'
+        );
+
+    if (sidebar) {
+
+        sidebar.style.display = '';
+
+        sidebar.classList.remove(
+            'open'
+        );
+
+    }
+
+    abrirTela(
+        'loginTela'
+    );
+
+}
+
+
+/* =========================================================
+   LOCAIS DA CONSULTA PÚBLICA
+========================================================= */
+
+function carregarLocaisConsultaPublica() {
+
+    const select =
+        document.getElementById(
+            'filtroLocalPublico'
+        );
+
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = `
+
+        <option value="">
+            Todos os locais
+        </option>
+
+    `;
 
     [...LOCAIS]
         .sort(
@@ -3625,7 +4109,7 @@ function preencherOrigemAutomaticamente() {
 
 
 /* =========================================================
-   VARIÁVEL DOS ITENS PÚBLICOS
+   ITENS DA CONSULTA PÚBLICA
 ========================================================= */
 
 let itensConsultaPublica = [];
@@ -3642,7 +4126,6 @@ async function carregarConsultaPublica() {
             'listaConsultaPublica'
         );
 
-
     if (!container) {
 
         console.error(
@@ -3650,13 +4133,7 @@ async function carregarConsultaPublica() {
         );
 
         return;
-
     }
-
-
-    /*
-       Estado de carregamento.
-    */
 
     container.innerHTML = `
 
@@ -3674,20 +4151,7 @@ async function carregarConsultaPublica() {
 
     `;
 
-
     try {
-
-        /*
-           IMPORTANTE:
-
-           A consulta pública NÃO acessa
-           diretamente a tabela "itens".
-
-           Ela consulta somente a VIEW
-           criada no Supabase:
-
-           consulta_publica_inventario
-        */
 
         const {
             data,
@@ -3712,44 +4176,21 @@ async function carregarConsultaPublica() {
                     }
                 );
 
-
         if (error) {
-
             throw error;
-
         }
-
 
         itensConsultaPublica =
             Array.isArray(data)
                 ? data
                 : [];
 
-
-        /*
-           Agrupa itens por:
-
-           ITEM + LOCAL
-
-           Exemplo:
-
-           300 copos CD1
-
-           será:
-
-           Copo de vidro
-           CD1
-           300 unidades
-        */
-
         itensConsultaPublica =
             consolidarItensConsultaPublica(
                 itensConsultaPublica
             );
 
-
         renderizarConsultaPublica();
-
 
     } catch (erro) {
 
@@ -3757,7 +4198,6 @@ async function carregarConsultaPublica() {
             'ERRO CONSULTA PÚBLICA:',
             erro
         );
-
 
         container.innerHTML = `
 
@@ -3800,31 +4240,23 @@ async function carregarConsultaPublica() {
 
 
 /* =========================================================
-   CONSOLIDAR ITENS DA CONSULTA
+   CONSOLIDAR CONSULTA
 ========================================================= */
 
 function consolidarItensConsultaPublica(
     lista
 ) {
 
-    const mapa = new Map();
-
+    const mapa =
+        new Map();
 
     lista.forEach(
         item => {
-
-            /*
-               A quantidade vem do banco.
-
-               Se por algum motivo não existir,
-               consideramos 1.
-            */
 
             const quantidade =
                 quantidadeItem(
                     item
                 );
-
 
             const chave =
                 [
@@ -3850,11 +4282,8 @@ function consolidarItensConsultaPublica(
                 ]
                 .join('||');
 
-
             if (
-                !mapa.has(
-                    chave
-                )
+                !mapa.has(chave)
             ) {
 
                 mapa.set(
@@ -3897,17 +4326,8 @@ function consolidarItensConsultaPublica(
                         chave
                     );
 
-
                 registro.quantidade +=
                     quantidade;
-
-
-                /*
-                   Se o primeiro registro
-                   não tiver foto, mas outro
-                   tiver, usamos a foto
-                   encontrada.
-                */
 
                 if (
                     !registro.foto_url &&
@@ -3924,7 +4344,6 @@ function consolidarItensConsultaPublica(
         }
     );
 
-
     return Array.from(
         mapa.values()
     );
@@ -3933,7 +4352,7 @@ function consolidarItensConsultaPublica(
 
 
 /* =========================================================
-   RENDERIZAR CONSULTA PÚBLICA
+   RENDERIZAR CONSULTA
 ========================================================= */
 
 function renderizarConsultaPublica() {
@@ -3943,13 +4362,9 @@ function renderizarConsultaPublica() {
             'listaConsultaPublica'
         );
 
-
     if (!container) {
-
         return;
-
     }
-
 
     const busca =
         document
@@ -3961,7 +4376,6 @@ function renderizarConsultaPublica() {
             .toLowerCase() ||
         '';
 
-
     const localFiltro =
         document
             .getElementById(
@@ -3969,7 +4383,6 @@ function renderizarConsultaPublica() {
             )
             ?.value ||
         '';
-
 
     const itensFiltrados =
         itensConsultaPublica.filter(
@@ -3983,19 +4396,16 @@ function renderizarConsultaPublica() {
                         nomeLocal(
                             item.local_id
                         )
-
                     ]
                     .filter(Boolean)
                     .join(' ')
                     .toLowerCase();
-
 
                 const correspondeBusca =
                     !busca ||
                     texto.includes(
                         busca
                     );
-
 
                 const correspondeLocal =
                     !localFiltro ||
@@ -4006,7 +4416,6 @@ function renderizarConsultaPublica() {
                         localFiltro
                     );
 
-
                 return (
                     correspondeBusca &&
                     correspondeLocal
@@ -4015,16 +4424,10 @@ function renderizarConsultaPublica() {
             }
         );
 
-
-    /*
-       Atualiza contador.
-    */
-
     const contador =
         document.getElementById(
             'contadorConsultaPublica'
         );
-
 
     if (contador) {
 
@@ -4032,11 +4435,6 @@ function renderizarConsultaPublica() {
             itensFiltrados.length;
 
     }
-
-
-    /*
-       Nenhum resultado.
-    */
 
     if (
         itensFiltrados.length ===
@@ -4069,13 +4467,9 @@ function renderizarConsultaPublica() {
         `;
 
         return;
-
     }
 
-
-    container.innerHTML =
-        '';
-
+    container.innerHTML = '';
 
     itensFiltrados.forEach(
         item => {
@@ -4085,22 +4479,18 @@ function renderizarConsultaPublica() {
                     'article'
                 );
 
-
             card.className =
                 'consulta-item-card';
-
 
             const local =
                 nomeLocal(
                     item.local_id
                 );
 
-
             const quantidade =
                 quantidadeItem(
                     item
                 );
-
 
             const foto =
                 item.foto_url
@@ -4151,7 +4541,6 @@ function renderizarConsultaPublica() {
 
                     `;
 
-
             const descricao =
                 item.descricao
                     ? `
@@ -4168,7 +4557,6 @@ function renderizarConsultaPublica() {
 
                     `
                     : '';
-
 
             card.innerHTML = `
 
@@ -4194,7 +4582,6 @@ function renderizarConsultaPublica() {
 
                         </span>
 
-
                         <span
                             class="consulta-tipo"
                         >
@@ -4208,7 +4595,6 @@ function renderizarConsultaPublica() {
 
                     </div>
 
-
                     <h3
                         class="consulta-item-nome"
                     >
@@ -4219,9 +4605,7 @@ function renderizarConsultaPublica() {
 
                     </h3>
 
-
                     ${descricao}
-
 
                     <div
                         class="consulta-info-grid"
@@ -4239,7 +4623,6 @@ function renderizarConsultaPublica() {
 
                             </span>
 
-
                             <strong
                                 class="consulta-quantidade"
                             >
@@ -4248,15 +4631,11 @@ function renderizarConsultaPublica() {
 
                             </strong>
 
-
                             <small>
-
                                 unidade(s)
-
                             </small>
 
                         </div>
-
 
                         <div
                             class="consulta-info"
@@ -4269,7 +4648,6 @@ function renderizarConsultaPublica() {
                                 Localização
 
                             </span>
-
 
                             <strong
                                 class="consulta-local"
@@ -4293,7 +4671,6 @@ function renderizarConsultaPublica() {
 
             `;
 
-
             container.appendChild(
                 card
             );
@@ -4305,7 +4682,7 @@ function renderizarConsultaPublica() {
 
 
 /* =========================================================
-   PESQUISAR CONSULTA PÚBLICA
+   FILTROS DA CONSULTA
 ========================================================= */
 
 function filtrarConsultaPublica() {
@@ -4315,10 +4692,6 @@ function filtrarConsultaPublica() {
 }
 
 
-/* =========================================================
-   LIMPAR FILTROS DA CONSULTA PÚBLICA
-========================================================= */
-
 function limparFiltrosConsultaPublica() {
 
     const busca =
@@ -4326,37 +4699,23 @@ function limparFiltrosConsultaPublica() {
             'buscaPublica'
         );
 
-
     const local =
         document.getElementById(
             'filtroLocalPublico'
         );
 
-
     if (busca) {
-
-        busca.value =
-            '';
-
+        busca.value = '';
     }
-
 
     if (local) {
-
-        local.value =
-            '';
-
+        local.value = '';
     }
-
 
     renderizarConsultaPublica();
 
 }
 
-
-/* =========================================================
-   ATUALIZAR CONSULTA PÚBLICA
-========================================================= */
 
 async function atualizarConsultaPublica() {
 
@@ -4365,15 +4724,12 @@ async function atualizarConsultaPublica() {
             'btnAtualizarConsulta'
         );
 
-
     const texto =
         botao?.innerHTML;
 
-
     if (botao) {
 
-        botao.disabled =
-            true;
+        botao.disabled = true;
 
         botao.innerHTML = `
 
@@ -4387,7 +4743,6 @@ async function atualizarConsultaPublica() {
 
     }
 
-
     try {
 
         await carregarConsultaPublica();
@@ -4396,8 +4751,7 @@ async function atualizarConsultaPublica() {
 
         if (botao) {
 
-            botao.disabled =
-                false;
+            botao.disabled = false;
 
             botao.innerHTML =
                 texto ||
@@ -4411,38 +4765,29 @@ async function atualizarConsultaPublica() {
 
 
 /* =========================================================
-   MODAL DA FOTO
+   MODAL DE FOTO
 ========================================================= */
 
 function abrirModalFoto(url) {
 
     if (!url) {
-
         return;
-
     }
-
 
     const modal =
         document.getElementById(
             'modalFoto'
         );
 
-
     const imagem =
         document.getElementById(
             'imagemModal'
         );
 
-
     if (
         !modal ||
         !imagem
     ) {
-
-        /*
-           Fallback caso o modal não exista.
-        */
 
         window.open(
             url,
@@ -4450,46 +4795,30 @@ function abrirModalFoto(url) {
         );
 
         return;
-
     }
-
 
     imagem.src =
         url;
 
-
     imagem.alt =
         'Foto do item';
-
 
     modal.classList.add(
         'active'
     );
 
-
-    document.body.classList.add(
-        'modal-aberto'
-    );
+    document.body
+        .classList
+        .add(
+            'modal-aberto'
+        );
 
 }
 
 
-/* =========================================================
-   FECHAR MODAL DA FOTO
-========================================================= */
-
 function fecharModalFoto(
     event
 ) {
-
-    /*
-       Se o clique aconteceu
-       diretamente no fundo do modal,
-       fecha.
-
-       Se o HTML chamar diretamente
-       fecharModalFoto(), também fecha.
-    */
 
     if (
         event &&
@@ -4500,15 +4829,12 @@ function fecharModalFoto(
     ) {
 
         return;
-
     }
-
 
     const modal =
         document.getElementById(
             'modalFoto'
         );
-
 
     if (modal) {
 
@@ -4518,17 +4844,14 @@ function fecharModalFoto(
 
     }
 
-
-    document.body.classList.remove(
-        'modal-aberto'
-    );
+    document.body
+        .classList
+        .remove(
+            'modal-aberto'
+        );
 
 }
 
-
-/* =========================================================
-   TECLA ESC FECHA MODAIS
-========================================================= */
 
 document.addEventListener(
     'keydown',
@@ -4548,7 +4871,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   ABRIR TELA
+   ABRIR TELAS
 ========================================================= */
 
 function abrirTela(
@@ -4556,19 +4879,12 @@ function abrirTela(
     elemento
 ) {
 
-    /*
-       Consulta pública é exceção:
-       não precisa de login.
-    */
-
     const telasPublicas = [
 
         'loginTela',
-
         'consultaPublicaTela'
 
     ];
-
 
     if (
         !usuarioLogado &&
@@ -4582,15 +4898,14 @@ function abrirTela(
         );
 
         return;
-
     }
-
 
     const tela =
         document.getElementById(
             idTela
         );
-            if (!tela) {
+
+    if (!tela) {
 
         console.error(
             'Tela não encontrada:',
@@ -4598,13 +4913,7 @@ function abrirTela(
         );
 
         return;
-
     }
-
-
-    /*
-       Fecha todas as telas.
-    */
 
     document
         .querySelectorAll(
@@ -4620,15 +4929,9 @@ function abrirTela(
             }
         );
 
-
     tela.classList.add(
         'activeTela'
     );
-
-
-    /*
-       Menu ativo.
-    */
 
     document
         .querySelectorAll(
@@ -4644,7 +4947,6 @@ function abrirTela(
             }
         );
 
-
     if (elemento) {
 
         elemento.classList.add(
@@ -4652,11 +4954,6 @@ function abrirTela(
         );
 
     }
-
-
-    /*
-       Login.
-    */
 
     if (
         idTela ===
@@ -4677,11 +4974,6 @@ function abrirTela(
 
     }
 
-
-    /*
-       Consulta pública.
-    */
-
     if (
         idTela ===
         'consultaPublicaTela'
@@ -4699,17 +4991,11 @@ function abrirTela(
                 'public-mode'
             );
 
-
         carregarLocaisConsultaPublica();
 
         carregarConsultaPublica();
 
     }
-
-
-    /*
-       Telas autenticadas.
-    */
 
     if (
         idTela !==
@@ -4732,11 +5018,6 @@ function abrirTela(
 
     }
 
-
-    /*
-       Fecha sidebar no mobile.
-    */
-
     if (
         window.innerWidth <=
         900
@@ -4746,7 +5027,6 @@ function abrirTela(
             document.getElementById(
                 'sidebar'
             );
-
 
         if (sidebar) {
 
@@ -4772,18 +5052,9 @@ function toggleSidebar() {
             'sidebar'
         );
 
-
     if (!sidebar) {
-
         return;
-
     }
-
-
-    /*
-       Não permite abrir o menu
-       na consulta pública.
-    */
 
     if (
         document.body
@@ -4794,9 +5065,7 @@ function toggleSidebar() {
     ) {
 
         return;
-
     }
-
 
     if (
         document.body
@@ -4807,9 +5076,7 @@ function toggleSidebar() {
     ) {
 
         return;
-
     }
-
 
     sidebar.classList.toggle(
         'open'
@@ -4817,10 +5084,6 @@ function toggleSidebar() {
 
 }
 
-
-/* =========================================================
-   FECHAR SIDEBAR AO CLICAR FORA
-========================================================= */
 
 document.addEventListener(
     'click',
@@ -4831,12 +5094,10 @@ document.addEventListener(
                 'sidebar'
             );
 
-
         const menuBtn =
             document.querySelector(
                 '.mobile-menu-btn'
             );
-
 
         if (
             !sidebar ||
@@ -4844,9 +5105,7 @@ document.addEventListener(
         ) {
 
             return;
-
         }
-
 
         if (
             window.innerWidth >
@@ -4854,9 +5113,7 @@ document.addEventListener(
         ) {
 
             return;
-
         }
-
 
         if (
             document.body
@@ -4876,21 +5133,17 @@ document.addEventListener(
             );
 
             return;
-
         }
-
 
         const clicouSidebar =
             sidebar.contains(
                 event.target
             );
 
-
         const clicouBotao =
             menuBtn.contains(
                 event.target
             );
-
 
         if (
             !clicouSidebar &&
@@ -4923,13 +5176,10 @@ function exportarExcel() {
         );
 
         return;
-
     }
-
 
     let csv =
         'PATRIMÔNIO;TIPO;NOME;DESCRIÇÃO;QUANTIDADE;LOCAL;STATUS\n';
-
 
     itens.forEach(
         item => {
@@ -4938,7 +5188,6 @@ function exportarExcel() {
                 nomeLocal(
                     item.local_id
                 );
-
 
             const linha = [
 
@@ -4975,14 +5224,12 @@ function exportarExcel() {
                 )
                 .join(';');
 
-
             csv +=
                 linha +
                 '\n';
 
         }
     );
-
 
     const blob =
         new Blob(
@@ -4998,39 +5245,31 @@ function exportarExcel() {
             }
         );
 
-
     const url =
         URL.createObjectURL(
             blob
         );
-
 
     const link =
         document.createElement(
             'a'
         );
 
-
     link.href =
         url;
 
-
     link.download =
         'inventario-grupo-monte-carlo.csv';
-
 
     document.body.appendChild(
         link
     );
 
-
     link.click();
-
 
     document.body.removeChild(
         link
     );
-
 
     URL.revokeObjectURL(
         url
@@ -5040,7 +5279,7 @@ function exportarExcel() {
 
 
 /* =========================================================
-   INICIALIZAÇÃO
+   INICIALIZAÇÃO DO SISTEMA
 ========================================================= */
 
 window.addEventListener(
@@ -5049,17 +5288,11 @@ window.addEventListener(
 
         try {
 
-            /*
-               Estado inicial:
-               sem login = modo login.
-            */
-
             document.body
                 .classList
                 .add(
                     'login-mode'
                 );
-
 
             carregarLocais();
 
@@ -5069,7 +5302,7 @@ window.addEventListener(
 
 
             /*
-               Verifica sessão existente.
+               Recupera sessão existente.
             */
 
             const {
@@ -5079,7 +5312,6 @@ window.addEventListener(
                 await supabaseClient
                     .auth
                     .getSession();
-
 
             if (error) {
 
@@ -5099,9 +5331,7 @@ window.addEventListener(
                 usuarioLogado =
                     data.session.user;
 
-
                 await verificarPerfil();
-
 
                 document.body
                     .classList
@@ -5109,11 +5339,9 @@ window.addEventListener(
                         'login-mode'
                     );
 
-
                 atualizarMenus();
 
                 atualizarUsuarioInterface();
-
 
                 abrirTela(
                     'dashboardTela',
@@ -5122,11 +5350,9 @@ window.addEventListener(
                     )
                 );
 
-
                 await carregarDashboard();
 
                 await carregarHistorico();
-
 
             } else {
 
@@ -5136,11 +5362,9 @@ window.addEventListener(
                 perfilUsuario =
                     null;
 
-
                 atualizarMenus();
 
                 atualizarUsuarioInterface();
-
 
                 abrirTela(
                     'loginTela',
@@ -5153,7 +5377,7 @@ window.addEventListener(
 
 
             /*
-               Observa mudanças de autenticação.
+               Observa alterações de autenticação.
             */
 
             supabaseClient
@@ -5169,7 +5393,6 @@ window.addEventListener(
                             evento
                         );
 
-
                         if (
                             session?.user
                         ) {
@@ -5177,9 +5400,7 @@ window.addEventListener(
                             usuarioLogado =
                                 session.user;
 
-
                             await verificarPerfil();
-
 
                             document.body
                                 .classList
@@ -5187,11 +5408,9 @@ window.addEventListener(
                                     'login-mode'
                                 );
 
-
                             atualizarMenus();
 
                             atualizarUsuarioInterface();
-
 
                         } else {
 
@@ -5201,13 +5420,11 @@ window.addEventListener(
                             perfilUsuario =
                                 null;
 
-
                             document.body
                                 .classList
                                 .add(
                                     'login-mode'
                                 );
-
 
                             atualizarMenus();
 
@@ -5223,14 +5440,12 @@ window.addEventListener(
                 'Sistema conectado ao Supabase.'
             );
 
-
         } catch (erro) {
 
             console.error(
                 'ERRO AO INICIAR SISTEMA:',
                 erro
             );
-
 
             alert(
                 'Erro ao iniciar o sistema.'
@@ -5243,7 +5458,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   EVENTOS DA CONSULTA PÚBLICA
+   EVENTOS
 ========================================================= */
 
 document.addEventListener(
@@ -5255,7 +5470,6 @@ document.addEventListener(
                 'buscaPublica'
             );
 
-
         if (busca) {
 
             busca.addEventListener(
@@ -5265,12 +5479,10 @@ document.addEventListener(
 
         }
 
-
         const filtroLocal =
             document.getElementById(
                 'filtroLocalPublico'
             );
-
 
         if (filtroLocal) {
 
@@ -5281,12 +5493,10 @@ document.addEventListener(
 
         }
 
-
         const quantidadeMov =
             document.getElementById(
                 'quantidadeMov'
             );
-
 
         if (quantidadeMov) {
 
@@ -5297,12 +5507,10 @@ document.addEventListener(
 
         }
 
-
         const itemMov =
             document.getElementById(
                 'itemMov'
             );
-
 
         if (itemMov) {
 
@@ -5313,12 +5521,10 @@ document.addEventListener(
 
         }
 
-
         const destino =
             document.getElementById(
                 'destino'
             );
-
 
         if (destino) {
 
@@ -5340,86 +5546,67 @@ document.addEventListener(
 window.login =
     login;
 
-
 window.logout =
     logout;
-
 
 window.abrirTela =
     abrirTela;
 
-
 window.abrirConsultaPublica =
     abrirConsultaPublica;
-
 
 window.voltarParaLogin =
     voltarParaLogin;
 
-
 window.carregarConsultaPublica =
     carregarConsultaPublica;
-
 
 window.atualizarConsultaPublica =
     atualizarConsultaPublica;
 
-
 window.filtrarConsultaPublica =
     filtrarConsultaPublica;
-
 
 window.limparFiltrosConsultaPublica =
     limparFiltrosConsultaPublica;
 
-
 window.abrirModalFoto =
     abrirModalFoto;
-
 
 window.fecharModalFoto =
     fecharModalFoto;
 
-
 window.toggleSidebar =
     toggleSidebar;
-
 
 window.salvarItem =
     salvarItem;
 
-
 window.editarItem =
     editarItem;
-
 
 window.excluirItem =
     excluirItem;
 
-
 window.movimentarItem =
     movimentarItem;
-
 
 window.preencherOrigemAutomaticamente =
     preencherOrigemAutomaticamente;
 
-
 window.atualizarResumoMovimentacao =
     atualizarResumoMovimentacao;
-
 
 window.filtrarItens =
     filtrarItens;
 
-
 window.filtrarDashboard =
     filtrarDashboard;
-
 
 window.exportarExcel =
     exportarExcel;
 
-
 window.alternarTipoControle =
     alternarTipoControle;
+
+
