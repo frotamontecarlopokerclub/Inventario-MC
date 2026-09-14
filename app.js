@@ -43,21 +43,27 @@ let perfilUsuario = null;
 ========================================================= */
 
 const LOCAIS = [
+    { id: 1, nome: 'CASA 1' },
+    { id: 2, nome: 'CASA 2' },
+    { id: 3, nome: 'CASA 3' },
 
-    { id: 1, nome: 'CASA 1 CHEFIA' },
-    { id: 2, nome: 'CASA 2 CHEFIA' },
-    { id: 3, nome: 'CASA 3 CHEFIA' },
+    // Novos locais — IDs novos para não quebrar os registros existentes
+    { id: 22, nome: 'CASA 4' },
+    { id: 23, nome: 'CASA 5' },
+    { id: 24, nome: 'CASA 6' },
 
-    { id: 4, nome: 'CASA 1 DOS FUNCIONARIOS' },
-    { id: 5, nome: 'CASA 2 DOS FUNCIONARIOS' },
-    { id: 6, nome: 'CASA 3 DOS FUNCIONARIOS' },
-    { id: 7, nome: 'CASA 4 DOS FUNCIONARIOS' },
+    { id: 4, nome: 'CASA 1 ( FUNCIONARIOS)' },
+    { id: 5, nome: 'CASA 2 ( FUNCIONARIOS)' },
+    { id: 6, nome: 'CASA 3 ( FUNCIONARIOS)' },
+    { id: 7, nome: 'CASA 4 ( FUNCIONARIOS)' },
 
-    { id: 8, nome: 'CONSERTO' },
+    { id: 8, nome: 'MANUTENCAO' },
 
     { id: 9, nome: 'CD1' },
     { id: 10, nome: 'CD2' },
-    { id: 11, nome: 'CD3' },
+
+    // Antes era CD3
+    { id: 11, nome: 'PREDIO CARDOSO' },
 
     { id: 12, nome: 'DORYO' },
 
@@ -73,7 +79,6 @@ const LOCAIS = [
     { id: 20, nome: 'M.G.' },
 
     { id: 21, nome: 'DESCARTE/BAIXA TOTAL' }
-
 ];
 
 
