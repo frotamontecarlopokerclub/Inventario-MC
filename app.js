@@ -2829,6 +2829,11 @@ async function carregarDashboard() {
 
         carregarFiltroLocaisDashboard();
 
+        // O filtro de Local acabou de ser montado.
+        // Agora o Subsetor deve ser recalculado usando
+        // o Local atualmente selecionado.
+        popularFiltroSubsetoresDashboard();
+
 
         /*
            =====================================================
@@ -3363,11 +3368,14 @@ function popularFiltroSubsetoresDashboard() {
             'filtroLocalDashboard'
         );
 
+    /*
+       O select de Local usa o ID do Local
+       como value. Portanto, usamos esse ID
+       diretamente para filtrar subsetores.
+    */
+
     const valorLocal =
-        selectLocal?.value
-            ?.trim()
-            .toLowerCase() ||
-        '';
+        selectLocal?.value || '';
 
     const valorSubsetorAtual =
         select.value || '';
@@ -3375,38 +3383,27 @@ function popularFiltroSubsetoresDashboard() {
     select.innerHTML =
         '<option value="">Todos os Subsetores</option>';
 
-    /*
-       IMPORTANTE:
-       O filtro é feito pelo ID do Local, e não pelo nome.
-       Isso evita qualquer divergência de acentuação,
-       maiúsculas/minúsculas ou nome exibido.
-    */
-
-    let localIdSelecionado = null;
-
-    if (valorLocal) {
-
-        const localEncontrado =
-            LOCAIS.find(
+    const localSelecionado =
+        valorLocal
+            ? LOCAIS.find(
                 local =>
-                    String(
-                        local.nome || ''
-                    )
-                    .trim()
-                    .toLowerCase() ===
-                    valorLocal
-            );
+                    String(local.nome || '')
+                        .trim()
+                        .toLowerCase() ===
+                    String(valorLocal)
+                        .trim()
+                        .toLowerCase()
+            )
+            : null;
 
-        if (localEncontrado) {
+    const localIdSelecionado =
+        localSelecionado
+            ? Number(localSelecionado.id)
+            : null;
 
-            localIdSelecionado =
-                Number(
-                    localEncontrado.id
-                );
-
-        }
-
-    }
+    const filtrarPorLocal =
+        localIdSelecionado !== null &&
+        Number.isFinite(localIdSelecionado);
 
     const lista =
         Array.isArray(subsetores)
@@ -3421,18 +3418,8 @@ function popularFiltroSubsetoresDashboard() {
                             return false;
                         }
 
-                        /*
-                           Todos os locais:
-                           mostra todos os subsetores.
-
-                           Local selecionado:
-                           mostra somente os subsetores
-                           cujo local_id é exatamente
-                           o ID daquele local.
-                        */
-
                         if (
-                            localIdSelecionado === null
+                            !filtrarPorLocal
                         ) {
                             return true;
                         }
@@ -3484,8 +3471,8 @@ function popularFiltroSubsetoresDashboard() {
     );
 
     /*
-       Se o Subsetor anteriormente selecionado
-       não pertence ao novo Local, limpa a seleção.
+       Se o subsetor anteriormente selecionado
+       não pertence ao novo Local, limpa-o.
     */
 
     if (
