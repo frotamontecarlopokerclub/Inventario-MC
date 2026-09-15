@@ -3358,47 +3358,51 @@ function popularFiltroSubsetoresDashboard() {
         return;
     }
 
+    const selectLocal =
+        document.getElementById(
+            'filtroLocalDashboard'
+        );
+
+    const localSelecionado =
+        selectLocal?.value
+            ?.trim()
+            .toLowerCase() ||
+        '';
+
     const valorAtual =
         select.value || '';
 
     select.innerHTML =
         '<option value="">Todos os Subsetores</option>';
 
+    /*
+       Se nenhum local foi escolhido,
+       mostra os subsetores de todos os locais.
+
+       Se um local foi escolhido,
+       mostra SOMENTE os subsetores daquele local.
+    */
     const lista =
         Array.isArray(subsetores)
             ? [...subsetores]
                 .filter(
                     s =>
                         s &&
-                        s.ativo !== false
+                        s.ativo !== false &&
+                        (
+                            !localSelecionado ||
+                            String(
+                                nomeLocal(
+                                    s.local_id
+                                )
+                            )
+                            .trim()
+                            .toLowerCase() ===
+                            localSelecionado
+                        )
                 )
                 .sort(
                     (a, b) => {
-
-                        const localA =
-                            nomeLocal(
-                                a.local_id
-                            );
-
-                        const localB =
-                            nomeLocal(
-                                b.local_id
-                            );
-
-                        const porLocal =
-                            String(localA)
-                                .localeCompare(
-                                    String(localB),
-                                    'pt-BR',
-                                    {
-                                        sensitivity:
-                                            'base'
-                                    }
-                                );
-
-                        if (porLocal !== 0) {
-                            return porLocal;
-                        }
 
                         return String(a.nome || '')
                             .localeCompare(
@@ -3416,23 +3420,32 @@ function popularFiltroSubsetoresDashboard() {
     lista.forEach(
         s => {
 
-            select.innerHTML += `
-                <option value="${escaparHTML(
-                    String(s.nome || '')
-                        .trim()
-                        .toLowerCase()
-                )}">
-                    ${escaparHTML(
-                        nomeLocal(s.local_id) +
-                        ' / ' +
-                        s.nome
-                    )}
-                </option>
-            `;
+            const option =
+                document.createElement(
+                    'option'
+                );
+
+            option.value =
+                String(
+                    s.nome || ''
+                )
+                .trim()
+                .toLowerCase();
+
+            option.textContent =
+                s.nome || '';
+
+            select.appendChild(
+                option
+            );
 
         }
     );
 
+    /*
+       Mantém a seleção somente se ela ainda
+       pertence ao local escolhido.
+    */
     if (
         valorAtual &&
         [...select.options].some(
@@ -3441,9 +3454,25 @@ function popularFiltroSubsetoresDashboard() {
                 valorAtual
         )
     ) {
+
         select.value =
             valorAtual;
+
+    } else {
+
+        select.value =
+            '';
+
     }
+
+}
+
+
+function atualizarSubsetoresDashboardPorLocal() {
+
+    popularFiltroSubsetoresDashboard();
+
+    filtrarDashboard();
 
 }
 
@@ -3630,6 +3659,8 @@ function carregarFiltroLocaisDashboard() {
             valorAtual;
 
     }
+
+    popularFiltroSubsetoresDashboard();
 
 }
 
