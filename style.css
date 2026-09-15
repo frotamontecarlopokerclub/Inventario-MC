@@ -8821,3 +8821,31 @@ body.login-mode .login-footer {
 .auditoria-edicao{background:var(--purple-soft);color:var(--purple);}
 .auditoria-detalhes{max-width:420px;max-height:120px;overflow:auto;white-space:pre-wrap;font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);margin:0;}
 @media (max-width:900px){.admin-grid{grid-template-columns:1fr}.admin-card-wide{grid-column:auto}.admin-table{min-width:720px}}
+
+
+/* Filtro de subsetor no Estoque */
+.estoque-filtro-subsetor {
+    min-width: 250px;
+    position: relative;
+}
+
+.estoque-filtro-subsetor select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #d8dee8;
+    border-radius: 10px;
+    background: #fff;
+    padding: 0 12px 0 38px;
+    font: inherit;
+    color: inherit;
+    outline: none;
+}
+
+.estoque-filtro-subsetor > i {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    pointer-events: none;
+}

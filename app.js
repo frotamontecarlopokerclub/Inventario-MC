@@ -765,6 +765,7 @@ async function carregarSubsetores() {
         subsetores = Array.isArray(data) ? data : [];
         popularSubsetoresCadastro();
         popularSubsetoresMovimentacao();
+        popularFiltroSubsetores();
         const adminLocal = document.getElementById('adminSubsetorLocal');
         if (adminLocal) {
             const valorAdmin = adminLocal.value;
@@ -778,6 +779,7 @@ async function carregarSubsetores() {
     } catch (erro) {
         console.warn('Subsetores ainda não configurados:', erro?.message || erro);
         subsetores = [];
+        popularFiltroSubsetores();
     }
 }
 
@@ -1818,6 +1820,11 @@ function renderizarItens() {
                     'tr'
                 );
 
+            tr.dataset.subsetorId =
+                item.subsetor_id
+                    ? String(item.subsetor_id)
+                    : '';
+
 
             const foto =
                 item.foto_url
@@ -2004,42 +2011,134 @@ function renderizarItens() {
    FILTRAR ITENS
 ========================================================= */
 
+function popularFiltroSubsetores() {
+
+    const select = document.getElementById('filtroSubsetor');
+
+    if (!select) return;
+
+    const valorAtual = select.value || '';
+
+    select.innerHTML = `
+        <option value="">Todos os Subsetores</option>
+    `;
+
+    const lista = Array.isArray(subsetores)
+        ? [...subsetores]
+            .filter(s => s && s.ativo !== false)
+            .sort((a, b) => {
+
+                const localA = nomeLocal(a.local_id);
+                const localB = nomeLocal(b.local_id);
+
+                const porLocal =
+                    String(localA).localeCompare(
+                        String(localB),
+                        'pt-BR',
+                        { sensitivity: 'base' }
+                    );
+
+                if (porLocal !== 0) return porLocal;
+
+                return String(a.nome || '').localeCompare(
+                    String(b.nome || ''),
+                    'pt-BR',
+                    { sensitivity: 'base' }
+                );
+            })
+        : [];
+
+    lista.forEach(subsetor => {
+
+        const option = document.createElement('option');
+
+        option.value = String(subsetor.id);
+
+        option.textContent =
+            `${nomeLocal(subsetor.local_id)} / ${subsetor.nome}`;
+
+        select.appendChild(option);
+
+    });
+
+    if (
+        valorAtual &&
+        [...select.options].some(
+            option => option.value === valorAtual
+        )
+    ) {
+        select.value = valorAtual;
+    }
+}
+
+
 function filtrarItens() {
 
     const busca =
         document
-            .getElementById(
-                'busca'
-            )
+            .getElementById('busca')
             ?.value
             ?.trim()
             .toLowerCase() ||
         '';
 
+    const filtroSubsetor =
+        document
+            .getElementById('filtroSubsetor')
+            ?.value ||
+        '';
 
     const linhas =
         document.querySelectorAll(
             '#listaItens tr'
         );
 
+    let totalVisiveis = 0;
 
-    linhas.forEach(
-        linha => {
+    linhas.forEach(linha => {
 
-            const texto =
-                linha.innerText
-                    .toLowerCase();
-
-
-            linha.style.display =
-                texto.includes(
-                    busca
-                )
-                    ? ''
-                    : 'none';
-
+        if (!linha.cells || linha.cells.length < 7) {
+            return;
         }
-    );
+
+        const texto =
+            linha.innerText
+                .toLowerCase();
+
+        const correspondeBusca =
+            !busca ||
+            texto.includes(busca);
+
+        const subsetorId =
+            linha.dataset.subsetorId ||
+            '';
+
+        const correspondeSubsetor =
+            !filtroSubsetor ||
+            String(subsetorId) === String(filtroSubsetor);
+
+        const mostrar =
+            correspondeBusca &&
+            correspondeSubsetor;
+
+        linha.style.display =
+            mostrar
+                ? ''
+                : 'none';
+
+        if (mostrar) {
+            totalVisiveis++;
+        }
+
+    });
+
+    const totalElement =
+        document.getElementById('estoqueTotal');
+
+    if (totalElement) {
+        totalElement.innerText =
+            totalVisiveis;
+    }
 
 }
 
