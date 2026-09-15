@@ -1,93 +1,59 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
-   DASHBOARD CORPORATIVO PREMIUM
-   IDENTIDADE MARSALA
-   ========================================================= */
-
-
-/* =========================================================
-   1. PALETA MONTE CARLO
-   ========================================================= */
+   UI CORPORATIVA PREMIUM
+   Compatível com o HTML atual e com o APP.JS existente
+========================================================= */
 
 :root{
+    --mc-navy:#0b1220;
+    --mc-navy-2:#111b2e;
+    --mc-navy-3:#18243a;
 
-    /* -------- MARSALA / VINHO -------- */
+    --mc-blue:#2457d6;
+    --mc-blue-2:#1d4ed8;
+    --mc-blue-soft:#edf3ff;
 
-    --mc-marsala-950:#240706;
-    --mc-marsala-900:#350A08;
-    --mc-marsala-800:#4A0D0A;
-    --mc-marsala-700:#5C120E;
-    --mc-marsala-600:#701812;
-    --mc-marsala-500:#821E18;
+    --mc-gold:#d2a04a;
+    --mc-gold-soft:#fbf5e8;
 
-    /* -------- CORES DO BRANDBOOK -------- */
+    --ink:#101828;
+    --ink-2:#344054;
+    --muted:#667085;
+    --muted-2:#98a2b3;
 
-    --mc-brand-1:#B5812A;
-    --mc-brand-2:#C7932D;
-    --mc-brand-3:#E0B230;
-    --mc-brand-4:#FBE251;
+    --bg:#f5f7fa;
+    --surface:#ffffff;
+    --surface-2:#f8fafc;
 
-    /* -------- DOURADO DE APOIO -------- */
+    --line:#e4e7ec;
+    --line-strong:#d0d5dd;
 
-    --mc-gold:#E0B230;
-    --mc-gold-light:#FBE251;
-    --mc-gold-soft:#FBF6DE;
+    --green:#149447;
+    --green-soft:#ecfdf3;
+    --orange:#d97706;
+    --orange-soft:#fff7ed;
+    --red:#d92d20;
+    --red-soft:#fef3f2;
+    --purple:#6941c6;
+    --purple-soft:#f4f3ff;
 
-    /* -------- SUPERFÍCIES -------- */
-
-    --mc-white:#FFFFFF;
-    --mc-bg:#FFFFFF;
-    --mc-surface:#FFFFFF;
-    --mc-surface-soft:#FCFAF8;
-
-    /* -------- TEXTO -------- */
-
-    --mc-text:#241918;
-    --mc-text-2:#493A38;
-    --mc-muted:#756866;
-    --mc-muted-light:#9B8E8B;
-
-    /* -------- BORDAS -------- */
-
-    --mc-border:#E9E1DE;
-    --mc-border-light:#F0EBE8;
-
-    /* -------- ESTADOS -------- */
-
-    --mc-success:#28734A;
-    --mc-success-bg:#EDF7F1;
-
-    --mc-warning:#9A6A17;
-    --mc-warning-bg:#FFF8E7;
-
-    --mc-danger:#8E2924;
-    --mc-danger-bg:#FBEDEC;
-
-    /* -------- SOMBRAS -------- */
-
-    --mc-shadow-xs:
-        0 1px 2px rgba(36,7,6,.035);
-
-    --mc-shadow-sm:
-        0 4px 14px rgba(36,7,6,.055);
-
-    --mc-shadow-md:
-        0 10px 28px rgba(36,7,6,.075);
-
-    /* -------- DIMENSÕES -------- */
-
-    --sidebar-width:236px;
-    --header-height:72px;
+    --shadow-xs:0 1px 2px rgba(16,24,40,.04);
+    --shadow-sm:0 4px 14px rgba(16,24,40,.055);
+    --shadow-md:0 12px 30px rgba(16,24,40,.075);
+    --shadow-lg:0 24px 60px rgba(16,24,40,.12);
 
     --radius-sm:8px;
-    --radius:11px;
-    --radius-lg:14px;
+    --radius:12px;
+    --radius-lg:16px;
+    --radius-xl:20px;
+
+    --sidebar-width:272px;
+    --header-height:82px;
 }
 
-
 /* =========================================================
-   2. RESET
-   ========================================================= */
+   RESET / BASE
+========================================================= */
 
 *,
 *::before,
@@ -102,23 +68,10 @@ html{
 body{
     margin:0;
     min-height:100vh;
-
-    background:#FFFFFF;
-
-    color:var(--mc-text);
-
-    font-family:
-        Inter,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-    font-size:13px;
-
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
-
     text-rendering:optimizeLegibility;
 }
 
@@ -133,6 +86,11 @@ button{
     cursor:pointer;
 }
 
+button:disabled{
+    cursor:not-allowed;
+    opacity:.65;
+}
+
 img{
     max-width:100%;
 }
@@ -140,257 +98,185 @@ img{
 ul{
     margin:0;
     padding:0;
-    list-style:none;
 }
 
-
-/* =========================================================
-   3. ÁREA PRINCIPAL
-   ========================================================= */
-
-.main{
-
-    margin-left:var(--sidebar-width);
-
-    min-height:100vh;
-
-    background:#FFFFFF;
-
-    transition:
-        margin-left .2s ease;
+.tela{
+    display:none;
+    padding:32px 38px 48px;
 }
 
+.tela.activeTela{
+    display:block;
+}
 
 /* =========================================================
-   4. HEADER
-   ========================================================= */
+   LOGIN MODE — SIDEBAR NEVER APPEARS BEFORE AUTHENTICATION
+========================================================= */
 
-header{
+.login-mode{
+    background:#f6f8fb;
+}
 
-    height:var(--header-height);
+.login-mode .sidebar,
+.login-mode .mobile-menu-btn,
+.login-mode .sidebar-overlay{
+    display:none !important;
+}
 
+.login-mode .main{
+    margin-left:0 !important;
+}
+
+.login-mode .main-header{
     display:flex;
-
-    align-items:center;
-
-    padding:
-        0 30px;
-
-    background:#FFFFFF;
-
-    border-bottom:
-        1px solid var(--mc-border-light);
-
-    position:relative;
-
-    z-index:10;
 }
 
-header h1{
-
-    margin:0;
-
-    color:var(--mc-marsala-900);
-
-    font-size:22px;
-
-    font-weight:800;
-
-    letter-spacing:-.5px;
+.login-mode .header-usuario{
+    display:none !important;
 }
-
 
 /* =========================================================
-   5. SIDEBAR
-   ========================================================= */
+   SIDEBAR
+========================================================= */
 
 .sidebar{
-
     position:fixed;
-
-    left:0;
-    top:0;
-    bottom:0;
-
+    inset:0 auto 0 0;
     width:var(--sidebar-width);
+    height:100vh;
+    z-index:1000;
 
     display:flex;
-
     flex-direction:column;
 
+    padding:22px 16px 16px;
+
     background:
-        linear-gradient(
-            180deg,
-            var(--mc-marsala-950) 0%,
-            var(--mc-marsala-900) 60%,
-            var(--mc-marsala-800) 100%
-        );
+        linear-gradient(180deg,#0a1220 0%,#0d1728 100%);
+    color:#fff;
 
-    border-right:
-        1px solid
-        rgba(255,255,255,.045);
-
-    z-index:100;
+    border-right:1px solid rgba(255,255,255,.06);
+    box-shadow:10px 0 35px rgba(5,12,24,.08);
 
     overflow:hidden;
 }
 
-
-/* detalhe decorativo */
-
-.sidebar::after{
-
-    content:"";
-
-    position:absolute;
-
-    right:-90px;
-    bottom:-80px;
-
-    width:230px;
-    height:230px;
-
-    border:
-        1px solid
-        rgba(251,226,81,.08);
-
-    transform:rotate(45deg);
-
-    pointer-events:none;
-}
-
-
-/* =========================================================
-   6. LOGO SIDEBAR
-   ========================================================= */
-
 .sidebar-logo{
-
+    min-height:66px;
     display:flex;
-
     align-items:center;
-
-    gap:11px;
-
-    min-height:76px;
-
-    padding:
-        15px 16px;
-
-    border-bottom:
-        1px solid
-        rgba(255,255,255,.07);
+    gap:12px;
+    padding:0 8px 20px;
+    margin-bottom:18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 .logo-imagem{
-
-    width:40px;
-    height:40px;
-
-    flex:0 0 40px;
+    position:relative;
+    width:46px;
+    height:46px;
+    flex:0 0 46px;
 
     display:flex;
-
     align-items:center;
     justify-content:center;
 
-    border-radius:9px;
-
-    background:
-        rgba(255,255,255,.055);
-
-    border:
-        1px solid
-        rgba(251,226,81,.16);
-
+    border-radius:12px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.08);
     overflow:hidden;
 }
 
 .logo-imagem img{
-
-    width:29px;
-    height:29px;
-
+    width:36px;
+    height:36px;
     object-fit:contain;
+    display:block;
+}
+
+.logo-imagem::after{
+    content:"MC";
+    display:none;
+    color:#f0bd67;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:-.8px;
+}
+
+.logo-imagem img[style*="display: none"] + *{
+    display:none;
 }
 
 .logo-texto{
-
     min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
 }
 
 .logo-texto strong{
-
-    display:block;
-
-    color:#FFFFFF;
-
-    font-size:11px;
-
+    color:#f8fafc;
+    font-size:14px;
     font-weight:800;
-
-    line-height:1.2;
-
+    letter-spacing:.15px;
     white-space:nowrap;
 }
 
 .logo-texto span{
-
-    display:block;
-
-    margin-top:3px;
-
-    color:
-        rgba(255,255,255,.55);
-
-    font-size:8px;
-
+    color:#8492a8;
+    font-size:10px;
     font-weight:700;
-
-    letter-spacing:1px;
+    letter-spacing:1.1px;
 }
 
-
-/* =========================================================
-   7. MENU
-   ========================================================= */
-
 .sidebar-menu{
+    flex:1;
+    min-height:0;
+    overflow:auto;
+    padding-top:3px;
+}
 
-    padding:
-        18px 10px;
+.sidebar-menu::-webkit-scrollbar{
+    width:4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.10);
+    border-radius:20px;
 }
 
 .sidebar-menu ul{
-
+    list-style:none;
     display:flex;
-
     flex-direction:column;
+    gap:5px;
+}
 
-    gap:4px;
+.sidebar-menu ul::before{
+    content:"PRINCIPAL";
+    padding:7px 12px 9px;
+    color:#71809a;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.5px;
 }
 
 .menu-item{
-
-    min-height:40px;
+    position:relative;
+    min-height:46px;
+    padding:0 13px;
 
     display:flex;
-
     align-items:center;
+    gap:12px;
 
-    gap:11px;
-
-    padding:
-        0 12px;
-
-    border-radius:8px;
-
-    color:
-        rgba(255,255,255,.68);
-
-    font-size:12px;
-
+    border-radius:10px;
+    color:#aeb9ca;
+    font-size:13.5px;
     font-weight:650;
+
+    cursor:pointer;
+    user-select:none;
 
     transition:
         background .18s ease,
@@ -399,178 +285,296 @@ header h1{
 }
 
 .menu-item i{
-
-    width:18px;
-
+    width:20px;
+    flex:0 0 20px;
     text-align:center;
-
-    color:
-        rgba(251,226,81,.66);
-
-    font-size:13px;
+    color:#8796ad;
+    font-size:15px;
+    transition:color .18s ease;
 }
 
 .menu-item:hover{
-
-    color:#FFFFFF;
-
-    background:
-        rgba(255,255,255,.065);
+    color:#fff;
+    background:rgba(255,255,255,.055);
+    transform:translateX(1px);
 }
 
 .menu-item:hover i{
-
-    color:
-        var(--mc-brand-4);
+    color:#c9d4e5;
 }
 
 .menu-item.active{
-
-    color:#FFFFFF;
-
-    background:
-        linear-gradient(
-            90deg,
-            rgba(112,24,18,.95),
-            rgba(112,24,18,.48)
-        );
-
-    box-shadow:
-        inset 3px 0 0
-        var(--mc-brand-3);
+    color:#fff;
+    background:linear-gradient(
+        90deg,
+        rgba(36,87,214,.22),
+        rgba(36,87,214,.08)
+    );
+    box-shadow:inset 2px 0 0 var(--mc-blue);
 }
 
 .menu-item.active i{
-
-    color:
-        var(--mc-brand-4);
+    color:#76a4ff;
 }
 
+.usuario-sidebar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:11px;
 
-/* =========================================================
-   8. TELAS
-   ========================================================= */
+    margin-top:14px;
+    padding:15px 9px 5px;
 
-.tela{
-
-    display:none;
-
-    padding:
-        26px 30px 40px;
-
-    min-height:
-        calc(100vh - var(--header-height));
+    border-top:1px solid rgba(255,255,255,.08);
 }
 
-.tela.activeTela{
-
-    display:block;
-}
-
-
-/* =========================================================
-   9. TÍTULO DA PÁGINA
-   ========================================================= */
-
-.page-title{
+.usuario-avatar{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
 
     display:flex;
+    align-items:center;
+    justify-content:center;
 
-    align-items:flex-end;
-
-    justify-content:space-between;
-
-    margin-bottom:20px;
+    border-radius:50%;
+    background:#17243a;
+    border:1px solid rgba(255,255,255,.08);
+    color:#8bb7ff;
 }
 
-.page-title > div > span{
+.usuario-info{
+    min-width:0;
+}
 
+.usuario-info strong{
     display:block;
+    max-width:185px;
 
-    margin-bottom:5px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 
-    color:
-        var(--mc-marsala-600);
+    color:#f8fafc;
+    font-size:12.5px;
+    font-weight:750;
+}
 
-    font-size:9px;
+.usuario-info span{
+    display:block;
+    margin-top:3px;
+    color:#7e8da4;
+    font-size:10.5px;
+    text-transform:capitalize;
+}
 
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+.mobile-menu-btn{
+    display:none;
+    position:fixed;
+    top:14px;
+    left:14px;
+    z-index:1200;
+
+    width:42px;
+    height:42px;
+    min-height:42px;
+    padding:0;
+
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+    color:var(--ink);
+
+    box-shadow:var(--shadow-md);
+}
+
+.sidebar-overlay{
+    display:none;
+}
+
+/* =========================================================
+   MAIN / HEADER
+========================================================= */
+
+.main{
+    min-height:100vh;
+    margin-left:var(--sidebar-width);
+    background:var(--bg);
+    transition:margin-left .25s ease;
+}
+
+.main-header{
+    position:sticky;
+    top:0;
+    z-index:100;
+
+    height:var(--header-height);
+    padding:0 34px 0 38px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    background:rgba(255,255,255,.96);
+    border-bottom:1px solid var(--line);
+
+    backdrop-filter:blur(12px);
+}
+
+.header-titulo{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+}
+
+.header-subtitulo{
+    color:#8a94a6;
+    font-size:10px;
     font-weight:800;
-
     letter-spacing:1.5px;
 }
 
-.page-title h2{
-
+.header-titulo h1{
     margin:0;
-
-    color:
-        var(--mc-marsala-950);
-
-    font-size:25px;
-
+    color:#101828;
+    font-size:21px;
     line-height:1.15;
-
     font-weight:800;
+    letter-spacing:-.45px;
+}
 
-    letter-spacing:-.6px;
+.header-usuario{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding-left:22px;
+    border-left:1px solid var(--line);
+}
+
+.header-usuario-info{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+}
+
+.header-usuario-info strong{
+    color:#101828;
+    font-size:12.5px;
+    font-weight:750;
+}
+
+.header-usuario-info span{
+    color:#8b95a7;
+    font-size:10.5px;
+    text-transform:capitalize;
+}
+
+.header-avatar{
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+    background:#eef4ff;
+    color:var(--mc-blue);
+    border:1px solid #dbe6ff;
+}
+
+/* =========================================================
+   PAGE TITLES
+========================================================= */
+
+.page-title{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+
+    margin:0 0 24px;
+}
+
+.page-title > div{
+    min-width:0;
+}
+
+.page-title > div > span,
+.dashboard-topo > div > span{
+    display:block;
+    margin-bottom:7px;
+
+    color:var(--mc-blue);
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:1.35px;
+}
+
+.page-title h2{
+    margin:0;
+    color:#101828;
+    font-size:29px;
+    line-height:1.08;
+    font-weight:800;
+    letter-spacing:-.8px;
 }
 
 .page-title p{
-
-    margin:
-        5px 0 0;
-
-    color:
-        var(--mc-muted);
-
-    font-size:12px;
+    margin:7px 0 0;
+    color:var(--muted);
+    font-size:13.5px;
 }
 
+/* =========================================================
+   SURFACES / CARDS
+========================================================= */
+
+.card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);
+    padding:24px;
+}
+
+.card h2{
+    color:#101828;
+    font-size:18px;
+    font-weight:800;
+}
 
 /* =========================================================
-   10. DASHBOARD — CARDS PRINCIPAIS
-   ========================================================= */
+   DASHBOARD
+========================================================= */
 
 .dashboard{
-
     display:grid;
-
-    grid-template-columns:
-        repeat(4,minmax(0,1fr));
-
-    gap:14px;
-
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:16px;
     margin-bottom:18px;
 }
 
 .dash-card{
-
     position:relative;
-
-    min-height:112px;
+    min-height:122px;
+    overflow:hidden;
 
     display:flex;
-
     align-items:center;
+    gap:15px;
 
-    gap:13px;
+    padding:20px;
 
-    padding:
-        17px;
-
-    background:#FFFFFF;
-
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:
-        var(--radius-lg);
-
-    box-shadow:
-        var(--mc-shadow-xs);
-
-    overflow:hidden;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-xs);
 
     transition:
         transform .18s ease,
@@ -579,1233 +583,6127 @@ header h1{
 }
 
 .dash-card:hover{
-
-    transform:
-        translateY(-1px);
-
-    border-color:
-        #DDCBC7;
-
-    box-shadow:
-        var(--mc-shadow-sm);
+    transform:translateY(-2px);
+    box-shadow:var(--shadow-sm);
+    border-color:#d9dee7;
 }
 
-
-/* linha superior */
-
-.dash-card::before{
-
+.dash-card::after{
     content:"";
-
     position:absolute;
-
-    left:0;
-    top:0;
-
-    width:100%;
-    height:3px;
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--mc-marsala-800),
-            var(--mc-brand-3)
-        );
-
-    opacity:.9;
+    width:92px;
+    height:92px;
+    right:-42px;
+    bottom:-43px;
+    border-radius:50%;
+    background:#f6f8fc;
 }
-
-
-/* ícone */
 
 .dash-icon{
+    position:relative;
+    z-index:1;
 
-    width:42px;
-    height:42px;
-
-    flex:0 0 42px;
+    width:48px;
+    height:48px;
+    flex:0 0 48px;
 
     display:flex;
-
     align-items:center;
     justify-content:center;
 
-    border-radius:11px;
-
-    background:
-        var(--mc-marsala-950);
-
-    color:
-        var(--mc-brand-4);
-
-    box-shadow:
-        0 5px 12px
-        rgba(36,7,6,.12);
+    border-radius:13px;
+    background:var(--mc-blue-soft);
+    color:var(--mc-blue);
+    font-size:18px;
 }
 
-.dash-icon i{
-
-    font-size:15px;
+.dash-card:nth-child(2) .dash-icon{
+    color:var(--green);
+    background:var(--green-soft);
 }
 
+.dash-card:nth-child(3) .dash-icon{
+    color:var(--orange);
+    background:var(--orange-soft);
+}
 
-/* números */
+.dash-card:nth-child(4) .dash-icon{
+    color:var(--red);
+    background:var(--red-soft);
+}
 
 .dash-card h3{
+    position:relative;
+    z-index:1;
+    margin:0 0 5px;
 
-    margin:0;
-
-    color:
-        var(--mc-marsala-950);
-
-    font-size:25px;
-
+    color:#101828;
+    font-size:30px;
     line-height:1;
-
     font-weight:800;
-
-    letter-spacing:-.5px;
+    letter-spacing:-.8px;
 }
 
 .dash-card p{
-
-    margin:
-        6px 0 0;
-
-    color:
-        var(--mc-muted);
-
-    font-size:11px;
-
-    font-weight:600;
+    position:relative;
+    z-index:1;
+    margin:0;
+    color:var(--muted);
+    font-size:11.5px;
+    font-weight:650;
 }
-
-
-/* =========================================================
-   11. DECORAÇÃO DOS CARDS
-   ========================================================= */
-
-.dash-card-decoration{
-
-    position:absolute;
-
-    right:-26px;
-    bottom:-30px;
-
-    width:88px;
-    height:88px;
-
-    border-radius:50%;
-
-    background:
-        var(--mc-marsala-600);
-
-    opacity:.035;
-
-    pointer-events:none;
-}
-
-.dash-card-decoration i{
-
-    display:none;
-}
-
-
-/* =========================================================
-   12. CARDS / CONTAINERS
-   ========================================================= */
-
-.card{
-
-    background:#FFFFFF;
-
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:
-        var(--radius-lg);
-
-    box-shadow:
-        var(--mc-shadow-xs);
-
-    padding:18px;
-}
-
-
-/* =========================================================
-   13. DASHBOARD AVANÇADO
-   ========================================================= */
 
 .dashboard-advanced{
-
     display:grid;
-
-    grid-template-columns:
-        minmax(0,1fr)
-        320px;
-
-    gap:16px;
-
-    align-items:start;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:18px;
+    align-items:stretch;
 }
 
 .dashboard-table{
-
     min-width:0;
+    padding:0;
+    overflow:hidden;
 }
-
-
-/* =========================================================
-   14. TÍTULOS DOS BLOCOS
-   ========================================================= */
 
 .dashboard-topo{
-
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
+    gap:18px;
 
-    gap:15px;
-
-    padding:
-        15px 17px;
-
-    border-bottom:
-        1px solid
-        var(--mc-border-light);
+    padding:22px 24px 18px;
+    border-bottom:1px solid var(--line);
 }
 
-.dashboard-topo h3{
-
+.dashboard-topo h2{
     margin:0;
-
-    color:
-        var(--mc-marsala-900);
-
-    font-size:15px;
-
+    color:#101828;
+    font-size:17px;
     font-weight:800;
+    letter-spacing:-.2px;
 }
-
-
-/* =========================================================
-   15. FILTROS DASHBOARD
-   ========================================================= */
 
 .dashboard-filtros{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:430px;
+}
+
+.dashboard-filtros .input-wrapper{
+    width:235px;
+}
+
+.dashboard-filtros select{
+    width:195px;
+}
+
+/* =========================================================
+   STATUS CARDS — DISCREET CORPORATE
+========================================================= */
+
+.dashboard-status-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+
+.status-card{
+    position:relative;
+    min-height:136px;
+    overflow:hidden;
 
     display:flex;
+    flex-direction:column;
+    justify-content:center;
 
+    padding:19px;
+
+    border-radius:15px;
+    border:1px solid rgba(16,24,40,.06);
+}
+
+.status-card::after{
+    content:"";
+    position:absolute;
+    width:105px;
+    height:105px;
+    right:-45px;
+    bottom:-48px;
+    border-radius:50%;
+    background:rgba(255,255,255,.25);
+}
+
+.status-icon{
+    position:relative;
+    z-index:1;
+
+    width:36px;
+    height:36px;
+    display:flex;
     align-items:center;
-
-    gap:9px;
-
-    flex-wrap:wrap;
-
-    margin-bottom:14px;
-}
-
-.dashboard-filtros input,
-.dashboard-filtros select{
-
-    height:38px;
-
-    padding:
-        0 11px;
-
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:8px;
-
-    background:#FFFFFF;
-
-    color:
-        var(--mc-text);
-
-    font-size:11px;
-
-    outline:none;
-
-    transition:
-        border-color .18s ease,
-        box-shadow .18s ease;
-}
-
-.dashboard-filtros input{
-
-    min-width:210px;
-}
-
-.dashboard-filtros select{
-
-    min-width:150px;
-}
-
-.dashboard-filtros input:focus,
-.dashboard-filtros select:focus{
-
-    border-color:
-        var(--mc-marsala-500);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(112,24,18,.07);
-}
-
-
-/* =========================================================
-   16. TABELAS
-   ========================================================= */
-
-.inventory-table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-    font-size:11px;
-}
-
-.inventory-table th{
-
-    padding:
-        10px 12px;
-
-    text-align:left;
-
-    background:
-        var(--mc-surface-soft);
-
-    color:
-        var(--mc-muted);
-
-    border-bottom:
-        1px solid
-        var(--mc-border);
-
-    font-size:9px;
-
-    font-weight:800;
-
-    letter-spacing:.6px;
-
-    text-transform:uppercase;
-}
-
-.inventory-table td{
-
-    padding:
-        11px 12px;
-
-    color:
-        var(--mc-text-2);
-
-    border-bottom:
-        1px solid
-        var(--mc-border-light);
-
-    vertical-align:middle;
-}
-
-.inventory-table tbody tr:hover{
-
-    background:
-        #FFFCFA;
-}
-
-.inventory-table tbody tr:last-child td{
-
-    border-bottom:none;
-}
-
-
-/* =========================================================
-   17. BOTÕES
-   ========================================================= */
-
-button{
-
-    min-height:37px;
-
-    padding:
-        0 13px;
-
-    border-radius:8px;
-
-    border:1px solid transparent;
-
-    font-size:11px;
-
-    font-weight:750;
-
-    transition:
-        all .18s ease;
-}
-
-.btn-primary{
-
-    background:
-        var(--mc-marsala-800);
-
-    color:#FFFFFF;
-
-    border-color:
-        var(--mc-marsala-800);
-
-    box-shadow:
-        0 4px 10px
-        rgba(74,13,10,.12);
-}
-
-.btn-primary:hover{
-
-    background:
-        var(--mc-marsala-600);
-
-    border-color:
-        var(--mc-marsala-600);
-
-    transform:
-        translateY(-1px);
-}
-
-.btn-secondary{
-
-    background:#FFFFFF;
-
-    color:
-        var(--mc-marsala-700);
-
-    border-color:
-        var(--mc-border);
-}
-
-.btn-secondary:hover{
-
-    background:
-        var(--mc-gold-soft);
-
-    border-color:
-        #E2C87C;
-}
-
-.btn-edit{
-
-    min-height:30px;
-
-    padding:
-        0 9px;
-
-    background:
-        var(--mc-gold-soft);
-
-    color:
-        var(--mc-marsala-700);
-}
-
-.btn-delete{
-
-    min-height:30px;
-
-    padding:
-        0 9px;
-
-    background:
-        var(--mc-danger-bg);
-
-    color:
-        var(--mc-danger);
-}
-
-
-/* =========================================================
-   18. FORMULÁRIOS
-   ========================================================= */
-
-.input-group{
+    justify-content:center;
 
     margin-bottom:12px;
+    border-radius:10px;
+
+    background:rgba(255,255,255,.22);
+    color:inherit;
+    font-size:14px;
 }
 
-.input-group label{
+.status-card h3{
+    position:relative;
+    z-index:1;
+    margin:0 0 4px;
 
-    display:block;
+    color:#fff;
+    font-size:28px;
+    line-height:1;
+    font-weight:800;
+}
 
-    margin-bottom:5px;
+.status-card p{
+    position:relative;
+    z-index:1;
+    margin:0;
 
-    color:
-        var(--mc-text-2);
-
-    font-size:11px;
-
+    color:rgba(255,255,255,.90);
+    font-size:10.5px;
     font-weight:700;
 }
 
-.input-group small,
-small{
+.manutencao-card{
+    background:linear-gradient(135deg,#d97706,#f59e0b);
+}
 
-    color:
-        var(--mc-muted);
+.extraviado-card{
+    background:linear-gradient(135deg,#6941c6,#7f56d9);
+}
+
+.baixado-card{
+    background:linear-gradient(135deg,#c62828,#e53935);
+}
+
+.ativo-card{
+    background:linear-gradient(135deg,#14804a,#16a34a);
+}
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+.table-area{
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.table-area::-webkit-scrollbar{
+    height:7px;
+}
+
+.table-area::-webkit-scrollbar-track{
+    background:#f1f3f6;
+}
+
+.table-area::-webkit-scrollbar-thumb{
+    background:#cbd2dc;
+    border-radius:20px;
+}
+
+.inventory-table{
+    width:100%;
+    min-width:820px;
+    border-collapse:separate;
+    border-spacing:0;
+}
+
+.inventory-table thead{
+    background:#f8fafc;
+}
+
+.inventory-table th{
+    padding:13px 16px;
+    text-align:left;
+
+    color:#667085;
+    font-size:10px;
+    line-height:1.2;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.75px;
+
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+}
+
+.inventory-table td{
+    padding:15px 16px;
+
+    color:#344054;
+    font-size:12.5px;
+    line-height:1.45;
+
+    border-bottom:1px solid #eef1f4;
+    vertical-align:middle;
+}
+
+.inventory-table tbody tr{
+    transition:background .15s ease;
+}
+
+.inventory-table tbody tr:hover{
+    background:#fafbfc;
+}
+
+.inventory-table tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.inventory-table img{
+    display:block;
+    width:58px;
+    height:58px;
+    object-fit:cover;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#f8fafc;
+}
+
+/* Dynamic status badge */
+.status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:27px;
+    padding:0 9px;
+    border-radius:999px;
 
     font-size:10px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.status.ativo{
+    color:#067647;
+    background:#ecfdf3;
+}
+
+.status.manutencao{
+    color:#b54708;
+    background:#fff7ed;
+}
+
+.status.baixado{
+    color:#b42318;
+    background:#fef3f2;
+}
+
+.status.extraviado{
+    color:#6941c6;
+    background:#f4f3ff;
+}
+
+.actions{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.btn-edit,
+.btn-delete{
+    min-height:34px;
+    padding:0 10px;
+
+    border-radius:8px;
+    font-size:10.5px;
+    font-weight:750;
+
+    transition:.18s ease;
+}
+
+.btn-edit{
+    color:var(--mc-blue);
+    background:#eff4ff;
+    border:1px solid #dce7ff;
+}
+
+.btn-edit:hover{
+    background:#e4edff;
+}
+
+.btn-delete{
+    color:#c43227;
+    background:#fff2f0;
+    border:1px solid #f8d7d2;
+}
+
+.btn-delete:hover{
+    background:#ffe7e4;
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.form-section{
+    padding:22px 0;
+    border-bottom:1px solid #eef1f4;
+}
+
+.form-section:first-child{
+    padding-top:0;
+}
+
+.form-section:last-child{
+    border-bottom:0;
+    padding-bottom:0;
+}
+
+.form-section-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    margin-bottom:17px;
+
+    color:#1d2939;
+    font-size:13px;
+    font-weight:800;
+}
+
+.form-section-title i{
+    color:var(--mc-blue);
+    font-size:14px;
+}
+
+.grid-2{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px;
+}
+
+.grid-3{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
+}
+
+.input-group{
+    min-width:0;
+}
+
+.input-group + .input-group{
+    margin-top:0;
+}
+
+.input-group label{
+    display:block;
+    margin:0 0 7px;
+
+    color:#344054;
+    font-size:11.5px;
+    font-weight:700;
+}
+
+.input-group small{
+    display:block;
+    margin-top:7px;
+    color:#98a2b3;
+    font-size:10.5px;
+    line-height:1.45;
 }
 
 input,
 select,
 textarea{
-
     width:100%;
-
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:8px;
-
-    background:#FFFFFF;
-
-    color:
-        var(--mc-text);
-
-    font-size:12px;
-
+    border:1px solid var(--line-strong);
     outline:none;
+
+    background:#fff;
+    color:#101828;
+
+    border-radius:9px;
+
+    font-size:13px;
 
     transition:
         border-color .18s ease,
-        box-shadow .18s ease;
+        box-shadow .18s ease,
+        background .18s ease;
 }
 
 input,
 select{
-
-    height:40px;
-
-    padding:
-        0 11px;
+    height:46px;
+    padding:0 13px;
 }
 
 textarea{
-
-    min-height:82px;
-
-    padding:10px;
-
+    min-height:112px;
+    padding:12px 13px;
     resize:vertical;
 }
 
 input::placeholder,
 textarea::placeholder{
-
-    color:
-        #AAA09D;
+    color:#98a2b3;
 }
 
 input:focus,
 select:focus,
 textarea:focus{
-
-    border-color:
-        var(--mc-marsala-500);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(112,24,18,.07);
-
-    outline:none;
+    border-color:#84a9f6;
+    box-shadow:0 0 0 3px rgba(36,87,214,.10);
 }
 
-
-/* =========================================================
-   19. GRID DE FORMULÁRIO
-   ========================================================= */
-
-.grid-2{
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(2,minmax(0,1fr));
-
-    gap:12px;
+input:disabled,
+select:disabled,
+textarea:disabled,
+input[readonly]{
+    background:#f8fafc;
+    color:#667085;
 }
 
-.grid-3{
-
-    display:grid;
-
-    grid-template-columns:
-        repeat(3,minmax(0,1fr));
-
-    gap:12px;
+.input-wrapper{
+    position:relative;
 }
 
+.input-wrapper > i{
+    position:absolute;
+    left:13px;
+    top:50%;
+    z-index:2;
 
-/* =========================================================
-   20. STATUS
-   ========================================================= */
+    transform:translateY(-50%);
 
-.status-badge,
-.badge,
-.tag{
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:5px;
-
-    min-height:24px;
-
-    padding:
-        0 8px;
-
-    border-radius:999px;
-
-    font-size:9px;
-
-    font-weight:800;
-
-    border:
-        1px solid transparent;
+    color:#98a2b3;
+    font-size:13px;
+    pointer-events:none;
 }
 
-.status-badge::before,
-.badge::before{
-
-    content:"";
-
-    width:5px;
-    height:5px;
-
-    border-radius:50%;
-
-    background:currentColor;
+.input-wrapper input{
+    padding-left:39px;
 }
 
-.status-ativo{
-
-    color:
-        var(--mc-success);
-
-    background:
-        var(--mc-success-bg);
-
-    border-color:
-        #D8EDDF;
+input[type="file"]{
+    height:auto;
+    min-height:46px;
+    padding:10px 12px;
+    background:#f8fafc;
+    cursor:pointer;
 }
 
-.status-manutencao{
-
-    color:
-        var(--mc-warning);
-
-    background:
-        var(--mc-warning-bg);
-
-    border-color:
-        #F1E2B9;
-}
-
-.status-baixado{
-
-    color:
-        var(--mc-danger);
-
-    background:
-        var(--mc-danger-bg);
-
-    border-color:
-        #EFD4D2;
-}
-
-
-/* =========================================================
-   21. LOGIN
-   ========================================================= */
-
-.login-mode{
-
-    background:
-        #FFFFFF;
-}
-
-.login-mode .sidebar,
-.login-mode .mobile-menu-btn,
-.login-mode .sidebar-overlay{
-
-    display:none !important;
-}
-
-.login-mode .main{
-
-    margin-left:0 !important;
-}
-
-.login-mode header{
-
-    height:72px;
-
-    padding:
-        0 38px;
-
-    border-bottom:
-        1px solid
-        var(--mc-border-light);
-}
-
-.login-mode .tela{
-
-    min-height:
-        calc(100vh - 72px);
-
-    padding:
-        30px;
-}
-
-
-/* =========================================================
-   22. LOGIN CARD
-   ========================================================= */
-
-.login-card{
-
-    width:
-        min(420px,100%);
-
-    margin:
-        35px auto;
-
-    padding:
-        30px;
-
-    background:#FFFFFF;
-
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:
-        15px;
-
-    box-shadow:
-        0 16px 40px
-        rgba(36,7,6,.07);
-}
-
-.login-logo{
-
-    width:52px;
-    height:52px;
-
-    margin-bottom:14px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    border-radius:11px;
-
-    background:
-        var(--mc-marsala-950);
-}
-
-.login-logo img{
-
-    width:35px;
-    height:35px;
-
-    object-fit:contain;
-}
-
-.login-brand{
-
-    color:
-        var(--mc-marsala-600);
-
-    font-size:9px;
-
-    font-weight:800;
-
-    letter-spacing:1.5px;
-}
-
-.login-card h2{
-
-    margin:
-        5px 0 5px;
-
-    color:
-        var(--mc-marsala-950);
-
-    font-size:24px;
-
-    font-weight:800;
-}
-
-.login-subtitle{
-
-    margin:
-        0 0 20px;
-
-    color:
-        var(--mc-muted);
-
+input[type="file"]::file-selector-button{
+    margin-right:10px;
+    padding:7px 10px;
+    border:0;
+    border-radius:7px;
+    background:#eef3ff;
+    color:var(--mc-blue);
     font-size:11px;
+    font-weight:750;
+    cursor:pointer;
 }
-
-.btn-login{
-
-    width:100%;
-
-    min-height:40px;
-
-    background:
-        var(--mc-marsala-800) !important;
-
-    border:
-        1px solid
-        var(--mc-marsala-800) !important;
-
-    color:#FFFFFF !important;
-}
-
-.btn-login:hover{
-
-    background:
-        var(--mc-marsala-600) !important;
-
-    border-color:
-        var(--mc-marsala-600) !important;
-}
-
-.btn-consulta-publica{
-
-    color:
-        var(--mc-marsala-700) !important;
-
-    border-color:
-        #E5D7D4 !important;
-
-    background:#FFFFFF !important;
-}
-
-.btn-consulta-publica:hover{
-
-    color:
-        var(--mc-marsala-900) !important;
-
-    background:
-        var(--mc-gold-soft) !important;
-
-    border-color:
-        #E1C77C !important;
-}
-
 
 /* =========================================================
-   23. CONSULTA PÚBLICA
-   ========================================================= */
+   CONTROL TYPE
+========================================================= */
 
-.consulta-publica-grid{
-
+.controle-grid{
     display:grid;
-
-    grid-template-columns:
-        repeat(3,minmax(0,1fr));
-
-    gap:14px;
-
-    align-items:stretch;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
 }
 
-.consulta-publica-card{
+.controle-option{
+    position:relative;
+    display:flex;
+    align-items:flex-start;
+    gap:13px;
 
-    min-width:0;
+    padding:16px;
 
-    background:#FFFFFF;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#fff;
 
-    border:
-        1px solid
-        var(--mc-border);
-
-    border-radius:
-        13px;
-
-    overflow:hidden;
-
-    box-shadow:
-        var(--mc-shadow-xs);
-
+    cursor:pointer;
     transition:
-        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease,
         box-shadow .18s ease;
 }
 
-.consulta-publica-card:hover{
-
-    transform:
-        translateY(-2px);
-
-    box-shadow:
-        var(--mc-shadow-sm);
+.controle-option:hover{
+    border-color:#b8c8e8;
+    background:#fbfdff;
 }
 
+.controle-option input{
+    width:18px;
+    height:18px;
+    flex:0 0 18px;
+    margin:2px 0 0;
+    accent-color:var(--mc-blue);
+}
+
+.controle-option > div{
+    min-width:0;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+}
+
+.controle-option i{
+    color:var(--mc-blue);
+}
+
+.controle-option strong{
+    color:#1d2939;
+    font-size:12.5px;
+    font-weight:800;
+}
+
+.controle-option span{
+    flex-basis:100%;
+    color:#667085;
+    font-size:10.5px;
+    line-height:1.5;
+}
+
+.controle-option:has(input:checked){
+    border-color:#91b4ff;
+    background:#f6f9ff;
+    box-shadow:0 0 0 3px rgba(36,87,214,.06);
+}
 
 /* =========================================================
-   24. CHECKBOX / RADIO
-   ========================================================= */
+   FORM ACTIONS
+========================================================= */
 
-input[type="checkbox"],
-input[type="radio"]{
+.form-actions{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
 
-    accent-color:
-        var(--mc-marsala-600);
+    padding-top:22px;
 }
 
+.btn-primary,
+.btn-secondary{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    padding:0 17px;
+
+    border-radius:9px;
+    font-size:12px;
+    font-weight:750;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        background .18s ease,
+        border-color .18s ease;
+}
+
+.btn-primary{
+    border:1px solid var(--mc-blue);
+    background:var(--mc-blue);
+    color:#fff;
+    box-shadow:0 4px 10px rgba(36,87,214,.14);
+}
+
+.btn-primary:hover{
+    background:var(--mc-blue-2);
+    box-shadow:0 7px 16px rgba(36,87,214,.18);
+    transform:translateY(-1px);
+}
+
+.btn-secondary{
+    border:1px solid var(--line-strong);
+    background:#fff;
+    color:#475467;
+}
+
+.btn-secondary:hover{
+    background:#f8fafc;
+    border-color:#b9c0ca;
+}
+
+.btn-login{
+    width:100%;
+    height:48px;
+    margin-top:6px;
+    font-size:12.5px;
+}
 
 /* =========================================================
-   25. LINKS
-   ========================================================= */
+   LOGIN
+========================================================= */
 
-a{
+.login-container{
+    min-height:calc(100vh - var(--header-height));
+    display:flex;
+    align-items:center;
+    justify-content:center;
 
-    color:
-        var(--mc-marsala-700);
-
-    text-decoration:none;
+    padding:34px 20px 48px;
 }
 
-a:hover{
+.login-card{
+    width:min(100%,430px);
 
-    color:
-        var(--mc-marsala-500);
+    padding:38px 40px 30px;
+
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:var(--shadow-lg);
 }
 
+.login-logo{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    margin-bottom:24px;
+}
+
+.login-logo-imagem{
+    position:relative;
+    width:66px;
+    height:66px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:16px;
+    background:#f8fafc;
+    border:1px solid var(--line);
+    overflow:hidden;
+}
+
+.login-logo-imagem img{
+    width:48px;
+    height:48px;
+    object-fit:contain;
+}
+
+.login-logo > span{
+    color:#8b6a28;
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:1.5px;
+}
+
+.login-titulo{
+    text-align:center;
+    margin-bottom:28px;
+}
+
+.login-titulo h2{
+    margin:0;
+    color:#101828;
+    font-size:25px;
+    line-height:1.15;
+    font-weight:800;
+    letter-spacing:-.5px;
+}
+
+.login-titulo p{
+    margin:8px 0 0;
+    color:#667085;
+    font-size:12.5px;
+    line-height:1.5;
+}
+
+.login-card .input-group{
+    margin-bottom:17px;
+}
+
+.login-card .input-group label{
+    color:#344054;
+    font-size:11.5px;
+    margin-bottom:7px;
+}
+
+.login-footer{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    margin-top:22px;
+    padding-top:18px;
+
+    border-top:1px solid #eef1f4;
+
+    color:#98a2b3;
+    font-size:10.5px;
+}
+
+.login-footer i{
+    color:#12b76a;
+}
 
 /* =========================================================
-   26. SCROLLBAR
-   ========================================================= */
+   ESTOQUE TOOLBAR
+========================================================= */
 
-::-webkit-scrollbar{
-
-    width:7px;
-    height:7px;
+.estoque-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:16px;
 }
 
-::-webkit-scrollbar-track{
-
-    background:#FFFFFF;
+.estoque-busca{
+    flex:1;
+    max-width:600px;
 }
 
-::-webkit-scrollbar-thumb{
+.estoque-info{
+    display:flex;
+    align-items:center;
+    gap:7px;
 
-    background:
-        #D8C9C5;
+    min-height:38px;
+    padding:0 12px;
 
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:#f8fafc;
+
+    color:#667085;
+    font-size:11px;
+    white-space:nowrap;
+}
+
+.estoque-info i{
+    color:var(--mc-blue);
+}
+
+.estoque-info strong{
+    color:#101828;
+    font-size:13px;
+}
+
+/* =========================================================
+   MOVIMENTACAO
+========================================================= */
+
+.movimentacao-alerta{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+
+    margin-bottom:4px;
+    padding:14px 15px;
+
+    border:1px solid #dce7ff;
+    border-radius:11px;
+    background:#f6f9ff;
+    color:#344054;
+}
+
+.movimentacao-alerta > i{
+    margin-top:2px;
+    color:var(--mc-blue);
+    font-size:15px;
+}
+
+.movimentacao-alerta strong{
+    display:block;
+    margin-bottom:3px;
+    color:#1d2939;
+    font-size:12px;
+}
+
+.movimentacao-alerta p{
+    margin:0;
+    color:#667085;
+    font-size:10.5px;
+    line-height:1.5;
+}
+
+/* =========================================================
+   MODAL FOTO
+========================================================= */
+
+.modal-foto{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+
+    display:none;
+    align-items:center;
+    justify-content:center;
+
+    padding:25px;
+
+    background:rgba(6,13,25,.78);
+    backdrop-filter:blur(5px);
+}
+
+.modal-foto-conteudo{
+    position:relative;
+    max-width:min(92vw,1000px);
+    max-height:90vh;
+
+    padding:10px;
+
+    border-radius:16px;
+    background:#fff;
+    box-shadow:var(--shadow-lg);
+}
+
+.modal-foto-conteudo img{
+    display:block;
+    max-width:88vw;
+    max-height:84vh;
+    object-fit:contain;
     border-radius:10px;
 }
 
-::-webkit-scrollbar-thumb:hover{
+.modal-fechar{
+    position:absolute;
+    top:-13px;
+    right:-13px;
 
-    background:
-        var(--mc-marsala-500);
-}
-
-
-/* =========================================================
-   27. SELEÇÃO
-   ========================================================= */
-
-::selection{
-
-    background:
-        rgba(224,178,48,.28);
-
-    color:
-        var(--mc-marsala-950);
-}
-
-
-/* =========================================================
-   28. MOBILE
-   ========================================================= */
-
-.mobile-menu-btn{
-
-    display:none;
-
-    position:fixed;
-
-    top:13px;
-    left:13px;
-
-    z-index:300;
-
-    width:38px;
-    height:38px;
-
-    min-height:38px;
-
+    width:36px;
+    height:36px;
+    min-height:36px;
     padding:0;
 
-    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 
-    background:
-        var(--mc-marsala-900);
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:#fff;
+    color:#344054;
 
-    color:
-        var(--mc-brand-4);
-
-    border:
-        1px solid
-        rgba(251,226,81,.18);
+    box-shadow:var(--shadow-md);
 }
 
+.modal-fechar:hover{
+    background:#f8fafc;
+}
 
 /* =========================================================
-   29. TABLET
-   ========================================================= */
+   UTILITÁRIOS / ESTADOS VAZIOS
+========================================================= */
 
-@media(max-width:1100px){
+.empty-state{
+    padding:38px 20px !important;
+    text-align:center;
+    color:#98a2b3;
+    font-size:12px;
+}
 
+.empty-state i{
+    display:block;
+    margin-bottom:9px;
+    color:#c5ccd6;
+    font-size:25px;
+}
+
+.fade-in{
+    animation:fadeIn .22s ease both;
+}
+
+@keyframes fadeIn{
+    from{opacity:0;transform:translateY(4px)}
+    to{opacity:1;transform:translateY(0)}
+}
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width:1180px){
     :root{
+        --sidebar-width:248px;
+    }
 
-        --sidebar-width:218px;
+    .main-header{
+        padding:0 25px;
     }
 
     .tela{
-
-        padding:
-            24px 22px 35px;
+        padding:28px 25px 42px;
     }
 
     .dashboard{
-
-        grid-template-columns:
-            repeat(2,minmax(0,1fr));
+        grid-template-columns:repeat(2,minmax(0,1fr));
     }
 
     .dashboard-advanced{
-
-        grid-template-columns:
-            1fr;
+        grid-template-columns:1fr;
     }
 
-    .consulta-publica-grid{
+    .dashboard-status-grid{
+        grid-template-columns:repeat(4,minmax(0,1fr));
+    }
 
-        grid-template-columns:
-            repeat(2,minmax(0,1fr));
+    .dashboard-filtros{
+        min-width:0;
     }
 }
 
-
 /* =========================================================
-   30. MOBILE
-   ========================================================= */
+   RESPONSIVE — MOBILE
+========================================================= */
 
-@media(max-width:700px){
-
+@media (max-width:820px){
     :root{
-
-        --sidebar-width:0px;
-    }
-
-    .sidebar{
-
-        width:235px;
-
-        transform:
-            translateX(-100%);
-
-        transition:
-            transform .22s ease;
-    }
-
-    .sidebar.open{
-
-        transform:
-            translateX(0);
-    }
-
-    .main{
-
-        margin-left:0 !important;
+        --header-height:70px;
     }
 
     .mobile-menu-btn{
-
         display:flex;
-
         align-items:center;
         justify-content:center;
     }
 
-    header{
-
-        height:64px;
-
-        padding:
-            0 18px 0 64px;
+    .sidebar{
+        width:272px;
+        transform:translateX(-100%);
+        box-shadow:18px 0 45px rgba(5,12,24,.22);
     }
 
-    header h1{
+    .sidebar.open{
+        transform:translateX(0);
+    }
 
+    .sidebar-overlay{
+        position:fixed;
+        inset:0;
+        z-index:950;
+        background:rgba(7,13,24,.45);
+        backdrop-filter:blur(2px);
+    }
+
+    .sidebar-overlay.active{
+        display:block;
+    }
+
+    .main{
+        margin-left:0;
+    }
+
+    .main-header{
+        padding:0 18px 0 70px;
+    }
+
+    .header-subtitulo{
+        font-size:9px;
+    }
+
+    .header-titulo h1{
         font-size:18px;
     }
 
+    .header-usuario{
+        padding-left:10px;
+        border-left:0;
+    }
+
+    .header-usuario-info{
+        display:none;
+    }
+
     .tela{
-
-        padding:
-            20px 15px 30px;
+        padding:24px 16px 36px;
     }
 
-    .dashboard{
-
-        grid-template-columns:
-            1fr;
-
-        gap:11px;
-    }
-
-    .dash-card{
-
-        min-height:100px;
-
-        padding:15px;
-    }
-
-    .dash-icon{
-
-        width:38px;
-        height:38px;
-
-        flex-basis:38px;
-    }
-
-    .dash-card h3{
-
-        font-size:23px;
-    }
-
-    .dashboard-filtros{
-
+    .page-title{
+        align-items:flex-start;
         flex-direction:column;
-
-        align-items:stretch;
-    }
-
-    .dashboard-filtros input,
-    .dashboard-filtros select{
-
-        width:100%;
-    }
-
-    .grid-2,
-    .grid-3{
-
-        grid-template-columns:1fr;
-    }
-
-    .consulta-publica-grid{
-
-        grid-template-columns:1fr;
-    }
-
-    .login-mode .tela{
-
-        padding:
-            18px;
-    }
-
-    .login-card{
-
-        margin:
-            20px auto;
-
-        padding:
-            24px 20px;
+        gap:15px;
+        margin-bottom:20px;
     }
 
     .page-title h2{
+        font-size:25px;
+    }
 
+    .dashboard{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .dashboard-advanced{
+        grid-template-columns:1fr;
+        gap:14px;
+    }
+
+    .dashboard-topo{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .dashboard-filtros{
+        width:100%;
+        min-width:0;
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .dashboard-filtros .input-wrapper,
+    .dashboard-filtros select{
+        width:100%;
+    }
+
+    .dashboard-status-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .grid-2,
+    .grid-3,
+    .controle-grid{
+        grid-template-columns:1fr;
+    }
+
+    .card{
+        padding:18px;
+    }
+
+    .estoque-toolbar{
+        align-items:stretch;
+        flex-direction:column;
+    }
+
+    .estoque-busca{
+        max-width:none;
+    }
+
+    .estoque-info{
+        width:max-content;
+    }
+
+    .form-actions{
+        flex-direction:column-reverse;
+        align-items:stretch;
+    }
+
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary{
+        width:100%;
+    }
+
+    .login-container{
+        min-height:calc(100vh - var(--header-height));
+        padding:24px 12px 36px;
+    }
+
+    .login-card{
+        padding:30px 22px 24px;
+        border-radius:16px;
+    }
+}
+
+/* =========================================================
+   RESPONSIVE — SMALL MOBILE
+========================================================= */
+
+@media (max-width:480px){
+    .header-avatar{
+        width:36px;
+        height:36px;
+    }
+
+    .dashboard-status-grid{
+        grid-template-columns:1fr;
+    }
+
+    .status-card{
+        min-height:115px;
+    }
+
+    .page-title h2{
+        font-size:23px;
+    }
+
+    .login-titulo h2{
         font-size:22px;
     }
 }
 
-
 /* =========================================================
-   31. TELA PEQUENA
-   ========================================================= */
+   ACCESSIBILITY
+========================================================= */
 
-@media(max-width:420px){
+:focus-visible{
+    outline:3px solid rgba(36,87,214,.25);
+    outline-offset:2px;
+}
 
-    .dash-card{
-
-        min-height:94px;
+@media (prefers-reduced-motion:reduce){
+    *,
+    *::before,
+    *::after{
+        scroll-behavior:auto !important;
+        animation:none !important;
+        transition:none !important;
     }
+}
+/* =========================================================
+   CONSULTA PUBLICA  LAYOUT COMPACTO E CORPORATIVO
+========================================================= */
 
-    .dash-card h3{
+#consultaPublicaTela {
+    min-height: calc(100vh - 80px);
+    padding: 24px 30px 30px;
+}
 
-        font-size:21px;
-    }
 
-    .dash-card p{
+/* Cabecalho da consulta */
 
-        font-size:10px;
-    }
+#consultaPublicaTela .consulta-publica-header {
+    max-width: 1450px;
+    margin: 0 auto 18px;
+}
 
-    .card{
 
-        padding:14px;
-    }
+/* Área principal */
 
-    .inventory-table{
+#consultaPublicaTela .consulta-publica-container {
+    max-width: 1450px;
+    margin: 0 auto;
+}
 
-        font-size:10px;
-    }
 
-    .inventory-table th{
+/* Barra de pesquisa/filtros */
 
-        font-size:8px;
-    }
+#consultaPublicaTela .consulta-filtros {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) 240px auto auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+}
 
-    .inventory-table th,
-    .inventory-table td{
 
-        padding:
-            9px 8px;
-    }
+/* Cards */
+
+#listaConsultaPublica {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+/* Card individual */
+
+.consulta-item-card {
+    border-radius: 14px;
+    overflow: hidden;
+    min-width: 0;
+}
+
+
+/* Foto */
+
+.consulta-foto {
+    height: 155px;
+    min-height: 155px;
+    position: relative;
+    overflow: hidden;
+}
+
+
+.consulta-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+    transition: transform .25s ease;
+}
+
+
+.consulta-foto img:hover {
+    transform: scale(1.04);
+}
+
+
+/* Card sem foto */
+
+.consulta-sem-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 7px;
+}
+
+
+/* Conteudo */
+
+.consulta-card-conteudo {
+    padding: 14px 15px 16px;
+}
+
+
+/* Topo */
+
+.consulta-card-topo {
+    margin-bottom: 7px;
+}
+
+
+/* Nome */
+
+.consulta-item-nome {
+    font-size: 16px;
+    line-height: 1.25;
+    margin: 0 0 6px;
+}
+
+
+/* Descricao */
+
+.consulta-descricao {
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0 0 12px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* Informacoes */
+
+.consulta-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 8px;
+}
+
+
+.consulta-info {
+    padding: 9px 10px;
+    border-radius: 9px;
+}
+
+
+.consulta-info-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+
+.consulta-quantidade {
+    font-size: 18px;
+}
+
+
+.consulta-info small {
+    font-size: 9px;
+}
+
+
+.consulta-local {
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+
+/* Status */
+
+.consulta-status,
+.consulta-tipo {
+    font-size: 9px;
+}
+
+
+/* Contador */
+
+#contadorConsultaPublica {
+    font-size: 12px;
+}
+
+
+/* Botao de ampliar */
+
+.consulta-foto-expandir {
+    width: 30px;
+    height: 30px;
+    right: 8px;
+    bottom: 8px;
 }
 
 
 /* =========================================================
-   32. UTILITÁRIOS
-   ========================================================= */
+   DESKTOP MENOR
+========================================================= */
 
-.hidden{
+@media (max-width: 1250px) {
 
-    display:none !important;
+    #listaConsultaPublica {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .consulta-foto {
+        height: 145px;
+        min-height: 145px;
+    }
+
 }
 
-.text-muted{
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    #consultaPublicaTela {
+        padding: 20px 18px 25px;
+    }
+
+
+    #listaConsultaPublica {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 13px;
+    }
+
+
+    #consultaPublicaTela .consulta-filtros {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+}
+
+
+/* =========================================================
+   CELULAR
+========================================================= */
+
+@media (max-width: 600px) {
+
+    #consultaPublicaTela {
+        padding: 14px 12px 20px;
+    }
+
+
+    #listaConsultaPublica {
+        grid-template-columns:
+            1fr;
+
+        gap: 12px;
+    }
+
+
+    #consultaPublicaTela .consulta-filtros {
+        grid-template-columns:
+            1fr;
+
+        gap: 8px;
+    }
+
+
+    .consulta-foto {
+        height: 175px;
+        min-height: 175px;
+    }
+
+
+    .consulta-card-conteudo {
+        padding: 13px;
+    }
+
+
+    .consulta-item-nome {
+        font-size: 15px;
+    }
+
+}
+
+
+/* =========================================================
+   TELAS MUITO GRANDES
+========================================================= */
+
+@media (min-width: 1600px) {
+
+    #listaConsultaPublica {
+        grid-template-columns:
+            repeat(5, minmax(0, 1fr));
+    }
+
+}
+/* =========================================================
+   MONTE CARLO — REFINAMENTO CORPORATIVO
+   VERSÃO COMPACTA / PREMIUM / ERP
+========================================================= */
+
+
+/* =========================================================
+   1. VARIÁVEIS VISUAIS
+========================================================= */
+
+:root {
+
+    --mc-navy: #0f172a;
+    --mc-navy-2: #162033;
+    --mc-blue: #2563eb;
+    --mc-blue-dark: #1d4ed8;
+
+    --mc-gold: #b8892d;
+    --mc-gold-light: #d5ad5b;
+
+    --mc-bg: #f4f6f9;
+    --mc-card: #ffffff;
+
+    --mc-border: #e2e8f0;
+    --mc-border-light: #edf1f5;
+
+    --mc-text: #0f172a;
+    --mc-text-secondary: #64748b;
+    --mc-text-muted: #94a3b8;
+
+    --mc-green: #16a34a;
+    --mc-red: #dc2626;
+    --mc-orange: #ea8a00;
+
+    --mc-radius: 12px;
+    --mc-shadow:
+        0 4px 18px rgba(15, 23, 42, .055);
+
+}
+
+
+/* =========================================================
+   2. SIDEBAR — CORPORATIVA E COMPACTA
+========================================================= */
+
+.sidebar {
+
+    width: 270px !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0b1322 0%,
+            #0f172a 100%
+        ) !important;
+
+    border-right:
+        1px solid
+        rgba(255,255,255,.055) !important;
+
+}
+
+
+/* Área do logo */
+
+.sidebar-logo {
+
+    height: 92px !important;
+
+    min-height: 92px !important;
+
+    padding:
+        18px 20px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    gap: 12px !important;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.07) !important;
+
+}
+
+
+/* Container do logo */
+
+.logo-imagem {
+
+    width: 48px !important;
+
+    height: 48px !important;
+
+    min-width: 48px !important;
+
+    max-width: 48px !important;
+
+    border-radius: 10px !important;
+
+    background:
+        rgba(255,255,255,.055) !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    overflow: hidden !important;
+
+}
+
+
+/* LOGO MONTE CARLO */
+
+.logo-imagem img {
+
+    width: 34px !important;
+
+    height: 34px !important;
+
+    max-width: 34px !important;
+
+    max-height: 34px !important;
+
+    object-fit: contain !important;
+
+    display: block !important;
+
+}
+
+
+/* Texto da marca */
+
+.logo-texto {
+
+    min-width: 0 !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    gap: 2px !important;
+
+}
+
+
+.logo-texto strong {
+
+    font-size: 13px !important;
+
+    line-height: 1.15 !important;
+
+    letter-spacing: .025em !important;
+
+    color: #f8fafc !important;
+
+    white-space: nowrap !important;
+
+}
+
+
+.logo-texto span {
+
+    font-size: 9px !important;
+
+    line-height: 1.2 !important;
+
+    letter-spacing: .09em !important;
+
+    color: #94a3b8 !important;
+
+    white-space: nowrap !important;
+
+}
+
+
+/* =========================================================
+   3. MENU LATERAL
+========================================================= */
+
+.sidebar-menu {
+
+    padding:
+        18px 12px !important;
+
+}
+
+
+.sidebar-menu ul {
+
+    gap: 4px !important;
+
+}
+
+
+.menu-item {
+
+    min-height: 44px !important;
+
+    height: 44px !important;
+
+    padding:
+        0 13px !important;
+
+    margin-bottom: 3px !important;
+
+    border-radius: 9px !important;
+
+    font-size: 13px !important;
+
+    font-weight: 500 !important;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease !important;
+
+}
+
+
+.menu-item i {
+
+    width: 20px !important;
+
+    font-size: 15px !important;
+
+}
+
+
+.menu-item:hover {
+
+    background:
+        rgba(255,255,255,.055) !important;
+
+}
+
+
+.menu-item.active {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(37,99,235,.20),
+            rgba(37,99,235,.08)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0
+        #2563eb !important;
+
+}
+
+
+/* =========================================================
+   4. ÁREA PRINCIPAL
+========================================================= */
+
+.main-content {
+
+    margin-left: 270px !important;
+
+    background:
+        var(--mc-bg) !important;
+
+}
+
+
+/* =========================================================
+   5. HEADER SUPERIOR
+========================================================= */
+
+.topbar,
+.header {
+
+    min-height: 72px !important;
+
+    height: 72px !important;
+
+    padding:
+        0 30px !important;
+
+    background:
+        rgba(255,255,255,.96) !important;
+
+    border-bottom:
+        1px solid
+        var(--mc-border) !important;
+
+}
+
+
+/* =========================================================
+   6. TÍTULOS DAS PÁGINAS
+========================================================= */
+
+.page-content,
+.content {
+
+    padding:
+        26px 30px !important;
+
+}
+
+
+.page-title,
+.content h1 {
+
+    font-size: 27px !important;
+
+    line-height: 1.15 !important;
+
+    letter-spacing: -.025em !important;
+
+}
+
+
+.page-subtitle {
+
+    font-size: 13px !important;
 
     color:
-        var(--mc-muted);
-}
+        var(--mc-text-secondary) !important;
 
-.text-center{
-
-    text-align:center;
 }
 
 
 /* =========================================================
-   FIM — MONTE CARLO
+   7. CARDS GERAIS
+========================================================= */
+
+.card {
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        var(--mc-radius) !important;
+
+    box-shadow:
+        var(--mc-shadow) !important;
+
+}
+
+
+/* =========================================================
+   8. DASHBOARD — CARDS MAIS ELEGANTES
+========================================================= */
+
+.stat-card {
+
+    min-height: 112px !important;
+
+    padding:
+        18px !important;
+
+    border-radius:
+        13px !important;
+
+}
+
+
+.stat-card .stat-value {
+
+    font-size: 28px !important;
+
+    line-height: 1 !important;
+
+}
+
+
+.stat-card .stat-label {
+
+    font-size: 11px !important;
+
+}
+
+
+/* =========================================================
+   9. CONSULTA PÚBLICA
+========================================================= */
+
+#consultaPublicaTela {
+
+    min-height:
+        100vh !important;
+
+    padding:
+        28px 34px 40px !important;
+
+    background:
+        #f5f7fa !important;
+
+}
+
+
+/* Container */
+
+#consultaPublicaTela
+.consulta-publica-container {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto !important;
+
+}
+
+
+/* Cabeçalho */
+
+#consultaPublicaTela
+.consulta-publica-header {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto 20px !important;
+
+}
+
+
+/* =========================================================
+   10. LOGO DA CONSULTA PÚBLICA
+========================================================= */
+
+/*
+   Esta regra é propositalmente agressiva.
+   Impede que o logo Monte Carlo volte a ocupar
+   centenas de pixels.
+*/
+
+#consultaPublicaTela img {
+
+    max-width:
+        100% !important;
+
+}
+
+
+/* Caso exista um container específico */
+
+#consultaPublicaTela
+.login-logo,
+#consultaPublicaTela
+.consulta-logo,
+#consultaPublicaTela
+.logo-publico {
+
+    width:
+        64px !important;
+
+    height:
+        64px !important;
+
+    max-width:
+        64px !important;
+
+    max-height:
+        64px !important;
+
+    margin:
+        0 auto 14px !important;
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        center !important;
+
+    overflow:
+        hidden !important;
+
+}
+
+
+/* Imagem do logo */
+
+#consultaPublicaTela
+.login-logo img,
+#consultaPublicaTela
+.consulta-logo img,
+#consultaPublicaTela
+.logo-publico img {
+
+    width:
+        48px !important;
+
+    height:
+        48px !important;
+
+    max-width:
+        48px !important;
+
+    max-height:
+        48px !important;
+
+    object-fit:
+        contain !important;
+
+}
+
+
+/* =========================================================
+   11. TÍTULO DA CONSULTA
+========================================================= */
+
+#consultaPublicaTela h1 {
+
+    font-size:
+        30px !important;
+
+    line-height:
+        1.15 !important;
+
+    letter-spacing:
+        -.025em !important;
+
+    color:
+        var(--mc-text) !important;
+
+}
+
+
+#consultaPublicaTela
+.consulta-subtitle {
+
+    font-size:
+        13px !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+}
+
+
+/* =========================================================
+   12. FILTROS
+========================================================= */
+
+#consultaPublicaTela
+.consulta-filtros {
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        minmax(300px, 1fr)
+        230px
+        auto
+        auto !important;
+
+    gap:
+        9px !important;
+
+    margin:
+        18px auto 20px !important;
+
+    width:
+        min(1280px, 100%) !important;
+
+}
+
+
+/* Inputs */
+
+#consultaPublicaTela
+.consulta-filtros input,
+#consultaPublicaTela
+.consulta-filtros select {
+
+    height:
+        42px !important;
+
+    min-height:
+        42px !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        8px !important;
+
+    background:
+        #ffffff !important;
+
+    padding:
+        0 13px !important;
+
+    font-size:
+        12px !important;
+
+    color:
+        var(--mc-text) !important;
+
+    box-shadow:
+        0 1px 2px
+        rgba(15,23,42,.025) !important;
+
+}
+
+
+/* Botões */
+
+#consultaPublicaTela
+.consulta-filtros button {
+
+    height:
+        42px !important;
+
+    padding:
+        0 15px !important;
+
+    border-radius:
+        8px !important;
+
+    font-size:
+        12px !important;
+
+    font-weight:
+        600 !important;
+
+}
+
+
+/* =========================================================
+   13. CONTADOR
+========================================================= */
+
+#contadorConsultaPublica {
+
+    display:
+        inline-flex !important;
+
+    align-items:
+        center !important;
+
+    height:
+        28px !important;
+
+    padding:
+        0 10px !important;
+
+    border-radius:
+        6px !important;
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+    font-size:
+        11px !important;
+
+    font-weight:
+        600 !important;
+
+}
+
+
+/* =========================================================
+   14. GRID DOS ITENS
+========================================================= */
+
+#listaConsultaPublica {
+
+    width:
+        min(1280px, 100%) !important;
+
+    margin:
+        0 auto !important;
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        ) !important;
+
+    gap:
+        16px !important;
+
+}
+
+
+/* =========================================================
+   15. CARD DO ITEM
+========================================================= */
+
+.consulta-item-card {
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        12px !important;
+
+    overflow:
+        hidden !important;
+
+    box-shadow:
+        0 3px 14px
+        rgba(15,23,42,.045) !important;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease !important;
+
+}
+
+
+.consulta-item-card:hover {
+
+    transform:
+        translateY(-2px) !important;
+
+    border-color:
+        #d5dce6 !important;
+
+    box-shadow:
+        0 8px 24px
+        rgba(15,23,42,.075) !important;
+
+}
+
+
+/* =========================================================
+   16. FOTO DOS ITENS
+========================================================= */
+
+.consulta-foto {
+
+    width:
+        100% !important;
+
+    height:
+        145px !important;
+
+    min-height:
+        145px !important;
+
+    background:
+        #f1f5f9 !important;
+
+    overflow:
+        hidden !important;
+
+}
+
+
+.consulta-foto img {
+
+    width:
+        100% !important;
+
+    height:
+        100% !important;
+
+    object-fit:
+        cover !important;
+
+    display:
+        block !important;
+
+}
+
+
+/* Sem foto */
+
+.consulta-sem-foto {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        center !important;
+
+    flex-direction:
+        column !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+    font-size:
+        11px !important;
+
+}
+
+
+/* =========================================================
+   17. CONTEÚDO DOS CARDS
+========================================================= */
+
+.consulta-card-conteudo {
+
+    padding:
+        13px 14px 14px !important;
+
+}
+
+
+.consulta-card-topo {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        space-between !important;
+
+    gap:
+        8px !important;
+
+    margin-bottom:
+        7px !important;
+
+}
+
+
+.consulta-status {
+
+    font-size:
+        9px !important;
+
+    font-weight:
+        600 !important;
+
+    color:
+        var(--mc-green) !important;
+
+}
+
+
+.consulta-tipo {
+
+    font-size:
+        9px !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+/* Nome */
+
+.consulta-item-nome {
+
+    margin:
+        0 0 12px !important;
+
+    font-size:
+        15px !important;
+
+    line-height:
+        1.3 !important;
+
+    font-weight:
+        700 !important;
+
+    color:
+        var(--mc-text) !important;
+
+}
+
+
+/* Descrição */
+
+.consulta-descricao {
+
+    margin:
+        0 0 12px !important;
+
+    font-size:
+        11px !important;
+
+    line-height:
+        1.45 !important;
+
+    color:
+        var(--mc-text-secondary) !important;
+
+}
+
+
+/* =========================================================
+   18. INFORMAÇÕES DO ITEM
+========================================================= */
+
+.consulta-info-grid {
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        1fr 1.35fr !important;
+
+    gap:
+        7px !important;
+
+}
+
+
+.consulta-info {
+
+    min-width:
+        0 !important;
+
+    padding:
+        8px 9px !important;
+
+    background:
+        #f8fafc !important;
+
+    border:
+        1px solid
+        #edf1f5 !important;
+
+    border-radius:
+        7px !important;
+
+}
+
+
+.consulta-info-label {
+
+    display:
+        block !important;
+
+    margin-bottom:
+        3px !important;
+
+    font-size:
+        8px !important;
+
+    text-transform:
+        uppercase !important;
+
+    letter-spacing:
+        .06em !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+.consulta-quantidade {
+
+    font-size:
+        17px !important;
+
+    font-weight:
+        700 !important;
+
+}
+
+
+.consulta-info small {
+
+    font-size:
+        8px !important;
+
+    color:
+        var(--mc-text-muted) !important;
+
+}
+
+
+.consulta-local {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    gap:
+        4px !important;
+
+    font-size:
+        10px !important;
+
+    line-height:
+        1.2 !important;
+
+    white-space:
+        normal !important;
+
+}
+
+
+/* =========================================================
+   19. BOTÃO DE AMPLIAR FOTO
+========================================================= */
+
+.consulta-foto-expandir {
+
+    width:
+        28px !important;
+
+    height:
+        28px !important;
+
+    right:
+        8px !important;
+
+    bottom:
+        8px !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        rgba(15,23,42,.72) !important;
+
+    color:
+        #ffffff !important;
+
+    backdrop-filter:
+        blur(5px) !important;
+
+}
+
+
+/* =========================================================
+   20. ÁREA VAZIA
+========================================================= */
+
+.consulta-vazia {
+
+    grid-column:
+        1 / -1 !important;
+
+    padding:
+        50px 20px !important;
+
+    text-align:
+        center !important;
+
+    background:
+        #ffffff !important;
+
+    border:
+        1px solid
+        var(--mc-border) !important;
+
+    border-radius:
+        12px !important;
+
+}
+
+
+/* =========================================================
+   21. MOBILE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            ) !important;
+
+    }
+
+}
+
+
+@media (max-width: 850px) {
+
+    .sidebar {
+
+        width:
+            250px !important;
+
+    }
+
+
+    .main-content {
+
+        margin-left:
+            250px !important;
+
+    }
+
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            ) !important;
+
+    }
+
+
+    #consultaPublicaTela
+    .consulta-filtros {
+
+        grid-template-columns:
+            1fr 1fr !important;
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .sidebar {
+
+        width:
+            250px !important;
+
+    }
+
+
+    .main-content {
+
+        margin-left:
+            0 !important;
+
+    }
+
+
+    #consultaPublicaTela {
+
+        padding:
+            18px 14px 25px !important;
+
+    }
+
+
+    #listaConsultaPublica {
+
+        grid-template-columns:
+            1fr !important;
+
+    }
+
+
+    #consultaPublicaTela
+    .consulta-filtros {
+
+        grid-template-columns:
+            1fr !important;
+
+    }
+
+
+    .consulta-foto {
+
+        height:
+            180px !important;
+
+        min-height:
+            180px !important;
+
+    }
+
+}
+
+
+/* =========================================================
+   22. EVITAR LOGO GIGANTE EM QUALQUER SITUAÇÃO
+========================================================= */
+
+.sidebar img {
+
+    max-width:
+        34px !important;
+
+    max-height:
+        34px !important;
+
+}
+
+
+.sidebar .logo-imagem img {
+
+    width:
+        34px !important;
+
+    height:
+        34px !important;
+
+}
+
+
+/* =========================================================
+   23. POLIMENTO GERAL
+========================================================= */
+
+button,
+input,
+select,
+textarea {
+
+    font-family:
+        inherit !important;
+
+}
+
+
+button {
+
+    transition:
+        all .18s ease !important;
+
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+
+    outline:
+        none !important;
+
+    border-color:
+        #93b4f7 !important;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,.08) !important;
+
+}
+
+
+/* Scrollbar discreta */
+
+::-webkit-scrollbar {
+
+    width:
+        7px;
+
+    height:
+        7px;
+
+}
+
+
+::-webkit-scrollbar-track {
+
+    background:
+        #f1f5f9;
+
+}
+
+
+::-webkit-scrollbar-thumb {
+
+    background:
+        #cbd5e1;
+
+    border-radius:
+        10px;
+
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+
+    background:
+        #94a3b8;
+
+}
+/* =========================================================
+   CONSULTA PÚBLICA — AJUSTE FINAL
+   MARCA D'ÁGUA + RESPONSIVIDADE
    ========================================================= */
+
+
+/* ---------------------------------------------------------
+   ÁREA DA CONSULTA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) main {
+
+    position: relative !important;
+
+    isolation: isolate !important;
+
+    overflow: visible !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   DESATIVA QUALQUER MARCA D'ÁGUA ANTIGA NO BODY
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+)::before {
+
+    content: none !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   MARCA D'ÁGUA NOVA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) main::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 360px;
+    height: 360px;
+
+    left: 50%;
+    top: 52%;
+
+    transform: translate(-50%, -50%);
+
+    background-image: url("monte-carlo-logo-transparente.png");
+
+    background-repeat: no-repeat;
+
+    background-position: center;
+
+    background-size: contain;
+
+    opacity: 0.075;
+
+    pointer-events: none;
+
+    z-index: -1;
+
+}
+
+
+/* ---------------------------------------------------------
+   CONTEÚDO SEMPRE ACIMA DA MARCA D'ÁGUA
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) main > * {
+
+    position: relative !important;
+
+    z-index: 1 !important;
+
+}
+
+
+/* ---------------------------------------------------------
+   IMPEDE O LOGO ORIGINAL DE APARECER
+   --------------------------------------------------------- */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) img[src*="monte-carlo-logo-transparente"] {
+
+    display: none !important;
+
+}
+
+
+/* =========================================================
+   AJUSTES VISUAIS DA CONSULTA
+   ========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) h1 {
+
+    font-size: 30px !important;
+
+    line-height: 1.15 !important;
+
+}
+
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) input,
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) select {
+
+    min-height: 44px !important;
+
+    height: 44px !important;
+
+}
+
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) button {
+
+    min-height: 40px !important;
+
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) .consulta-item-card {
+
+    position: relative !important;
+
+    z-index: 2 !important;
+
+}
+
+
+/* =========================================================
+   FOTOS
+   ========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) .consulta-foto {
+
+    width: 100% !important;
+
+    height: 145px !important;
+
+    max-height: 145px !important;
+
+    object-fit: cover !important;
+
+}
+
+
+/* =========================================================
+   LISTA
+   ========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #listaConsultaPublica {
+
+    position: relative !important;
+
+    z-index: 2 !important;
+
+}
+
+
+/* =========================================================
+   CORREÇÃO DEFINITIVA PARA CELULAR
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    /* Remove qualquer camada que possa cobrir a página */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) {
+
+        overflow-x: hidden !important;
+
+        overflow-y: auto !important;
+
+    }
+
+
+    /* A marca d'água fica menor no celular */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) main::before {
+
+        width: 210px;
+
+        height: 210px;
+
+        left: 50%;
+
+        top: 48%;
+
+        opacity: 0.055;
+
+        z-index: -1 !important;
+
+    }
+
+
+    /* Garante que o conteúdo seja visível */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) main,
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) main > * {
+
+        opacity: 1 !important;
+
+        visibility: visible !important;
+
+    }
+
+
+    /* Evita elementos gigantes */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) img {
+
+        max-width: 100%;
+
+    }
+
+
+    /* Título */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) h1 {
+
+        font-size: 24px !important;
+
+    }
+
+
+    /* Campos */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) input,
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) select {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        height: 44px !important;
+
+        min-height: 44px !important;
+
+    }
+
+
+    /* Botões */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) button {
+
+        min-height: 40px !important;
+
+        height: 40px !important;
+
+    }
+
+
+    /* Cards em uma coluna */
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #listaConsultaPublica {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 16px !important;
+
+    }
+
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) .consulta-item-card {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+    }
+
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) .consulta-foto {
+
+        height: 190px !important;
+
+        max-height: 190px !important;
+
+    }
+
+}
+/* =========================================================
+   INVENTÁRIO CENTRAL
+   MOBILE CORPORATIVO — AJUSTE FINAL
+   ========================================================= */
+
+
+/* =========================================================
+   1. BASE MOBILE
+   ========================================================= */
+
+@media (max-width: 820px) {
+
+    body {
+        overflow-x: hidden !important;
+    }
+
+    .main {
+        width: 100% !important;
+        margin-left: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px 14px 34px !important;
+        box-sizing: border-box !important;
+    }
+
+    .tela {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 22px 14px 34px !important;
+        box-sizing: border-box !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       2. CABEÇALHO
+       ===================================================== */
+
+    .main-header {
+        height: 70px !important;
+        min-height: 70px !important;
+        padding: 0 16px 0 68px !important;
+    }
+
+    .header-titulo {
+        min-width: 0 !important;
+    }
+
+    .header-subtitulo {
+        font-size: 8px !important;
+        letter-spacing: .10em !important;
+        margin-bottom: 2px !important;
+    }
+
+    .header-titulo h1 {
+        font-size: 17px !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+    }
+
+    .header-usuario {
+        padding-left: 8px !important;
+    }
+
+    .header-avatar {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+
+    /* =====================================================
+       3. TÍTULO DAS TELAS
+       ===================================================== */
+
+    .page-title {
+        margin-bottom: 18px !important;
+        gap: 5px !important;
+    }
+
+    .page-title h2 {
+        font-size: 24px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -.5px !important;
+    }
+
+    .page-title p {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+
+    /* =====================================================
+       4. DASHBOARD — 2 × 2
+       ===================================================== */
+
+    .dashboard {
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 10px !important;
+
+        width: 100% !important;
+
+        margin-bottom: 14px !important;
+    }
+
+
+    .dash-card {
+        min-width: 0 !important;
+
+        min-height: 92px !important;
+
+        height: 92px !important;
+
+        padding: 14px !important;
+
+        border-radius: 14px !important;
+
+        gap: 10px !important;
+
+        box-shadow:
+            0 2px 10px rgba(16,24,40,.05) !important;
+    }
+
+
+    .dash-icon {
+        width: 38px !important;
+        height: 38px !important;
+
+        min-width: 38px !important;
+
+        flex: 0 0 38px !important;
+
+        border-radius: 11px !important;
+
+        font-size: 15px !important;
+    }
+
+
+    .dash-card h3 {
+        font-size: 24px !important;
+
+        margin: 0 0 3px !important;
+
+        letter-spacing: -.5px !important;
+    }
+
+
+    .dash-card p {
+        font-size: 9.5px !important;
+
+        line-height: 1.2 !important;
+    }
+
+
+    /* =====================================================
+       5. DASHBOARD — ÁREA DE DISTRIBUIÇÃO
+       ===================================================== */
+
+    .dashboard-advanced {
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 12px !important;
+
+        width: 100% !important;
+    }
+
+
+    .dashboard-table {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        border-radius: 14px !important;
+
+        overflow: hidden !important;
+    }
+
+
+    .dashboard-topo {
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 12px !important;
+
+        padding: 17px 16px 15px !important;
+    }
+
+
+    .dashboard-topo h2 {
+        font-size: 15px !important;
+
+        line-height: 1.25 !important;
+    }
+
+
+    .dashboard-filtros {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 8px !important;
+    }
+
+
+    .dashboard-filtros .input-wrapper,
+    .dashboard-filtros select {
+        width: 100% !important;
+
+        min-width: 0 !important;
+    }
+
+
+    .dashboard-filtros input,
+    .dashboard-filtros select {
+        height: 42px !important;
+
+        min-height: 42px !important;
+
+        font-size: 12px !important;
+    }
+
+
+    /* =====================================================
+       6. TABELA DO DASHBOARD
+       ===================================================== */
+
+    .dashboard-table .table-area {
+        width: 100% !important;
+
+        overflow-x: auto !important;
+    }
+
+
+    .dashboard-table .inventory-table {
+        min-width: 500px !important;
+    }
+
+
+    .dashboard-table .inventory-table th {
+        padding: 10px 12px !important;
+
+        font-size: 9px !important;
+    }
+
+
+    .dashboard-table .inventory-table td {
+        padding: 10px 12px !important;
+
+        font-size: 11px !important;
+    }
+
+
+    /* =====================================================
+       7. STATUS — 2 × 2
+       ===================================================== */
+
+    .dashboard-status-grid {
+
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 10px !important;
+
+        width: 100% !important;
+
+    }
+
+
+    .status-card {
+
+        min-width: 0 !important;
+
+        min-height: 110px !important;
+
+        height: 110px !important;
+
+        padding: 14px !important;
+
+        border-radius: 14px !important;
+
+        justify-content: center !important;
+
+    }
+
+
+    .status-icon {
+
+        width: 31px !important;
+
+        height: 31px !important;
+
+        min-width: 31px !important;
+
+        margin-bottom: 8px !important;
+
+        border-radius: 9px !important;
+
+        font-size: 12px !important;
+
+    }
+
+
+    .status-card h3 {
+
+        font-size: 23px !important;
+
+        margin-bottom: 3px !important;
+
+    }
+
+
+    .status-card p {
+
+        font-size: 9px !important;
+
+        line-height: 1.2 !important;
+
+    }
+
+
+    /* =====================================================
+       8. CADASTRO — CARD PRINCIPAL
+       ===================================================== */
+
+    #cadastroTela .card {
+
+        padding: 16px !important;
+
+        border-radius: 15px !important;
+
+    }
+
+
+    #cadastroTela .form-section {
+
+        padding: 18px 0 !important;
+
+    }
+
+
+    #cadastroTela .form-section-title {
+
+        margin-bottom: 14px !important;
+
+        font-size: 13px !important;
+
+    }
+
+
+    /* =====================================================
+       9. CONTROLE — ESTOQUE / PATRIMÔNIO
+       ===================================================== */
+
+    .controle-grid {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 9px !important;
+
+        width: 100% !important;
+
+    }
+
+
+    .controle-option {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+
+        display: flex !important;
+
+        flex-direction: row !important;
+
+        align-items: flex-start !important;
+
+        gap: 11px !important;
+
+        padding: 13px 14px !important;
+
+        min-height: 66px !important;
+
+        border-radius: 11px !important;
+
+    }
+
+
+    /* CORREÇÃO PRINCIPAL DO TEXTO ESPREMIDO */
+
+    .controle-option > div {
+
+        flex: 1 1 auto !important;
+
+        width: auto !important;
+
+        min-width: 0 !important;
+
+        display: grid !important;
+
+        grid-template-columns: auto 1fr !important;
+
+        align-items: center !important;
+
+        column-gap: 7px !important;
+
+        row-gap: 4px !important;
+
+    }
+
+
+    .controle-option input {
+
+        width: 18px !important;
+
+        height: 18px !important;
+
+        min-width: 18px !important;
+
+        flex: 0 0 18px !important;
+
+        margin-top: 1px !important;
+
+    }
+
+
+    .controle-option i {
+
+        width: 17px !important;
+
+        font-size: 14px !important;
+
+    }
+
+
+    .controle-option strong {
+
+        font-size: 12px !important;
+
+        line-height: 1.25 !important;
+
+        min-width: 0 !important;
+
+    }
+
+
+    .controle-option span {
+
+        grid-column: 1 / -1 !important;
+
+        flex-basis: auto !important;
+
+        font-size: 10px !important;
+
+        line-height: 1.4 !important;
+
+        margin: 0 !important;
+
+    }
+
+
+    /* =====================================================
+       10. FORMULÁRIOS
+       ===================================================== */
+
+    .grid-2,
+    .grid-3 {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 13px !important;
+
+    }
+
+
+    .input-group {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+    }
+
+
+    .input-group label {
+
+        font-size: 11px !important;
+
+        margin-bottom: 6px !important;
+
+    }
+
+
+    input,
+    select {
+
+        width: 100% !important;
+
+        height: 44px !important;
+
+        min-height: 44px !important;
+
+        font-size: 12px !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    textarea {
+
+        width: 100% !important;
+
+        min-height: 105px !important;
+
+        font-size: 12px !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    input[type="file"] {
+
+        height: auto !important;
+
+        min-height: 44px !important;
+
+        padding: 8px 10px !important;
+
+    }
+
+
+    /* =====================================================
+       11. BOTÕES DO CADASTRO
+       ===================================================== */
+
+    .form-actions {
+
+        display: grid !important;
+
+        grid-template-columns: 1fr 1fr !important;
+
+        gap: 8px !important;
+
+        padding-top: 18px !important;
+
+    }
+
+
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+
+        width: 100% !important;
+
+        min-height: 42px !important;
+
+        height: 42px !important;
+
+        padding: 0 10px !important;
+
+        font-size: 11px !important;
+
+    }
+
+
+    /* =====================================================
+       12. ESTOQUE
+       ===================================================== */
+
+    .estoque-toolbar {
+
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 9px !important;
+
+    }
+
+
+    .estoque-busca {
+
+        width: 100% !important;
+
+        max-width: none !important;
+
+    }
+
+
+    .estoque-info {
+
+        width: fit-content !important;
+
+        font-size: 10px !important;
+
+    }
+
+
+    /* =====================================================
+       13. TABELA DE ESTOQUE
+       ===================================================== */
+
+    .inventory-table {
+
+        min-width: 680px !important;
+
+    }
+
+
+    /* =====================================================
+       14. MOVIMENTAÇÕES
+       ===================================================== */
+
+    #movimentacaoTela .grid-2,
+    #movimentacaoTela .grid-3 {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+
+    #movimentacaoTela .card {
+
+        padding: 16px !important;
+
+    }
+
+
+    /* =====================================================
+       15. HISTÓRICO
+       ===================================================== */
+
+    #historicoTela .table-area {
+
+        width: 100% !important;
+
+        overflow-x: auto !important;
+
+        -webkit-overflow-scrolling: touch;
+
+    }
+
+
+    /* =====================================================
+       16. SIDEBAR MOBILE
+       ===================================================== */
+
+    .mobile-menu-btn {
+
+        width: 42px !important;
+
+        height: 42px !important;
+
+        top: 14px !important;
+
+        left: 14px !important;
+
+        border-radius: 11px !important;
+
+        background: #fff !important;
+
+        border: 1px solid #e5e7eb !important;
+
+        box-shadow:
+            0 4px 12px rgba(16,24,40,.10) !important;
+
+        color: #182230 !important;
+
+    }
+
+
+    .sidebar {
+
+        width: 275px !important;
+
+        max-width: 82vw !important;
+
+    }
+
+
+    .sidebar-overlay {
+
+        z-index: 1100 !important;
+
+    }
+
+
+    .sidebar {
+
+        z-index: 1150 !important;
+
+    }
+
+
+    .mobile-menu-btn {
+
+        z-index: 1200 !important;
+
+    }
+
+
+    /* =====================================================
+       17. EVITA ESTOURO HORIZONTAL
+       ===================================================== */
+
+    .dashboard *,
+    .dashboard-advanced *,
+    #cadastroTela *,
+    #movimentacaoTela *,
+    #estoqueTela * {
+
+        max-width: 100%;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMARTPHONE PEQUENO
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+
+    .content {
+
+        padding: 18px 12px 28px !important;
+
+    }
+
+
+    .tela {
+
+        padding: 20px 12px 30px !important;
+
+    }
+
+
+    /* Dashboard continua 2 × 2 */
+
+    .dashboard {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .dash-card {
+
+        height: 86px !important;
+
+        min-height: 86px !important;
+
+        padding: 11px !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .dash-icon {
+
+        width: 34px !important;
+
+        height: 34px !important;
+
+        min-width: 34px !important;
+
+        flex-basis: 34px !important;
+
+        font-size: 13px !important;
+
+    }
+
+
+    .dash-card h3 {
+
+        font-size: 22px !important;
+
+    }
+
+
+    .dash-card p {
+
+        font-size: 8.5px !important;
+
+    }
+
+
+    /* Status também 2 × 2 */
+
+    .dashboard-status-grid {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 8px !important;
+
+    }
+
+
+    .status-card {
+
+        height: 100px !important;
+
+        min-height: 100px !important;
+
+        padding: 12px !important;
+
+    }
+
+
+    .status-icon {
+
+        width: 28px !important;
+
+        height: 28px !important;
+
+        min-width: 28px !important;
+
+        margin-bottom: 6px !important;
+
+    }
+
+
+    .status-card h3 {
+
+        font-size: 21px !important;
+
+    }
+
+
+    .status-card p {
+
+        font-size: 8.5px !important;
+
+    }
+
+
+    /* Cadastro */
+
+    #cadastroTela .card {
+
+        padding: 14px !important;
+
+    }
+
+
+    .controle-option {
+
+        min-height: 62px !important;
+
+        padding: 12px !important;
+
+    }
+
+
+    .controle-option strong {
+
+        font-size: 11.5px !important;
+
+    }
+
+
+    .controle-option span {
+
+        font-size: 9.5px !important;
+
+    }
+
+
+    .form-actions {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+}
+/* =========================================================
+   CORREÇÃO DEFINITIVA — LOGIN / LOGOTIPO
+   GRUPO MONTE CARLO
+========================================================= */
+
+/* Remove qualquer estrutura antiga de login */
+body.login-mode .login-layout {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+/* Área principal do login */
+body.login-mode .login-container {
+    width: 100% !important;
+    min-height: calc(100vh - 110px) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 40px 20px 60px !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Cartão */
+body.login-mode .login-card {
+    position: relative !important;
+
+    width: 100% !important;
+    max-width: 430px !important;
+
+    margin: 0 auto !important;
+
+    padding: 36px 40px 30px !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #e4e7ec !important;
+    border-radius: 20px !important;
+
+    box-shadow:
+        0 20px 45px rgba(16, 24, 40, 0.08) !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Logo */
+body.login-mode .login-logo {
+    width: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 0 22px !important;
+
+    gap: 10px !important;
+}
+
+/* Caixa do logo */
+body.login-mode .login-logo-imagem {
+    width: 78px !important;
+    height: 78px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 10px !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #e4e7ec !important;
+    border-radius: 18px !important;
+
+    box-sizing: border-box !important;
+
+    overflow: hidden !important;
+}
+
+/* Imagem */
+body.login-mode .login-logo-imagem img {
+    display: block !important;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    max-width: 100% !important;
+    max-height: 100% !important;
+
+    object-fit: contain !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Nome da empresa */
+body.login-mode .login-logo > span {
+    display: block !important;
+
+    color: #8b6a28 !important;
+
+    font-size: 10px !important;
+    font-weight: 800 !important;
+
+    letter-spacing: 1.6px !important;
+    text-transform: uppercase !important;
+}
+
+/* Título */
+body.login-mode .login-titulo {
+    width: 100% !important;
+
+    text-align: center !important;
+
+    margin: 0 0 26px !important;
+}
+
+body.login-mode .login-titulo h2 {
+    margin: 0 !important;
+
+    color: #101828 !important;
+
+    font-size: 26px !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+
+    letter-spacing: -0.6px !important;
+}
+
+body.login-mode .login-titulo p {
+    margin: 8px 0 0 !important;
+
+    color: #667085 !important;
+
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+}
+
+/* Formulário */
+body.login-mode .login-card form {
+    width: 100% !important;
+}
+
+/* Inputs */
+body.login-mode .login-card .input-group {
+    width: 100% !important;
+
+    margin-bottom: 17px !important;
+}
+
+/* Botão */
+body.login-mode .btn-login {
+    width: 100% !important;
+    height: 48px !important;
+
+    margin-top: 5px !important;
+}
+
+/* Rodapé */
+body.login-mode .login-footer {
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin-top: 22px !important;
+    padding-top: 18px !important;
+
+    border-top: 1px solid #eef1f4 !important;
+
+    color: #98a2b3 !important;
+
+    font-size: 10.5px !important;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    body.login-mode .main {
+        padding: 0 !important;
+    }
+
+    body.login-mode .login-container {
+        min-height: calc(100vh - 78px) !important;
+
+        padding:
+            28px 16px
+            40px !important;
+
+        align-items: flex-start !important;
+    }
+
+    body.login-mode .login-card {
+        max-width: 100% !important;
+
+        padding:
+            30px 22px 26px !important;
+
+        border-radius: 18px !important;
+    }
+
+    body.login-mode .login-logo-imagem {
+        width: 70px !important;
+        height: 70px !important;
+    }
+
+    body.login-mode .login-titulo h2 {
+        font-size: 23px !important;
+    }
+}
+
+/* =========================================================
+   CONSULTA PÚBLICA 2.0 — CARDS, FILTROS E PAGINAÇÃO
+   ========================================================= */
+
+#consultaPublicaTela {
+    min-height: 100vh !important;
+    padding: 30px 34px 42px !important;
+    background:
+        radial-gradient(circle at 90% 0%, rgba(36,87,214,.055), transparent 32%),
+        #f5f7fa !important;
+}
+
+#consultaPublicaTela .consulta-publica-container {
+    width: min(1500px, 100%) !important;
+    max-width: 1500px !important;
+    margin: 0 auto !important;
+}
+
+#consultaPublicaTela .consulta-publica-header {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 0 22px !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 1fr) 220px 210px 190px auto auto !important;
+    gap: 10px !important;
+    align-items: center !important;
+    margin: 0 0 12px !important;
+}
+
+#consultaPublicaTela .consulta-publica-busca {
+    min-width: 0 !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar select,
+#consultaPublicaTela .consulta-publica-toolbar input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 46px !important;
+    min-height: 46px !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar button {
+    height: 46px !important;
+    min-height: 46px !important;
+    white-space: nowrap !important;
+}
+
+.consulta-publica-opcoes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 0 0 18px;
+    padding: 0 2px;
+}
+
+.consulta-publica-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.consulta-publica-view > span {
+    margin-right: 5px;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.consulta-view-btn {
+    width: 36px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #d9dee7 !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #667085 !important;
+    box-shadow: none !important;
+}
+
+.consulta-view-btn:hover {
+    color: #2457d6 !important;
+    border-color: #b9c9f5 !important;
+    background: #f7f9ff !important;
+}
+
+.consulta-view-btn.active {
+    color: #2457d6 !important;
+    background: #edf3ff !important;
+    border-color: #b9c9f5 !important;
+}
+
+.consulta-publica-dica {
+    color: #98a2b3;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.consulta-publica-dica i {
+    margin-right: 5px;
+}
+
+#listaConsultaPublica {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+    align-items: stretch !important;
+}
+
+.consulta-item-card {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    border: 1px solid #e4e7ec !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 16px rgba(16,24,40,.055) !important;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+}
+
+.consulta-item-card:hover {
+    transform: translateY(-3px) !important;
+    border-color: #d6deee !important;
+    box-shadow: 0 12px 28px rgba(16,24,40,.09) !important;
+}
+
+.consulta-foto {
+    height: 178px !important;
+    min-height: 178px !important;
+    flex: 0 0 178px !important;
+    background: #f1f4f8 !important;
+}
+
+.consulta-foto img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.consulta-sem-foto {
+    color: #98a2b3 !important;
+    background: linear-gradient(135deg, #f8fafc, #eef2f7) !important;
+}
+
+.consulta-sem-foto i {
+    font-size: 28px !important;
+    opacity: .72;
+}
+
+.consulta-sem-foto span {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+}
+
+.consulta-card-conteudo {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 16px !important;
+}
+
+.consulta-card-topo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 9px !important;
+}
+
+.consulta-status {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 7px !important;
+    border-radius: 999px !important;
+    background: #ecfdf3 !important;
+    color: #149447 !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .04em !important;
+}
+
+.consulta-status-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #149447 !important;
+}
+
+.consulta-tipo {
+    max-width: 55% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #667085 !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+}
+
+.consulta-item-nome {
+    min-height: 40px !important;
+    margin: 0 0 8px !important;
+    color: #101828 !important;
+    font-size: 16px !important;
+    line-height: 1.25 !important;
+    font-weight: 800 !important;
+    letter-spacing: -.2px !important;
+}
+
+.consulta-descricao {
+    min-height: 34px !important;
+    margin: 0 0 13px !important;
+    color: #667085 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.consulta-info-grid {
+    margin-top: auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(92px, .8fr) minmax(0, 1.45fr) !important;
+    gap: 8px !important;
+}
+
+.consulta-info {
+    min-width: 0 !important;
+    padding: 10px 11px !important;
+    background: #f8fafc !important;
+    border: 1px solid #edf1f5 !important;
+    border-radius: 9px !important;
+}
+
+.consulta-info-label {
+    display: block !important;
+    margin-bottom: 4px !important;
+    color: #98a2b3 !important;
+    font-size: 8px !important;
+    font-weight: 800 !important;
+    letter-spacing: .07em !important;
+    text-transform: uppercase !important;
+}
+
+.consulta-quantidade {
+    color: #101828 !important;
+    font-size: 19px !important;
+    line-height: 1 !important;
+    font-weight: 850 !important;
+}
+
+.consulta-info small {
+    margin-left: 2px !important;
+    color: #98a2b3 !important;
+    font-size: 8px !important;
+}
+
+.consulta-local {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    color: #344054 !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+    overflow-wrap: anywhere !important;
+}
+
+.consulta-local i {
+    flex: 0 0 auto !important;
+    margin-top: 1px !important;
+    color: #2457d6 !important;
+}
+
+.consulta-foto-expandir {
+    width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    border: 1px solid rgba(255,255,255,.18) !important;
+    border-radius: 9px !important;
+    background: rgba(15,23,42,.72) !important;
+    color: #fff !important;
+    backdrop-filter: blur(7px) !important;
+}
+
+.consulta-foto-expandir:hover {
+    background: rgba(15,23,42,.9) !important;
+    transform: translateY(-1px);
+}
+
+/* Lista compacta */
+#listaConsultaPublica.consulta-lista-modo {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+}
+
+#listaConsultaPublica.consulta-lista-modo .consulta-item-card {
+    display: grid !important;
+    grid-template-columns: 150px minmax(0, 1fr) !important;
+    min-height: 150px !important;
+}
+
+#listaConsultaPublica.consulta-lista-modo .consulta-foto {
+    height: 100% !important;
+    min-height: 150px !important;
+    flex-basis: auto !important;
+}
+
+#listaConsultaPublica.consulta-lista-modo .consulta-card-conteudo {
+    padding: 15px 18px !important;
+}
+
+#listaConsultaPublica.consulta-lista-modo .consulta-item-nome {
+    min-height: 0 !important;
+}
+
+/* Paginação */
+.consulta-publica-paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 20px;
+    padding: 13px 0 2px;
+}
+
+.consulta-paginacao-info {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.consulta-paginacao-info strong {
+    color: #344054;
+}
+
+.consulta-paginacao-controles {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.consulta-page-btn {
+    min-width: 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #d9dee7 !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #475467 !important;
+    font-size: 11px !important;
+    font-weight: 750 !important;
+}
+
+.consulta-page-btn:hover:not(:disabled) {
+    border-color: #b9c9f5 !important;
+    color: #2457d6 !important;
+    background: #f7f9ff !important;
+}
+
+.consulta-page-btn.active {
+    border-color: #2457d6 !important;
+    background: #2457d6 !important;
+    color: #fff !important;
+}
+
+.consulta-page-btn:disabled {
+    opacity: .4 !important;
+}
+
+.consulta-page-gap {
+    min-width: 20px;
+    text-align: center;
+    color: #98a2b3;
+    font-size: 12px;
+}
+
+.consulta-vazia {
+    grid-column: 1 / -1 !important;
+    padding: 64px 24px !important;
+    text-align: center !important;
+    background: #fff !important;
+    border: 1px dashed #d0d5dd !important;
+    border-radius: 16px !important;
+}
+
+.consulta-vazia-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: #f2f4f7;
+    color: #98a2b3;
+    font-size: 21px;
+}
+
+.consulta-vazia h3 {
+    margin: 0 0 6px;
+    color: #101828;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.consulta-vazia p {
+    margin: 0 0 17px;
+    color: #667085;
+    font-size: 12px;
+}
+
+@media (max-width: 1300px) {
+    #listaConsultaPublica {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar {
+        grid-template-columns: minmax(220px, 1fr) 190px 180px 170px auto auto !important;
+    }
+}
+
+@media (max-width: 1050px) {
+    #listaConsultaPublica {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 700px) {
+    #consultaPublicaTela {
+        padding: 18px 12px 28px !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca {
+        grid-column: auto;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar button,
+    #consultaPublicaTela .consulta-publica-toolbar select,
+    #consultaPublicaTela .consulta-publica-toolbar input {
+        width: 100% !important;
+    }
+
+    .consulta-publica-opcoes {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #listaConsultaPublica,
+    #listaConsultaPublica.consulta-lista-modo {
+        grid-template-columns: 1fr !important;
+    }
+
+    #listaConsultaPublica.consulta-lista-modo .consulta-item-card {
+        grid-template-columns: 105px minmax(0, 1fr) !important;
+    }
+
+    #listaConsultaPublica.consulta-lista-modo .consulta-foto {
+        min-height: 100% !important;
+    }
+
+    .consulta-foto {
+        height: 190px !important;
+        min-height: 190px !important;
+        flex-basis: 190px !important;
+    }
+
+    .consulta-publica-paginacao {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .consulta-paginacao-controles {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 430px) {
+    .consulta-item-nome {
+        font-size: 15px !important;
+    }
+
+    .consulta-card-conteudo {
+        padding: 14px !important;
+    }
+
+    .consulta-info-grid {
+        grid-template-columns: 1fr 1.25fr !important;
+    }
+}
+
+
+/* =========================================================
+   MONTE CARLO — V4
+   CONSULTA PÚBLICA / LOGIN
+   Objetivo: interface compacta, elegante e proporcional.
+   Corrige logo, marca d'água e ícones gigantes.
+========================================================= */
+
+/* ---------- PALETA ---------- */
+:root{
+    --mc-marsala:#6f1d1b;
+    --mc-marsala-dark:#4f1514;
+    --mc-marsala-soft:#f7eeee;
+    --mc-gold:#d6a04a;
+    --mc-gold-light:#f8edda;
+    --mc-cream:#f7f4ee;
+    --mc-ink:#211816;
+}
+
+/* =========================================================
+   LOGIN — COMPACTO
+========================================================= */
+
+body.login-mode #loginTela{
+    min-height:calc(100vh - 72px) !important;
+    padding:22px 18px 30px !important;
+    background:
+        radial-gradient(circle at 50% 20%,rgba(214,160,74,.08),transparent 30%),
+        var(--mc-cream) !important;
+    position:relative !important;
+    overflow:hidden !important;
+}
+
+/* Remove qualquer marca d'água que esteja presa ao main/body */
+body.login-mode main::before,
+body.login-mode main::after,
+body.login-mode #loginTela::before,
+body.login-mode #loginTela::after{
+    display:none !important;
+    content:none !important;
+}
+
+body.login-mode .login-container{
+    width:100% !important;
+    max-width:390px !important;
+    min-height:0 !important;
+    margin:0 auto !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+}
+
+body.login-mode .login-card{
+    width:100% !important;
+    max-width:390px !important;
+    padding:24px 28px 19px !important;
+    margin:0 auto !important;
+    border:1px solid rgba(111,29,27,.10) !important;
+    border-radius:14px !important;
+    box-shadow:0 14px 36px rgba(33,24,22,.08) !important;
+}
+
+/* Logo do login */
+body.login-mode .login-logo{
+    margin:0 0 13px !important;
+    gap:6px !important;
+}
+
+body.login-mode .login-logo-imagem{
+    width:52px !important;
+    height:52px !important;
+    min-width:52px !important;
+    max-width:52px !important;
+    min-height:52px !important;
+    max-height:52px !important;
+    padding:7px !important;
+    border-radius:10px !important;
+    background:#171111 !important;
+    border:1px solid rgba(214,160,74,.25) !important;
+    overflow:hidden !important;
+}
+
+body.login-mode .login-logo-imagem img{
+    width:38px !important;
+    height:38px !important;
+    max-width:38px !important;
+    max-height:38px !important;
+    object-fit:contain !important;
+}
+
+/* Marca */
+body.login-mode .login-logo > span{
+    font-size:8px !important;
+    letter-spacing:1.3px !important;
+    color:#8b6a28 !important;
+}
+
+/* Título */
+body.login-mode .login-titulo{
+    margin:0 0 15px !important;
+}
+
+body.login-mode .login-titulo h2{
+    font-size:21px !important;
+    line-height:1.15 !important;
+    color:var(--mc-ink) !important;
+}
+
+body.login-mode .login-titulo p{
+    margin-top:5px !important;
+    font-size:11px !important;
+    line-height:1.4 !important;
+    color:#786e68 !important;
+}
+
+/* Campos */
+body.login-mode .login-card .input-group{
+    margin-bottom:10px !important;
+}
+
+body.login-mode .login-card .input-group label{
+    font-size:11px !important;
+    margin-bottom:4px !important;
+}
+
+body.login-mode .login-card .input-wrapper input{
+    height:38px !important;
+    min-height:38px !important;
+    font-size:12px !important;
+}
+
+body.login-mode .login-card .input-wrapper > i{
+    font-size:10px !important;
+}
+
+/* Botão principal */
+body.login-mode .btn-login{
+    height:40px !important;
+    min-height:40px !important;
+    margin-top:3px !important;
+    border-radius:8px !important;
+    font-size:12px !important;
+}
+
+/* Botão CONSULTAR INVENTÁRIO */
+body.login-mode .btn-consulta-publica,
+body.login-mode .login-card .btn-consulta-publica{
+    width:100% !important;
+    height:38px !important;
+    min-height:38px !important;
+    margin-top:7px !important;
+    padding:0 12px !important;
+    border-radius:8px !important;
+    border:1px solid rgba(111,29,27,.18) !important;
+    background:#fff !important;
+    color:var(--mc-marsala) !important;
+    font-size:12px !important;
+    font-weight:700 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:7px !important;
+    box-shadow:none !important;
+}
+
+body.login-mode .btn-consulta-publica:hover{
+    background:var(--mc-marsala-soft) !important;
+    border-color:rgba(111,29,27,.30) !important;
+    transform:none !important;
+}
+
+body.login-mode .btn-consulta-publica i{
+    font-size:10px !important;
+}
+
+/* Rodapé */
+body.login-mode .login-footer{
+    margin-top:11px !important;
+    padding-top:11px !important;
+    font-size:9px !important;
+}
+
+/* =========================================================
+   CONSULTA PÚBLICA — TELA
+========================================================= */
+
+/* Desliga completamente os pseudo-elementos antigos */
+#consultaPublicaTela::before,
+#consultaPublicaTela::after,
+#consultaPublicaTela .consulta-publica-container::before,
+#consultaPublicaTela .consulta-publica-container::after,
+#consultaPublicaTela .consulta-publica-header::before,
+#consultaPublicaTela .consulta-publica-header::after{
+    display:none !important;
+    content:none !important;
+}
+
+/* Desliga a marca d'água gigante criada no main */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) main::before{
+    display:none !important;
+    content:none !important;
+}
+
+/* Nova marca d'água: pequena, discreta e controlada */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela{
+    position:relative !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
+    background:
+        linear-gradient(rgba(247,244,238,.97),rgba(247,244,238,.97)),
+        #f7f4ee !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela > .consulta-publica-container::after{
+    content:"" !important;
+    display:block !important;
+    position:absolute !important;
+    width:230px !important;
+    height:230px !important;
+    left:50% !important;
+    top:55% !important;
+    transform:translate(-50%,-50%) !important;
+    background-image:url("monte-carlo-logo-transparente.png") !important;
+    background-repeat:no-repeat !important;
+    background-position:center !important;
+    background-size:contain !important;
+    opacity:.035 !important;
+    pointer-events:none !important;
+    z-index:-1 !important;
+}
+
+/* Conteúdo acima da marca d'água */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-container{
+    position:relative !important;
+    z-index:2 !important;
+    width:min(1180px,100%) !important;
+    max-width:1180px !important;
+    margin:0 auto !important;
+    padding:22px 26px 40px !important;
+}
+
+/* Cabeçalho compacto */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-header{
+    min-height:54px !important;
+    margin:0 0 18px !important;
+    padding:0 !important;
+    align-items:center !important;
+    gap:18px !important;
+}
+
+/* Marca da consulta */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-marca{
+    gap:10px !important;
+    align-items:center !important;
+}
+
+/* Caixa da logo pública */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-logo{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    max-width:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+    flex:0 0 42px !important;
+    padding:6px !important;
+    border-radius:9px !important;
+    background:#171111 !important;
+    border:1px solid rgba(214,160,74,.22) !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:hidden !important;
+}
+
+/* Logo pública */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-logo img{
+    display:block !important;
+    width:30px !important;
+    height:30px !important;
+    max-width:30px !important;
+    max-height:30px !important;
+    object-fit:contain !important;
+}
+
+/* Textos da marca */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-marca span{
+    font-size:8px !important;
+    letter-spacing:1.2px !important;
+    margin-bottom:2px !important;
+    color:#8b6a28 !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-marca h1{
+    font-size:20px !important;
+    line-height:1.15 !important;
+    margin:0 !important;
+    color:var(--mc-ink) !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-marca p{
+    margin-top:2px !important;
+    font-size:10px !important;
+    line-height:1.3 !important;
+    color:#786e68 !important;
+}
+
+/* Botão voltar */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-voltar{
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 11px !important;
+    border-radius:7px !important;
+    font-size:11px !important;
+    gap:5px !important;
+}
+
+/* Filtros compactos */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-toolbar{
+    grid-template-columns:minmax(300px,1fr) 190px 180px auto auto !important;
+    gap:8px !important;
+    margin:0 0 10px !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-toolbar input,
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-toolbar select{
+    height:38px !important;
+    min-height:38px !important;
+    font-size:11px !important;
+    border-radius:7px !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-publica-toolbar button{
+    height:38px !important;
+    min-height:38px !important;
+    font-size:11px !important;
+}
+
+/* Botões de visualização */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-view-btn{
+    width:32px !important;
+    height:30px !important;
+    min-height:30px !important;
+    border-radius:6px !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela .consulta-view-btn i{
+    font-size:10px !important;
+}
+
+/* Cards públicos */
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #listaConsultaPublica{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:12px !important;
+}
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #listaConsultaPublica .consulta-publica-card{
+    border-radius:9px !important;
+    box-shadow:0 5px 16px rgba(33,24,22,.06) !important;
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+
+@media (max-width:900px){
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela > .consulta-publica-container{
+        padding:18px 16px 32px !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr 1fr !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela .consulta-publica-busca{
+        grid-column:1 / -1 !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #listaConsultaPublica{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width:600px){
+    body.login-mode .login-card{
+        max-width:360px !important;
+        padding:21px 20px 17px !important;
+    }
+
+    body.login-mode .login-logo-imagem{
+        width:48px !important;
+        height:48px !important;
+        min-width:48px !important;
+        max-width:48px !important;
+        min-height:48px !important;
+        max-height:48px !important;
+    }
+
+    body.login-mode .login-logo-imagem img{
+        width:34px !important;
+        height:34px !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela > .consulta-publica-container{
+        padding:16px 13px 30px !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela .consulta-publica-header{
+        align-items:flex-start !important;
+        flex-direction:column !important;
+        gap:10px !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela .consulta-publica-busca{
+        grid-column:auto !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #listaConsultaPublica{
+        grid-template-columns:1fr !important;
+    }
+
+    body:has(
+        input[placeholder*="Pesquisar item, categoria ou local"]
+    ) #consultaPublicaTela > .consulta-publica-container::after{
+        width:150px !important;
+        height:150px !important;
+    }
+}
+
+
+/* =========================================================
+   MONTE CARLO — V5
+   IDENTIDADE CORPORATIVA GLOBAL
+   Fundo claro + Navy / Azul / Dourado
+   Cards fluidos e alinhados
+========================================================= */
+
+/* ---------- PALETA OFICIAL UTILIZADA NO SISTEMA ----------
+   Mantém as variáveis já existentes no projeto:
+   Navy #0b1220 / #111b2e / #18243a
+   Azul #2457d6 / #1d4ed8
+   Dourado #d2a04a
+--------------------------------------------------------- */
+
+:root{
+    --mc-navy:#0b1220 !important;
+    --mc-navy-2:#111b2e !important;
+    --mc-navy-3:#18243a !important;
+    --mc-blue:#2457d6 !important;
+    --mc-blue-2:#1d4ed8 !important;
+    --mc-blue-soft:#edf3ff !important;
+    --mc-gold:#d2a04a !important;
+    --mc-gold-soft:#fbf5e8 !important;
+
+    --mc-bg-white:#ffffff !important;
+    --mc-surface:#ffffff !important;
+    --mc-border:#e6eaf0 !important;
+}
+
+/* =========================================================
+   1. FUNDO GLOBAL — BRANCO
+========================================================= */
+
+html,
+body{
+    background:#ffffff !important;
+}
+
+body{
+    color:var(--ink) !important;
+}
+
+/* Todas as telas internas devem respirar em branco */
+.main,
+.main-content,
+.content,
+.tela{
+    background:#ffffff !important;
+}
+
+/* =========================================================
+   2. HEADER — LIMPO E CORPORATIVO
+========================================================= */
+
+.main-header,
+.topbar,
+.header{
+    background:#ffffff !important;
+    border-bottom:1px solid #e7ebf0 !important;
+    box-shadow:0 1px 0 rgba(11,18,32,.02) !important;
+}
+
+/* Pequenos textos de identificação */
+.header-subtitulo,
+.breadcrumb,
+.page-title > div > span,
+.dashboard-topo > div > span{
+    color:var(--mc-gold) !important;
+}
+
+/* Títulos */
+.main-header h1,
+.page-title h1,
+.dashboard-topo h1,
+#pageTitle{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   3. SIDEBAR — BRANDBOOK
+========================================================= */
+
+.sidebar{
+    background:
+        linear-gradient(
+            180deg,
+            var(--mc-navy) 0%,
+            var(--mc-navy-2) 100%
+        ) !important;
+
+    border-right:1px solid rgba(210,160,74,.12) !important;
+    box-shadow:10px 0 30px rgba(11,18,32,.10) !important;
+}
+
+/* Logo da sidebar */
+.sidebar-logo{
+    border-bottom:1px solid rgba(255,255,255,.07) !important;
+}
+
+.logo-imagem{
+    background:rgba(210,160,74,.08) !important;
+    border:1px solid rgba(210,160,74,.18) !important;
+}
+
+.logo-imagem img{
+    opacity:1 !important;
+}
+
+.logo-texto strong{
+    color:#ffffff !important;
+}
+
+.logo-texto span{
+    color:var(--mc-gold) !important;
+}
+
+/* Título da seção */
+.sidebar-menu ul::before{
+    color:var(--mc-gold) !important;
+    opacity:.78 !important;
+}
+
+/* Itens */
+.menu-item{
+    color:#cbd5e1 !important;
+}
+
+.menu-item i{
+    color:#94a3b8 !important;
+    transition:color .18s ease, transform .18s ease !important;
+}
+
+.menu-item:hover{
+    color:#ffffff !important;
+    background:rgba(210,160,74,.07) !important;
+}
+
+.menu-item:hover i{
+    color:var(--mc-gold) !important;
+    transform:scale(1.04) !important;
+}
+
+/* Item ativo — azul + detalhe dourado */
+.menu-item.active{
+    color:#ffffff !important;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(36,87,214,.28),
+            rgba(36,87,214,.10)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0 var(--mc-gold) !important;
+}
+
+.menu-item.active i{
+    color:var(--mc-gold) !important;
+}
+
+/* Logout */
+.logout-item i{
+    color:#d2a04a !important;
+}
+
+/* Avatar / usuário */
+.user-avatar,
+.header-avatar,
+.topbar-avatar{
+    background:var(--mc-blue-soft) !important;
+    border:1px solid #dbe6ff !important;
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   4. ÁREA PRINCIPAL — SEM CINZA CANSATIVO
+========================================================= */
+
+.main{
+    background:#ffffff !important;
+}
+
+.content{
+    background:#ffffff !important;
+}
+
+/* Cards */
+.card,
+.dash-card,
+.panel,
+.section-card{
+    background:#ffffff !important;
+    border-color:#e7ebf0 !important;
+    box-shadow:0 4px 14px rgba(11,18,32,.045) !important;
+}
+
+/* =========================================================
+   5. ÍCONES — CORES DA IDENTIDADE
+========================================================= */
+
+.dash-icon{
+    background:var(--mc-blue-soft) !important;
+    color:var(--mc-blue) !important;
+}
+
+.form-section-title i,
+.section-title i,
+.card-title i,
+.page-title i{
+    color:var(--mc-gold) !important;
+}
+
+/* Ícones dentro de status / indicadores */
+.status-icon{
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   6. BOTÕES
+========================================================= */
+
+.btn-primary{
+    background:var(--mc-blue) !important;
+    border-color:var(--mc-blue) !important;
+    color:#ffffff !important;
+    box-shadow:0 4px 10px rgba(36,87,214,.12) !important;
+}
+
+.btn-primary:hover{
+    background:var(--mc-blue-2) !important;
+    border-color:var(--mc-blue-2) !important;
+}
+
+.btn-secondary{
+    background:#ffffff !important;
+    border-color:#d9dee7 !important;
+    color:var(--mc-navy) !important;
+}
+
+.btn-secondary:hover{
+    background:var(--mc-gold-soft) !important;
+    border-color:#e4c98f !important;
+    color:var(--mc-navy) !important;
+}
+
+/* Botões de ação */
+.btn-edit{
+    color:var(--mc-blue) !important;
+    background:var(--mc-blue-soft) !important;
+    border-color:#dce7ff !important;
+}
+
+.btn-delete{
+    color:#9b2c2c !important;
+}
+
+/* =========================================================
+   7. CONSULTA PÚBLICA — BRANCA
+========================================================= */
+
+#consultaPublicaTela{
+    background:#ffffff !important;
+    padding:26px 30px 44px !important;
+}
+
+/* Container maior para aproveitar a tela */
+#consultaPublicaTela .consulta-publica-container{
+    width:min(1320px,100%) !important;
+    max-width:1320px !important;
+}
+
+/* Cabeçalho */
+#consultaPublicaTela .consulta-publica-header{
+    margin-bottom:18px !important;
+}
+
+/* Logo */
+#consultaPublicaTela .consulta-publica-logo{
+    background:var(--mc-navy) !important;
+    border-color:rgba(210,160,74,.25) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca span{
+    color:var(--mc-gold) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca h1{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   8. FILTROS — UMA LINHA LIMPA
+========================================================= */
+
+#consultaPublicaTela .consulta-publica-toolbar{
+    grid-template-columns:
+        minmax(340px,1fr)
+        190px
+        180px
+        150px
+        auto !important;
+
+    gap:9px !important;
+    align-items:center !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input,
+#consultaPublicaTela .consulta-publica-toolbar select{
+    background:#ffffff !important;
+    border:1px solid #d8dee8 !important;
+    color:var(--mc-navy) !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input:focus,
+#consultaPublicaTela .consulta-publica-toolbar select:focus{
+    border-color:var(--mc-blue) !important;
+    box-shadow:0 0 0 3px rgba(36,87,214,.09) !important;
+    outline:none !important;
+}
+
+/* Atualizar ocupa apenas o necessário */
+#consultaPublicaTela .consulta-publica-toolbar .btn-primary{
+    min-width:108px !important;
+}
+
+/* =========================================================
+   9. CARDS DA CONSULTA — ALINHAMENTO REAL
+========================================================= */
+
+/*
+   Antes:
+   repeat(4,...)
+   Isso deixava 2 itens presos nas duas primeiras colunas.
+
+   Agora:
+   auto-fit distribui os cards disponíveis pela largura inteira.
+*/
+#listaConsultaPublica{
+    width:100% !important;
+
+    display:grid !important;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(270px,1fr)
+        ) !important;
+
+    gap:14px !important;
+
+    align-items:stretch !important;
+    justify-items:stretch !important;
+}
+
+/* Todos os cards exatamente com a mesma altura */
+#listaConsultaPublica .consulta-publica-card{
+    width:100% !important;
+    height:100% !important;
+    min-width:0 !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+
+    background:#ffffff !important;
+    border:1px solid #e4e8ee !important;
+    border-radius:10px !important;
+
+    box-shadow:
+        0 4px 14px rgba(11,18,32,.055) !important;
+
+    overflow:hidden !important;
+}
+
+/* Área da imagem uniforme */
+#listaConsultaPublica .consulta-publica-card img{
+    width:100% !important;
+    height:150px !important;
+    object-fit:contain !important;
+    background:#ffffff !important;
+}
+
+/* Corpo flexível */
+#listaConsultaPublica .consulta-publica-card-body{
+    flex:1 !important;
+    display:flex !important;
+    flex-direction:column !important;
+}
+
+/* Título consistente */
+#listaConsultaPublica .consulta-publica-card h3{
+    color:var(--mc-navy) !important;
+}
+
+/* Informações */
+#listaConsultaPublica .consulta-publica-card-info{
+    margin-top:auto !important;
+}
+
+/* Localização em azul */
+#listaConsultaPublica .consulta-publica-card-info i{
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   10. MARCA D'ÁGUA — QUASE IMPERCEPTÍVEL
+========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela > .consulta-publica-container::after{
+    width:190px !important;
+    height:190px !important;
+    opacity:.022 !important;
+}
+
+/* =========================================================
+   11. LOGIN — MESMA IDENTIDADE
+========================================================= */
+
+body.login-mode,
+body.login-mode #loginTela{
+    background:#ffffff !important;
+}
+
+body.login-mode .login-card{
+    background:#ffffff !important;
+    border-color:#e3e7ed !important;
+    box-shadow:
+        0 12px 34px rgba(11,18,32,.07) !important;
+}
+
+body.login-mode .login-logo-imagem{
+    background:var(--mc-navy) !important;
+    border-color:rgba(210,160,74,.25) !important;
+}
+
+body.login-mode .login-logo > span{
+    color:var(--mc-gold) !important;
+}
+
+body.login-mode .login-titulo h2{
+    color:var(--mc-navy) !important;
+}
+
+body.login-mode .btn-login{
+    background:var(--mc-blue) !important;
+    border-color:var(--mc-blue) !important;
+}
+
+body.login-mode .btn-consulta-publica{
+    color:var(--mc-blue) !important;
+    border-color:#d7e2f8 !important;
+    background:#ffffff !important;
+}
+
+body.login-mode .btn-consulta-publica:hover{
+    color:var(--mc-navy) !important;
+    background:var(--mc-blue-soft) !important;
+    border-color:#bfd0f5 !important;
+}
+
+/* =========================================================
+   12. RESPONSIVO
+========================================================= */
+
+@media (max-width:900px){
+    #consultaPublicaTela{
+        padding:20px 18px 35px !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr 1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca{
+        grid-column:1 / -1 !important;
+    }
+
+    #listaConsultaPublica{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width:600px){
+    #consultaPublicaTela{
+        padding:16px 12px 30px !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca{
+        grid-column:auto !important;
+    }
+
+    #listaConsultaPublica{
+        grid-template-columns:1fr !important;
+        gap:11px !important;
+    }
+
+    #listaConsultaPublica .consulta-publica-card img{
+        height:135px !important;
+    }
+}
+
+
+/* =========================================================
+   MONTE CARLO — V6 MARSALA
+   Identidade visual mais sofisticada e quente
+   Fundo branco + Marsala + vinho profundo + dourado
+========================================================= */
+
+:root{
+    /* Marsala principal */
+    --mc-marsala:#955251 !important;
+    --mc-marsala-dark:#6f3038 !important;
+    --mc-marsala-deep:#4d2028 !important;
+    --mc-marsala-soft:#f7eeee !important;
+
+    /* Vinho institucional */
+    --mc-navy:#24151a !important;
+    --mc-navy-2:#321b22 !important;
+    --mc-navy-3:#43242c !important;
+
+    /* Ações */
+    --mc-blue:#955251 !important;
+    --mc-blue-2:#6f3038 !important;
+    --mc-blue-soft:#f7eeee !important;
+
+    /* Dourado */
+    --mc-gold:#c49a5a !important;
+    --mc-gold-soft:#faf5ec !important;
+}
+
+/* =========================================================
+   FUNDO — BRANCO PURO
+========================================================= */
+
+html,
+body,
+.main,
+.main-content,
+.content,
+.tela{
+    background:#ffffff !important;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.main-header,
+.topbar,
+.header{
+    background:#ffffff !important;
+    border-bottom:1px solid #eadfe1 !important;
+}
+
+.header-subtitulo,
+.breadcrumb,
+.page-title > div > span,
+.dashboard-topo > div > span{
+    color:var(--mc-marsala) !important;
+}
+
+.main-header h1,
+.page-title h1,
+.dashboard-topo h1,
+#pageTitle{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   SIDEBAR — VINHO / MARSALA
+========================================================= */
+
+.sidebar{
+    background:
+        linear-gradient(
+            180deg,
+            #24151a 0%,
+            #321b22 55%,
+            #43242c 100%
+        ) !important;
+
+    border-right:1px solid rgba(196,154,90,.20) !important;
+    box-shadow:10px 0 30px rgba(36,21,26,.12) !important;
+}
+
+.sidebar-logo{
+    border-bottom:1px solid rgba(196,154,90,.12) !important;
+}
+
+.logo-imagem{
+    background:rgba(196,154,90,.08) !important;
+    border:1px solid rgba(196,154,90,.22) !important;
+}
+
+.logo-texto strong{
+    color:#ffffff !important;
+}
+
+.logo-texto span{
+    color:#c49a5a !important;
+}
+
+.sidebar-menu ul::before{
+    color:#c49a5a !important;
+}
+
+/* Menu normal */
+.menu-item{
+    color:#d8cdd0 !important;
+}
+
+.menu-item i{
+    color:#b9a7ab !important;
+}
+
+/* Hover marsala */
+.menu-item:hover{
+    color:#ffffff !important;
+    background:rgba(149,82,81,.20) !important;
+}
+
+.menu-item:hover i{
+    color:#d8aa67 !important;
+}
+
+/* Ativo — Marsala + dourado */
+.menu-item.active{
+    color:#ffffff !important;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(149,82,81,.48),
+            rgba(149,82,81,.18)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0 #c49a5a !important;
+}
+
+.menu-item.active i{
+    color:#d8aa67 !important;
+}
+
+/* =========================================================
+   ÍCONES E INDICADORES
+========================================================= */
+
+.dash-icon{
+    background:var(--mc-marsala-soft) !important;
+    color:var(--mc-marsala) !important;
+}
+
+.form-section-title i,
+.section-title i,
+.card-title i,
+.page-title i{
+    color:var(--mc-marsala) !important;
+}
+
+.status-icon{
+    color:var(--mc-marsala) !important;
+}
+
+.user-avatar,
+.header-avatar,
+.topbar-avatar{
+    background:var(--mc-marsala-soft) !important;
+    border-color:#ead4d6 !important;
+    color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   BOTÕES — MARSALA
+========================================================= */
+
+.btn-primary{
+    background:var(--mc-marsala) !important;
+    border-color:var(--mc-marsala) !important;
+    color:#ffffff !important;
+    box-shadow:0 4px 12px rgba(149,82,81,.18) !important;
+}
+
+.btn-primary:hover{
+    background:var(--mc-marsala-dark) !important;
+    border-color:var(--mc-marsala-dark) !important;
+}
+
+.btn-secondary{
+    background:#ffffff !important;
+    border-color:#ddd0d3 !important;
+    color:var(--mc-marsala-dark) !important;
+}
+
+.btn-secondary:hover{
+    background:var(--mc-gold-soft) !important;
+    border-color:#d8bf94 !important;
+}
+
+.btn-edit{
+    color:var(--mc-marsala) !important;
+    background:var(--mc-marsala-soft) !important;
+    border-color:#ead4d6 !important;
+}
+
+/* =========================================================
+   CARDS — LIMPOS E PREMIUM
+========================================================= */
+
+.card,
+.dash-card,
+.panel,
+.section-card{
+    background:#ffffff !important;
+    border-color:#e9e0e2 !important;
+    box-shadow:0 4px 16px rgba(36,21,26,.045) !important;
+}
+
+/* =========================================================
+   CONSULTA PÚBLICA
+========================================================= */
+
+#consultaPublicaTela{
+    background:#ffffff !important;
+}
+
+#consultaPublicaTela .consulta-publica-logo{
+    background:var(--mc-marsala-deep) !important;
+    border-color:rgba(196,154,90,.30) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca span{
+    color:var(--mc-marsala) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca h1{
+    color:var(--mc-navy) !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input:focus,
+#consultaPublicaTela .consulta-publica-toolbar select:focus{
+    border-color:var(--mc-marsala) !important;
+    box-shadow:0 0 0 3px rgba(149,82,81,.10) !important;
+}
+
+#consultaPublicaTela .consulta-publica-card{
+    border-color:#e8dfe1 !important;
+    box-shadow:0 4px 16px rgba(36,21,26,.055) !important;
+}
+
+#listaConsultaPublica .consulta-publica-card h3{
+    color:var(--mc-navy) !important;
+}
+
+#listaConsultaPublica .consulta-publica-card-info i{
+    color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   LOGIN — MESMA IDENTIDADE MARSALA
+========================================================= */
+
+body.login-mode,
+body.login-mode #loginTela{
+    background:#ffffff !important;
+}
+
+body.login-mode .login-card{
+    background:#ffffff !important;
+    border-color:#e8dfe1 !important;
+    box-shadow:0 12px 36px rgba(36,21,26,.075) !important;
+}
+
+body.login-mode .login-logo-imagem{
+    background:var(--mc-marsala-deep) !important;
+    border-color:rgba(196,154,90,.30) !important;
+}
+
+body.login-mode .login-logo > span{
+    color:var(--mc-marsala) !important;
+}
+
+body.login-mode .login-titulo h2{
+    color:var(--mc-navy) !important;
+}
+
+body.login-mode .btn-login{
+    background:var(--mc-marsala) !important;
+    border-color:var(--mc-marsala) !important;
+}
+
+body.login-mode .btn-login:hover{
+    background:var(--mc-marsala-dark) !important;
+    border-color:var(--mc-marsala-dark) !important;
+}
+
+body.login-mode .btn-consulta-publica{
+    color:var(--mc-marsala) !important;
+    border-color:#ead4d6 !important;
+    background:#ffffff !important;
+}
+
+body.login-mode .btn-consulta-publica:hover{
+    color:var(--mc-marsala-dark) !important;
+    background:var(--mc-marsala-soft) !important;
+}
+
+/* =========================================================
+   BADGES / DETALHES DE DESTAQUE
+========================================================= */
+
+.badge,
+.status-badge,
+.tag{
+    border-color:#ead4d6 !important;
+}
+
+.badge-primary,
+.status-primary{
+    color:var(--mc-marsala) !important;
+    background:var(--mc-marsala-soft) !important;
+}
+
+/* =========================================================
+   CAMPOS DE FORMULÁRIO
+========================================================= */
+
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:var(--mc-marsala) !important;
+    box-shadow:0 0 0 3px rgba(149,82,81,.09) !important;
+    outline:none !important;
+}
+
+/* =========================================================
+   BARRAS / PROGRESSOS / CHECKBOXES
+========================================================= */
+
+input[type="checkbox"],
+input[type="radio"]{
+    accent-color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   RESPONSIVO — MANTER CARDS ALINHADOS
+========================================================= */
+
+@media (max-width:900px){
+    #listaConsultaPublica{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width:600px){
+    #listaConsultaPublica{
+        grid-template-columns:1fr !important;
+    }
+}
