@@ -6349,3 +6349,361 @@ body.login-mode .btn-consulta-publica:hover{
         height:135px !important;
     }
 }
+
+
+/* =========================================================
+   MONTE CARLO — V6 MARSALA
+   Identidade visual mais sofisticada e quente
+   Fundo branco + Marsala + vinho profundo + dourado
+========================================================= */
+
+:root{
+    /* Marsala principal */
+    --mc-marsala:#955251 !important;
+    --mc-marsala-dark:#6f3038 !important;
+    --mc-marsala-deep:#4d2028 !important;
+    --mc-marsala-soft:#f7eeee !important;
+
+    /* Vinho institucional */
+    --mc-navy:#24151a !important;
+    --mc-navy-2:#321b22 !important;
+    --mc-navy-3:#43242c !important;
+
+    /* Ações */
+    --mc-blue:#955251 !important;
+    --mc-blue-2:#6f3038 !important;
+    --mc-blue-soft:#f7eeee !important;
+
+    /* Dourado */
+    --mc-gold:#c49a5a !important;
+    --mc-gold-soft:#faf5ec !important;
+}
+
+/* =========================================================
+   FUNDO — BRANCO PURO
+========================================================= */
+
+html,
+body,
+.main,
+.main-content,
+.content,
+.tela{
+    background:#ffffff !important;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.main-header,
+.topbar,
+.header{
+    background:#ffffff !important;
+    border-bottom:1px solid #eadfe1 !important;
+}
+
+.header-subtitulo,
+.breadcrumb,
+.page-title > div > span,
+.dashboard-topo > div > span{
+    color:var(--mc-marsala) !important;
+}
+
+.main-header h1,
+.page-title h1,
+.dashboard-topo h1,
+#pageTitle{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   SIDEBAR — VINHO / MARSALA
+========================================================= */
+
+.sidebar{
+    background:
+        linear-gradient(
+            180deg,
+            #24151a 0%,
+            #321b22 55%,
+            #43242c 100%
+        ) !important;
+
+    border-right:1px solid rgba(196,154,90,.20) !important;
+    box-shadow:10px 0 30px rgba(36,21,26,.12) !important;
+}
+
+.sidebar-logo{
+    border-bottom:1px solid rgba(196,154,90,.12) !important;
+}
+
+.logo-imagem{
+    background:rgba(196,154,90,.08) !important;
+    border:1px solid rgba(196,154,90,.22) !important;
+}
+
+.logo-texto strong{
+    color:#ffffff !important;
+}
+
+.logo-texto span{
+    color:#c49a5a !important;
+}
+
+.sidebar-menu ul::before{
+    color:#c49a5a !important;
+}
+
+/* Menu normal */
+.menu-item{
+    color:#d8cdd0 !important;
+}
+
+.menu-item i{
+    color:#b9a7ab !important;
+}
+
+/* Hover marsala */
+.menu-item:hover{
+    color:#ffffff !important;
+    background:rgba(149,82,81,.20) !important;
+}
+
+.menu-item:hover i{
+    color:#d8aa67 !important;
+}
+
+/* Ativo — Marsala + dourado */
+.menu-item.active{
+    color:#ffffff !important;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(149,82,81,.48),
+            rgba(149,82,81,.18)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0 #c49a5a !important;
+}
+
+.menu-item.active i{
+    color:#d8aa67 !important;
+}
+
+/* =========================================================
+   ÍCONES E INDICADORES
+========================================================= */
+
+.dash-icon{
+    background:var(--mc-marsala-soft) !important;
+    color:var(--mc-marsala) !important;
+}
+
+.form-section-title i,
+.section-title i,
+.card-title i,
+.page-title i{
+    color:var(--mc-marsala) !important;
+}
+
+.status-icon{
+    color:var(--mc-marsala) !important;
+}
+
+.user-avatar,
+.header-avatar,
+.topbar-avatar{
+    background:var(--mc-marsala-soft) !important;
+    border-color:#ead4d6 !important;
+    color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   BOTÕES — MARSALA
+========================================================= */
+
+.btn-primary{
+    background:var(--mc-marsala) !important;
+    border-color:var(--mc-marsala) !important;
+    color:#ffffff !important;
+    box-shadow:0 4px 12px rgba(149,82,81,.18) !important;
+}
+
+.btn-primary:hover{
+    background:var(--mc-marsala-dark) !important;
+    border-color:var(--mc-marsala-dark) !important;
+}
+
+.btn-secondary{
+    background:#ffffff !important;
+    border-color:#ddd0d3 !important;
+    color:var(--mc-marsala-dark) !important;
+}
+
+.btn-secondary:hover{
+    background:var(--mc-gold-soft) !important;
+    border-color:#d8bf94 !important;
+}
+
+.btn-edit{
+    color:var(--mc-marsala) !important;
+    background:var(--mc-marsala-soft) !important;
+    border-color:#ead4d6 !important;
+}
+
+/* =========================================================
+   CARDS — LIMPOS E PREMIUM
+========================================================= */
+
+.card,
+.dash-card,
+.panel,
+.section-card{
+    background:#ffffff !important;
+    border-color:#e9e0e2 !important;
+    box-shadow:0 4px 16px rgba(36,21,26,.045) !important;
+}
+
+/* =========================================================
+   CONSULTA PÚBLICA
+========================================================= */
+
+#consultaPublicaTela{
+    background:#ffffff !important;
+}
+
+#consultaPublicaTela .consulta-publica-logo{
+    background:var(--mc-marsala-deep) !important;
+    border-color:rgba(196,154,90,.30) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca span{
+    color:var(--mc-marsala) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca h1{
+    color:var(--mc-navy) !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input:focus,
+#consultaPublicaTela .consulta-publica-toolbar select:focus{
+    border-color:var(--mc-marsala) !important;
+    box-shadow:0 0 0 3px rgba(149,82,81,.10) !important;
+}
+
+#consultaPublicaTela .consulta-publica-card{
+    border-color:#e8dfe1 !important;
+    box-shadow:0 4px 16px rgba(36,21,26,.055) !important;
+}
+
+#listaConsultaPublica .consulta-publica-card h3{
+    color:var(--mc-navy) !important;
+}
+
+#listaConsultaPublica .consulta-publica-card-info i{
+    color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   LOGIN — MESMA IDENTIDADE MARSALA
+========================================================= */
+
+body.login-mode,
+body.login-mode #loginTela{
+    background:#ffffff !important;
+}
+
+body.login-mode .login-card{
+    background:#ffffff !important;
+    border-color:#e8dfe1 !important;
+    box-shadow:0 12px 36px rgba(36,21,26,.075) !important;
+}
+
+body.login-mode .login-logo-imagem{
+    background:var(--mc-marsala-deep) !important;
+    border-color:rgba(196,154,90,.30) !important;
+}
+
+body.login-mode .login-logo > span{
+    color:var(--mc-marsala) !important;
+}
+
+body.login-mode .login-titulo h2{
+    color:var(--mc-navy) !important;
+}
+
+body.login-mode .btn-login{
+    background:var(--mc-marsala) !important;
+    border-color:var(--mc-marsala) !important;
+}
+
+body.login-mode .btn-login:hover{
+    background:var(--mc-marsala-dark) !important;
+    border-color:var(--mc-marsala-dark) !important;
+}
+
+body.login-mode .btn-consulta-publica{
+    color:var(--mc-marsala) !important;
+    border-color:#ead4d6 !important;
+    background:#ffffff !important;
+}
+
+body.login-mode .btn-consulta-publica:hover{
+    color:var(--mc-marsala-dark) !important;
+    background:var(--mc-marsala-soft) !important;
+}
+
+/* =========================================================
+   BADGES / DETALHES DE DESTAQUE
+========================================================= */
+
+.badge,
+.status-badge,
+.tag{
+    border-color:#ead4d6 !important;
+}
+
+.badge-primary,
+.status-primary{
+    color:var(--mc-marsala) !important;
+    background:var(--mc-marsala-soft) !important;
+}
+
+/* =========================================================
+   CAMPOS DE FORMULÁRIO
+========================================================= */
+
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:var(--mc-marsala) !important;
+    box-shadow:0 0 0 3px rgba(149,82,81,.09) !important;
+    outline:none !important;
+}
+
+/* =========================================================
+   BARRAS / PROGRESSOS / CHECKBOXES
+========================================================= */
+
+input[type="checkbox"],
+input[type="radio"]{
+    accent-color:var(--mc-marsala) !important;
+}
+
+/* =========================================================
+   RESPONSIVO — MANTER CARDS ALINHADOS
+========================================================= */
+
+@media (max-width:900px){
+    #listaConsultaPublica{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width:600px){
+    #listaConsultaPublica{
+        grid-template-columns:1fr !important;
+    }
+}
