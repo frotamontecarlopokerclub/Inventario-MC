@@ -3363,48 +3363,90 @@ function popularFiltroSubsetoresDashboard() {
             'filtroLocalDashboard'
         );
 
-    const localSelecionado =
+    const valorLocal =
         selectLocal?.value
             ?.trim()
             .toLowerCase() ||
         '';
 
-    const valorAtual =
+    const valorSubsetorAtual =
         select.value || '';
 
     select.innerHTML =
         '<option value="">Todos os Subsetores</option>';
 
     /*
-       Se nenhum local foi escolhido,
-       mostra os subsetores de todos os locais.
-
-       Se um local foi escolhido,
-       mostra SOMENTE os subsetores daquele local.
+       IMPORTANTE:
+       O filtro é feito pelo ID do Local, e não pelo nome.
+       Isso evita qualquer divergência de acentuação,
+       maiúsculas/minúsculas ou nome exibido.
     */
+
+    let localIdSelecionado = null;
+
+    if (valorLocal) {
+
+        const localEncontrado =
+            LOCAIS.find(
+                local =>
+                    String(
+                        local.nome || ''
+                    )
+                    .trim()
+                    .toLowerCase() ===
+                    valorLocal
+            );
+
+        if (localEncontrado) {
+
+            localIdSelecionado =
+                Number(
+                    localEncontrado.id
+                );
+
+        }
+
+    }
+
     const lista =
         Array.isArray(subsetores)
             ? [...subsetores]
                 .filter(
-                    s =>
-                        s &&
-                        s.ativo !== false &&
-                        (
-                            !localSelecionado ||
-                            String(
-                                nomeLocal(
-                                    s.local_id
-                                )
-                            )
-                            .trim()
-                            .toLowerCase() ===
-                            localSelecionado
-                        )
+                    s => {
+
+                        if (
+                            !s ||
+                            s.ativo === false
+                        ) {
+                            return false;
+                        }
+
+                        /*
+                           Todos os locais:
+                           mostra todos os subsetores.
+
+                           Local selecionado:
+                           mostra somente os subsetores
+                           cujo local_id é exatamente
+                           o ID daquele local.
+                        */
+
+                        if (
+                            localIdSelecionado === null
+                        ) {
+                            return true;
+                        }
+
+                        return Number(
+                            s.local_id
+                        ) ===
+                        localIdSelecionado;
+
+                    }
                 )
                 .sort(
-                    (a, b) => {
-
-                        return String(a.nome || '')
+                    (a, b) =>
+                        String(a.nome || '')
                             .localeCompare(
                                 String(b.nome || ''),
                                 'pt-BR',
@@ -3412,8 +3454,7 @@ function popularFiltroSubsetoresDashboard() {
                                     sensitivity:
                                         'base'
                                 }
-                            );
-                    }
+                            )
                 )
             : [];
 
@@ -3443,20 +3484,21 @@ function popularFiltroSubsetoresDashboard() {
     );
 
     /*
-       Mantém a seleção somente se ela ainda
-       pertence ao local escolhido.
+       Se o Subsetor anteriormente selecionado
+       não pertence ao novo Local, limpa a seleção.
     */
+
     if (
-        valorAtual &&
+        valorSubsetorAtual &&
         [...select.options].some(
             option =>
                 option.value ===
-                valorAtual
+                valorSubsetorAtual
         )
     ) {
 
         select.value =
-            valorAtual;
+            valorSubsetorAtual;
 
     } else {
 
