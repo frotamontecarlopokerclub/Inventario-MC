@@ -6707,3 +6707,135 @@ input[type="radio"]{
         grid-template-columns:1fr !important;
     }
 }
+/* =========================================================
+   MODAL DE FOTO — VISUALIZAÇÃO AMPLIADA
+   ========================================================= */
+
+#modalFoto {
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100vh !important;
+
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 30px !important;
+    box-sizing: border-box !important;
+
+    background: rgba(15, 23, 42, 0.88) !important;
+
+    z-index: 99999 !important;
+}
+
+/* Quando o modal estiver aberto */
+#modalFoto.active {
+    display: flex !important;
+}
+
+/* Imagem ampliada */
+#modalFoto #imagemModal {
+    display: block !important;
+
+    max-width: min(92vw, 1200px) !important;
+    max-height: 88vh !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    object-fit: contain !important;
+
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Botão X */
+#modalFoto .fechar-modal,
+#modalFoto .modal-fechar,
+#modalFoto .close,
+#modalFoto .btn-fechar {
+    position: absolute !important;
+
+    top: 20px !important;
+    right: 25px !important;
+
+    width: 44px !important;
+    height: 44px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border: 0 !important;
+    border-radius: 50% !important;
+
+    background: rgba(255, 255, 255, 0.95) !important;
+
+    color: #7b3034 !important;
+
+    font-size: 25px !important;
+    font-weight: 700 !important;
+
+    cursor: pointer !important;
+
+    z-index: 100000 !important;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        color .18s ease !important;
+}
+
+#modalFoto .fechar-modal:hover,
+#modalFoto .modal-fechar:hover,
+#modalFoto .close:hover,
+#modalFoto .btn-fechar:hover {
+    transform: scale(1.08) !important;
+
+    background: #7b3034 !important;
+
+    color: #ffffff !important;
+}
+
+/* Impede seleção arrastada da imagem */
+#modalFoto #imagemModal {
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* =========================================================
+   MODAL — CELULAR
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    #modalFoto {
+        padding: 15px !important;
+    }
+
+    #modalFoto #imagemModal {
+        max-width: 96vw !important;
+        max-height: 82vh !important;
+
+        border-radius: 8px !important;
+    }
+
+    #modalFoto .fechar-modal,
+    #modalFoto .modal-fechar,
+    #modalFoto .close,
+    #modalFoto .btn-fechar {
+        top: 12px !important;
+        right: 12px !important;
+
+        width: 40px !important;
+        height: 40px !important;
+
+        font-size: 22px !important;
+    }
+}
