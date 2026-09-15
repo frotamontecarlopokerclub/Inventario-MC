@@ -194,6 +194,18 @@
             </li>
 
 
+            <!-- ADMINISTRAÇÃO -->
+            <li
+                id="menuAdministracao"
+                class="menu-item"
+                style="display:none;"
+                onclick="abrirAdministracao()"
+            >
+                <i class="fa-solid fa-gear"></i>
+                <span>Administração</span>
+            </li>
+
+
             <!-- LOGOUT -->
 
             <li
@@ -462,166 +474,293 @@
 
 
 
-    <!-- =================================================
-         CONSULTA PÚBLICA DE INVENTÁRIO
-    ================================================== -->
+   <!-- =================================================
+     CONSULTA PÚBLICA DE INVENTÁRIO
+================================================== -->
 
-    <section
-        id="consultaPublicaTela"
-        class="tela consulta-publica-tela"
-    >
+<section
+    id="consultaPublicaTela"
+    class="tela consulta-publica-tela"
+>
 
-        <div class="consulta-publica-container">
+    <div class="consulta-publica-container">
 
-            <div class="consulta-publica-header">
+        <!-- =================================================
+             CABEÇALHO
+        ================================================== -->
 
-                <div class="consulta-publica-marca">
+        <div class="consulta-publica-header">
 
-                    <div class="consulta-publica-logo">
+            <div class="consulta-publica-marca">
 
-                        <img
-                            src="monte-carlo-logo-transparente.png"
-                            alt="Grupo Monte Carlo"
-                            onerror="this.style.display='none'"
-                        >
+                <div class="consulta-publica-logo">
 
-                    </div>
-
-                    <div>
-
-                        <span>
-                            GRUPO MONTE CARLO
-                        </span>
-
-                        <h1>
-                            Consulta de Inventário
-                        </h1>
-
-                        <p>
-                            Consulte os itens ativos, suas quantidades e localizações.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <button
-                    type="button"
-                    class="btn-secondary consulta-voltar"
-                    onclick="voltarParaLogin()"
-                >
-
-                    <i class="fa-solid fa-arrow-left"></i>
-
-                    Voltar
-
-                </button>
-
-            </div>
-
-
-            <div class="consulta-publica-toolbar">
-
-                <div class="consulta-publica-busca">
-
-                    <i class="fa-solid fa-magnifying-glass"></i>
-
-                    <input
-                        type="search"
-                        id="buscaPublica"
-                        oninput="filtrarConsultaPublica()"
-                        placeholder="Pesquisar item, categoria ou local..."
-                        autocomplete="off"
-                        aria-label="Pesquisar inventário"
+                    <img
+                        src="monte-carlo-logo-transparente.png"
+                        alt="Grupo Monte Carlo"
+                        onerror="this.style.display='none'"
                     >
 
                 </div>
 
-                <select id="filtroLocalPublico" aria-label="Filtrar por local" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
-                    <option value="">Todos os locais</option>
-                </select>
-
-                <select id="filtroCategoriaPublico" aria-label="Filtrar por categoria" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
-                    <option value="">Todas as categorias</option>
-                </select>
-
-                <select id="ordenacaoPublica" aria-label="Ordenar resultados" onchange="consultaPublicaPagina=1; renderizarConsultaPublica()">
-                    <option value="nome-asc">Nome: A–Z</option>
-                    <option value="nome-desc">Nome: Z–A</option>
-                    <option value="quantidade-desc">Maior quantidade</option>
-                    <option value="quantidade-asc">Menor quantidade</option>
-                    <option value="local-asc">Local: A–Z</option>
-                </select>
-
-                <button type="button" class="btn-secondary" onclick="limparFiltrosConsultaPublica()">
-                    <i class="fa-solid fa-filter-circle-xmark"></i>
-                    Limpar
-                </button>
-
-                <button type="button" id="btnAtualizarConsulta" class="btn-primary" onclick="atualizarConsultaPublica()">
-                    <i class="fa-solid fa-rotate"></i>
-                    Atualizar
-                </button>
-
-            </div>
-
-            <div class="consulta-publica-opcoes">
-                <div class="consulta-publica-view">
-                    <span>Visualização</span>
-                    <button type="button" class="consulta-view-btn active" id="consultaViewCards" onclick="alterarVisualizacaoConsulta('cards')" aria-label="Visualização em cards" title="Cards">
-                        <i class="fa-solid fa-grip"></i>
-                    </button>
-                    <button type="button" class="consulta-view-btn" id="consultaViewLista" onclick="alterarVisualizacaoConsulta('lista')" aria-label="Visualização em lista" title="Lista">
-                        <i class="fa-solid fa-list"></i>
-                    </button>
-                </div>
-                <span class="consulta-publica-dica"><i class="fa-solid fa-circle-info"></i> Clique na foto para ampliar.</span>
-            </div>
-
-
-            <div class="consulta-publica-resumo">
-
                 <div>
 
                     <span>
-                        ITENS DISPONÍVEIS
+                        GRUPO MONTE CARLO
                     </span>
 
-                    <strong id="contadorConsultaPublica">
-                        0
-                    </strong>
+                    <h1>
+                        Consulta de Inventário
+                    </h1>
 
-                </div>
-
-                <div class="consulta-publica-resumo-info">
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    Somente itens ativos são exibidos.
+                    <p>
+                        Consulte os itens ativos, suas quantidades e localizações.
+                    </p>
 
                 </div>
 
             </div>
 
 
-            <div
-                id="listaConsultaPublica"
-                class="consulta-publica-grid"
-            ></div>
+            <button
+                type="button"
+                class="btn-secondary consulta-voltar"
+                onclick="voltarParaLogin()"
+            >
 
-            <div id="paginacaoConsultaPublica" class="consulta-publica-paginacao"></div>
+                <i class="fa-solid fa-arrow-left"></i>
 
-            <div class="consulta-publica-footer">
+                Voltar
 
-                <i class="fa-solid fa-shield-halved"></i>
+            </button>
 
-                Consulta somente para visualização
+        </div>
+
+
+        <!-- =================================================
+             BARRA DE FILTROS
+        ================================================== -->
+
+        <div class="consulta-publica-toolbar">
+
+            <!-- PESQUISA -->
+
+            <div class="consulta-publica-busca">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="search"
+                    id="buscaPublica"
+                    placeholder="Pesquisar item, categoria ou local..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <!-- LOCAL -->
+
+            <select
+                id="filtroLocalPublico"
+                aria-label="Filtrar por local"
+            >
+
+                <option value="">
+                    Todos os locais
+                </option>
+
+            </select>
+
+
+            <!-- CATEGORIA -->
+
+            <select
+                id="filtroCategoriaPublico"
+                aria-label="Filtrar por categoria"
+            >
+
+                <option value="">
+                    Todas as categorias
+                </option>
+
+            </select>
+
+
+            <!-- ORDENAÇÃO -->
+
+            <select
+                id="ordenacaoPublica"
+                aria-label="Ordenar inventário"
+            >
+
+                <option value="nome-asc">
+                    Nome: A–Z
+                </option>
+
+                <option value="nome-desc">
+                    Nome: Z–A
+                </option>
+
+                <option value="quantidade-desc">
+                    Maior quantidade
+                </option>
+
+                <option value="quantidade-asc">
+                    Menor quantidade
+                </option>
+
+                <option value="local-asc">
+                    Local: A–Z
+                </option>
+
+            </select>
+
+
+            <!-- LIMPAR -->
+
+            <button
+                type="button"
+                class="btn-secondary"
+                onclick="limparFiltrosConsultaPublica()"
+            >
+
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                Limpar
+
+            </button>
+
+
+            <!-- ATUALIZAR -->
+
+            <button
+                type="button"
+                id="btnAtualizarConsulta"
+                class="btn-primary"
+                onclick="atualizarConsultaPublica()"
+            >
+
+                <i class="fa-solid fa-rotate"></i>
+
+                Atualizar
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             CONTROLES DE VISUALIZAÇÃO
+        ================================================== -->
+
+        <div class="consulta-controles">
+
+            <div class="consulta-controles-esquerda">
+
+                <span class="consulta-label-visualizacao">
+                    Visualização
+                </span>
+
+                <div class="consulta-view-buttons">
+
+                    <button
+                        type="button"
+                        id="btnViewGrid"
+                        data-view="grid"
+                        class="active"
+                        title="Visualização em grade"
+                        aria-label="Visualização em grade"
+                    >
+
+                        <i class="fa-solid fa-grip"></i>
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="btnViewList"
+                        data-view="list"
+                        title="Visualização em lista"
+                        aria-label="Visualização em lista"
+                    >
+
+                        <i class="fa-solid fa-list"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="consulta-dica">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                Clique na foto para ampliar.
 
             </div>
 
         </div>
 
-    </section>
+
+        <!-- =================================================
+             RESUMO
+        ================================================== -->
+
+        <div class="consulta-publica-resumo">
+
+            <div class="consulta-resumo-titulo">
+
+                <span>
+                    ITENS DISPONÍVEIS
+                </span>
+
+                <strong id="contadorConsultaPublica">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="consulta-publica-resumo-info">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                Somente itens ativos são exibidos.
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             LISTA DE ITENS
+        ================================================== -->
+
+        <div
+            id="listaConsultaPublica"
+            class="consulta-publica-grid"
+        ></div>
+
+
+        <!-- =================================================
+             RODAPÉ
+        ================================================== -->
+
+        <div class="consulta-publica-footer">
+
+            <i class="fa-solid fa-shield-halved"></i>
+
+            Consulta somente para visualização
+
+        </div>
+
+    </div>
+
+</section>
 
 
 
@@ -1189,6 +1328,14 @@
 
                         </div>
 
+                        <div class="input-group">
+                            <label for="subsetorCadastro">Subsetor</label>
+                            <select id="subsetorCadastro">
+                                <option value="">Sem subsetor</option>
+                            </select>
+                            <small>Opcional. Os subsetores são definidos pela Administração.</small>
+                        </div>
+
 
                     </div>
 
@@ -1495,6 +1642,13 @@
 
                     </div>
 
+                    <div class="input-group">
+                        <label for="destinoSubsetor">Subsetor de Destino</label>
+                        <select id="destinoSubsetor">
+                            <option value="">Sem subsetor</option>
+                        </select>
+                    </div>
+
 
                     <div class="input-group">
 
@@ -1740,6 +1894,10 @@
                             </th>
 
                             <th>
+                                Subsetor
+                            </th>
+
+                            <th>
                                 Status
                             </th>
 
@@ -1837,6 +1995,10 @@
                             </th>
 
                             <th>
+                                Usuário
+                            </th>
+
+                            <th>
                                 Data
                             </th>
 
@@ -1861,6 +2023,79 @@
     </section>
 
 
+
+
+    <!-- =================================================
+         ADMINISTRAÇÃO — USUÁRIOS / SUBSETORES / AUDITORIA
+    ================================================== -->
+    <section id="administracaoTela" class="tela">
+        <div class="page-title">
+            <div>
+                <span>GESTÃO DO SISTEMA</span>
+                <h2>Administração</h2>
+                <p>Gerencie usuários, subsetores e acompanhe a rastreabilidade das ações.</p>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="card">
+                <div class="form-section-title"><i class="fa-solid fa-user-plus"></i> Criar usuário</div>
+                <div class="grid-2 admin-form-grid">
+                    <div class="input-group"><label for="novoUsuarioNome">Nome</label><input id="novoUsuarioNome" type="text" placeholder="Nome completo"></div>
+                    <div class="input-group"><label for="novoUsuarioEmail">E-mail</label><input id="novoUsuarioEmail" type="email" placeholder="usuario@empresa.com"></div>
+                    <div class="input-group"><label for="novoUsuarioSenha">Senha inicial</label><input id="novoUsuarioSenha" type="password" minlength="6" placeholder="Mínimo 6 caracteres"></div>
+                    <div class="input-group"><label for="novoUsuarioPerfil">Perfil</label>
+                        <select id="novoUsuarioPerfil">
+                            <option value="consulta">Consulta</option>
+                            <option value="operacional">Operacional</option>
+                            <option value="gestor">Gestor</option>
+                            <option value="administrador">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-primary" onclick="criarUsuario()"><i class="fa-solid fa-user-plus"></i> Criar usuário</button></div>
+            </div>
+
+            <div class="card">
+                <div class="form-section-title"><i class="fa-solid fa-users"></i> Usuários cadastrados</div>
+                <div class="table-area">
+                    <table class="inventory-table admin-table">
+                        <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="listaUsuariosAdmin"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-section-title"><i class="fa-solid fa-sitemap"></i> Criar subsetor</div>
+                <div class="grid-2 admin-form-grid">
+                    <div class="input-group"><label for="adminSubsetorLocal">Local</label><select id="adminSubsetorLocal"><option value="">Selecione o local</option></select></div>
+                    <div class="input-group"><label for="adminSubsetorNome">Nome do subsetor</label><input id="adminSubsetorNome" type="text" placeholder="Ex.: RH"></div>
+                </div>
+                <div class="form-actions"><button type="button" class="btn-primary" onclick="criarSubsetor()"><i class="fa-solid fa-plus"></i> Criar subsetor</button></div>
+            </div>
+
+            <div class="card">
+                <div class="form-section-title"><i class="fa-solid fa-list-check"></i> Subsetores ativos</div>
+                <div class="table-area">
+                    <table class="inventory-table admin-table">
+                        <thead><tr><th>Local</th><th>Subsetor</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="listaSubsetoresAdmin"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card admin-card-wide">
+                <div class="form-section-title"><i class="fa-solid fa-shield-halved"></i> Auditoria de ações</div>
+                <div class="table-area">
+                    <table class="inventory-table admin-table">
+                        <thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>Detalhes</th></tr></thead>
+                        <tbody id="listaAuditoria"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
 </main>
 

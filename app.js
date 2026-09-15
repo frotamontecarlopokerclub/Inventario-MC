@@ -36,6 +36,8 @@ let movimentacoes = [];
 
 let usuarioLogado = null;
 let perfilUsuario = null;
+let nomeUsuarioLogado = '';
+let subsetores = [];
 
 
 /* =========================================================
@@ -257,6 +259,7 @@ async function login(event) {
 
 
         await carregarDashboard();
+        await carregarSubsetores();
 
 
         return false;
@@ -318,6 +321,7 @@ async function logout() {
     usuarioLogado = null;
 
     perfilUsuario = null;
+    nomeUsuarioLogado = '';
 
 
     document.body
@@ -354,34 +358,39 @@ async function verificarPerfil() {
 
     try {
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
+        let perfilConsulta = await supabaseClient
+            .from('usuarios')
+            .select('perfil, nome, ativo')
+            .eq('email', usuarioLogado.email)
+            .maybeSingle();
+
+        if (perfilConsulta.error) {
+            // Compatibilidade temporária caso a migração ainda não tenha sido executada.
+            perfilConsulta = await supabaseClient
                 .from('usuarios')
                 .select('perfil')
-                .eq(
-                    'email',
-                    usuarioLogado.email
-                )
+                .eq('email', usuarioLogado.email)
                 .maybeSingle();
-
-
-        if (error) {
-
-            console.error(
-                'ERRO PERFIL:',
-                error
-            );
-
-            perfilUsuario =
-                'consulta';
-
-            return;
-
         }
 
+        const data = perfilConsulta.data;
+        const error = perfilConsulta.error;
+
+        if (error) {
+            console.error('ERRO PERFIL:', error);
+            perfilUsuario = 'consulta';
+            nomeUsuarioLogado = usuarioLogado.email || '';
+            return;
+        }
+
+
+        if (data?.ativo === false) {
+            await supabaseClient.auth.signOut();
+            throw new Error('Usuário inativo.');
+        }
+
+        nomeUsuarioLogado =
+            String(data?.nome || usuarioLogado.email || '').trim();
 
         perfilUsuario =
             String(
@@ -454,6 +463,8 @@ function atualizarMenus() {
             'menuLogout'
         );
 
+    const adminMenu = document.getElementById('menuAdministracao');
+
 
     /*
        Alguns elementos podem não existir
@@ -518,6 +529,7 @@ function atualizarMenus() {
 
         }
 
+        if (adminMenu) adminMenu.style.display = 'none';
 
         return;
 
@@ -561,6 +573,10 @@ function atualizarMenus() {
         logoutMenu.style.display =
             'flex';
 
+    }
+
+    if (adminMenu) {
+        adminMenu.style.display = podeAdministrar() ? 'flex' : 'none';
     }
 
 
@@ -613,6 +629,7 @@ function atualizarMenus() {
 function atualizarUsuarioInterface() {
 
     const nome =
+        nomeUsuarioLogado ||
         usuarioLogado?.email ||
         'Visitante';
 
@@ -700,6 +717,264 @@ function atualizarUsuarioInterface() {
 
 }
 
+
+function limparFormulario() {
+    limparFormularioCadastro();
+}
+
+/* =========================================================
+   SUBSETORES / AUDITORIA — NOVAS FUNCIONALIDADES
+========================================================= */
+
+function nomeSubsetor(subsetorId) {
+    if (!subsetorId) return 'Sem subsetor';
+    const s = subsetores.find(x => String(x.id) === String(subsetorId));
+    return s?.nome || 'Sem subsetor';
+}
+
+function formatarLocalSubsetor(localId, subsetorId) {
+    const local = nomeLocal(localId);
+    if (!subsetorId) return local;
+    return `${local} / ${nomeSubsetor(subsetorId)}`;
+}
+
+
+function limparFormularioMovimentacao() {
+    ['itemMov','destino','destinoSubsetor','quantidadeMov','observacaoMov','statusMov','origemNome','origemAtual'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === 'quantidadeMov') el.value = 1;
+        else el.value = '';
+    });
+    atualizarResumoMovimentacao();
+}
+
+function podeAdministrar() {
+    return ['administrador', 'gestor'].includes(String(perfilUsuario || '').toLowerCase());
+}
+
+async function carregarSubsetores() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('subsetores')
+            .select('*')
+            .eq('ativo', true)
+            .order('local_id', { ascending: true })
+            .order('nome', { ascending: true });
+        if (error) throw error;
+        subsetores = Array.isArray(data) ? data : [];
+        popularSubsetoresCadastro();
+        popularSubsetoresMovimentacao();
+        const adminLocal = document.getElementById('adminSubsetorLocal');
+        if (adminLocal) {
+            const valorAdmin = adminLocal.value;
+            adminLocal.innerHTML = '<option value="">Selecione o local</option>';
+            LOCAIS.forEach(local => {
+                adminLocal.innerHTML += `<option value="${local.id}">${escaparHTML(local.nome)}</option>`;
+            });
+            if ([...adminLocal.options].some(o => o.value === valorAdmin)) adminLocal.value = valorAdmin;
+        }
+        renderizarSubsetoresAdmin();
+    } catch (erro) {
+        console.warn('Subsetores ainda não configurados:', erro?.message || erro);
+        subsetores = [];
+    }
+}
+
+function popularSubsetorSelect(selectId, localId, placeholder = 'Sem subsetor') {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const valorAtual = select.value;
+    select.innerHTML = `<option value="">${escaparHTML(placeholder)}</option>`;
+    if (!localId) return;
+    subsetores
+        .filter(s => String(s.local_id) === String(localId) && s.ativo !== false)
+        .forEach(s => {
+            select.innerHTML += `<option value="${Number(s.id)}">${escaparHTML(s.nome)}</option>`;
+        });
+    if ([...select.options].some(o => o.value === valorAtual)) select.value = valorAtual;
+}
+
+function popularSubsetoresCadastro() {
+    popularSubsetorSelect('subsetorCadastro', document.getElementById('local')?.value, 'Sem subsetor');
+}
+
+function popularSubsetoresMovimentacao() {
+    popularSubsetorSelect('destinoSubsetor', document.getElementById('destino')?.value, 'Sem subsetor');
+}
+
+async function registrarAuditoria(acao, payload = {}) {
+    if (!usuarioLogado?.id) return;
+    try {
+        const { error } = await supabaseClient.from('auditoria').insert([{
+            usuario_id: usuarioLogado.id,
+            acao: String(acao || '').toUpperCase(),
+            item_id: payload.item_id ?? null,
+            descricao: payload.descricao || null,
+            detalhes: payload.detalhes || {},
+            data: new Date().toISOString()
+        }]);
+        if (error) console.warn('AUDITORIA:', error.message);
+    } catch (erro) {
+        console.warn('Falha ao registrar auditoria:', erro);
+    }
+}
+
+async function carregarAuditoria() {
+    const tbody = document.getElementById('listaAuditoria');
+    if (!tbody) return;
+    try {
+        const { data, error } = await supabaseClient
+            .from('auditoria')
+            .select('*, usuarios:usuario_id(nome,email)')
+            .order('data', { ascending: false });
+        if (error) throw error;
+        tbody.innerHTML = '';
+        (data || []).forEach(reg => {
+            const tr = document.createElement('tr');
+            const detalhes = reg.detalhes && typeof reg.detalhes === 'object'
+                ? JSON.stringify(reg.detalhes, null, 2)
+                : String(reg.detalhes || '');
+            tr.innerHTML = `
+                <td>${escaparHTML(reg.data ? new Date(reg.data).toLocaleString('pt-BR') : '-')}</td>
+                <td><strong>${escaparHTML(reg.usuarios?.nome || reg.usuarios?.email || '—')}</strong></td>
+                <td><span class="auditoria-badge auditoria-${escaparHTML(String(reg.acao || '').toLowerCase())}">${escaparHTML(reg.acao || '-')}</span></td>
+                <td>${escaparHTML(reg.descricao || '-')}</td>
+                <td><pre class="auditoria-detalhes">${escaparHTML(detalhes)}</pre></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        if (!data?.length) tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhuma ação registrada.</td></tr>';
+    } catch (erro) {
+        console.error('ERRO AO CARREGAR AUDITORIA:', erro);
+    }
+}
+
+async function criarSubsetor() {
+    if (!podeAdministrar()) return alert('Usuário sem permissão para administrar subsetores.');
+    const localId = document.getElementById('adminSubsetorLocal')?.value;
+    const nome = document.getElementById('adminSubsetorNome')?.value?.trim();
+    if (!localId || !nome) return alert('Selecione o local e informe o nome do subsetor.');
+    const { error } = await supabaseClient.from('subsetores').insert([{
+        local_id: Number(localId), nome, ativo: true, created_by: usuarioLogado.id
+    }]);
+    if (error) return alert('Erro ao criar subsetor.\n\n' + error.message);
+    document.getElementById('adminSubsetorNome').value = '';
+    await carregarSubsetores();
+    await registrarAuditoria('CRIACAO_SUBSETOR', { descricao: `Criação do subsetor: ${nome}`, detalhes: { local_id: Number(localId), nome } });
+}
+
+async function editarSubsetor(id) {
+    if (!podeAdministrar()) return alert('Usuário sem permissão.');
+    const atual = subsetores.find(s => Number(s.id) === Number(id));
+    if (!atual) return;
+    const nome = prompt('Nome do subsetor:', atual.nome);
+    if (nome === null) return;
+    const novoNome = nome.trim();
+    if (!novoNome) return alert('O nome não pode ficar vazio.');
+    const { error } = await supabaseClient.from('subsetores').update({ nome: novoNome }).eq('id', id);
+    if (error) return alert('Erro ao editar subsetor.\n\n' + error.message);
+    await registrarAuditoria('EDICAO_SUBSETOR', { descricao: `Edição do subsetor: ${atual.nome}`, detalhes: { id, antes: atual.nome, depois: novoNome } });
+    await carregarSubsetores();
+}
+
+async function inativarSubsetor(id) {
+    if (!podeAdministrar()) return alert('Usuário sem permissão.');
+    const atual = subsetores.find(s => Number(s.id) === Number(id));
+    if (!atual || !confirm(`Inativar o subsetor "${atual.nome}"?`)) return;
+    const { error } = await supabaseClient.from('subsetores').update({ ativo: false }).eq('id', id);
+    if (error) return alert('Erro ao inativar subsetor.\n\n' + error.message);
+    await registrarAuditoria('INATIVACAO_SUBSETOR', { descricao: `Inativação do subsetor: ${atual.nome}`, detalhes: { id, local_id: atual.local_id } });
+    await carregarSubsetores();
+}
+
+function renderizarSubsetoresAdmin() {
+    const tbody = document.getElementById('listaSubsetoresAdmin');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    subsetores.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${escaparHTML(nomeLocal(s.local_id))}</td>
+            <td><strong>${escaparHTML(s.nome)}</strong></td>
+            <td><span class="status-badge ativo">Ativo</span></td>
+            <td class="admin-actions">
+                <button type="button" class="btn-secondary btn-small" onclick="editarSubsetor(${Number(s.id)})"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="btn-secondary btn-small" onclick="inativarSubsetor(${Number(s.id)})"><i class="fa-solid fa-ban"></i></button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+    if (!subsetores.length) tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum subsetor cadastrado.</td></tr>';
+}
+
+async function carregarUsuariosAdmin() {
+    const tbody = document.getElementById('listaUsuariosAdmin');
+    if (!tbody) return;
+    try {
+        const { data, error } = await supabaseClient.from('usuarios').select('id,email,nome,perfil,ativo,created_at').order('nome', { ascending: true });
+        if (error) throw error;
+        tbody.innerHTML = '';
+        (data || []).forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${escaparHTML(u.nome || '—')}</td>
+                <td>${escaparHTML(u.email || '—')}</td>
+                <td>${escaparHTML(u.perfil || 'consulta')}</td>
+                <td><span class="status-badge ${u.ativo === false ? 'inativo' : 'ativo'}">${u.ativo === false ? 'Inativo' : 'Ativo'}</span></td>
+                <td class="admin-actions">
+                    <button type="button" class="btn-secondary btn-small" onclick="alternarStatusUsuario('${escaparHTML(u.id)}', ${u.ativo !== false})">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+        if (!data?.length) tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum usuário encontrado.</td></tr>';
+    } catch (erro) {
+        console.error('ERRO USUÁRIOS:', erro);
+    }
+}
+
+async function criarUsuario() {
+    if (!podeAdministrar()) return alert('Usuário sem permissão para criar usuários.');
+    const nome = document.getElementById('novoUsuarioNome')?.value?.trim();
+    const email = document.getElementById('novoUsuarioEmail')?.value?.trim();
+    const senha = document.getElementById('novoUsuarioSenha')?.value || '';
+    const perfil = document.getElementById('novoUsuarioPerfil')?.value || 'consulta';
+    if (!nome || !email || senha.length < 6) return alert('Informe nome, e-mail e uma senha com pelo menos 6 caracteres.');
+    try {
+        const { data, error } = await supabaseClient.functions.invoke('criar-usuario', {
+            body: { nome, email, senha, perfil }
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        alert('Usuário criado com sucesso.');
+        document.getElementById('novoUsuarioNome').value = '';
+        document.getElementById('novoUsuarioEmail').value = '';
+        document.getElementById('novoUsuarioSenha').value = '';
+        await carregarUsuariosAdmin();
+        await registrarAuditoria('CRIACAO_USUARIO', { descricao: `Criação do usuário: ${email}`, detalhes: { nome, email, perfil } });
+    } catch (erro) {
+        alert('Não foi possível criar o usuário.\n\nVerifique se a Edge Function "criar-usuario" foi publicada no Supabase.\n\n' + (erro?.message || 'Erro desconhecido.'));
+    }
+}
+
+async function alternarStatusUsuario(id, ativoAtual) {
+    if (!podeAdministrar()) return alert('Usuário sem permissão.');
+    if (String(id) === String(usuarioLogado?.id)) return alert('Não é permitido inativar o próprio usuário.');
+    const novoStatus = !ativoAtual;
+    const { error } = await supabaseClient.from('usuarios').update({ ativo: novoStatus }).eq('id', id);
+    if (error) return alert('Erro ao alterar status.\n\n' + error.message);
+    await registrarAuditoria('STATUS_USUARIO', { descricao: `Usuário ${novoStatus ? 'ativado' : 'inativado'}`, detalhes: { usuario_id: id, ativo: novoStatus } });
+    await carregarUsuariosAdmin();
+}
+
+async function abrirAdministracao() {
+    if (!podeAdministrar()) return alert('Usuário sem permissão para acessar a Administração.');
+    abrirTela('administracaoTela', document.getElementById('menuAdministracao'));
+    await carregarSubsetores();
+    await carregarUsuariosAdmin();
+    await carregarAuditoria();
+}
 
 /* =========================================================
    CARREGAR LOCAIS NOS SELECTS
@@ -909,6 +1184,9 @@ async function salvarItem(event) {
             'local'
         )?.value || '';
 
+    const subsetorId =
+        document.getElementById('subsetorCadastro')?.value || null;
+
 
     const status =
         document.getElementById(
@@ -1081,28 +1359,22 @@ async function salvarItem(event) {
                um estoque do mesmo item no mesmo local.
             */
 
+            let consultaEstoque = supabaseClient
+                .from('itens')
+                .select('*')
+                .eq('nome', nome)
+                .eq('local_id', Number(localId));
+
+            consultaEstoque = subsetorId
+                ? consultaEstoque.eq('subsetor_id', Number(subsetorId))
+                : consultaEstoque.is('subsetor_id', null);
+
             const {
-                data:
-                    existente,
-                error:
-                    erroBusca
-            } =
-                await supabaseClient
-                    .from('itens')
-                    .select('*')
-                    .eq(
-                        'nome',
-                        nome
-                    )
-                    .eq(
-                        'local_id',
-                        Number(localId)
-                    )
-                    .is(
-                        'patrimonio',
-                        null
-                    )
-                    .maybeSingle();
+                data: existente,
+                error: erroBusca
+            } = await consultaEstoque
+                .is('patrimonio', null)
+                .maybeSingle();
 
 
             if (erroBusca) {
@@ -1192,6 +1464,9 @@ async function salvarItem(event) {
                             local_id:
                                 Number(localId),
 
+                            subsetor_id:
+                                subsetorId ? Number(subsetorId) : null,
+
                             quantidade:
                                 quantidade,
 
@@ -1245,6 +1520,9 @@ async function salvarItem(event) {
                         local_id:
                             Number(localId),
 
+                        subsetor_id:
+                            subsetorId ? Number(subsetorId) : null,
+
                         quantidade:
                             1,
 
@@ -1273,6 +1551,20 @@ async function salvarItem(event) {
 
 
         limparFormularioCadastro();
+
+        await registrarAuditoria('CADASTRO', {
+            item_id: null,
+            descricao: `Cadastro do item: ${nome}`,
+            detalhes: {
+                nome,
+                tipo,
+                quantidade,
+                local_id: Number(localId),
+                subsetor_id: subsetorId ? Number(subsetorId) : null,
+                patrimonio: patrimonio || null,
+                status
+            }
+        });
 
 
         await carregarDashboard();
@@ -1344,6 +1636,9 @@ function limparFormularioCadastro() {
         }
     );
 
+
+    const subsetor = document.getElementById('subsetorCadastro');
+    if (subsetor) subsetor.value = '';
 
     const local =
         document.getElementById(
@@ -1497,7 +1792,7 @@ function renderizarItens() {
             <tr>
 
                 <td
-                    colspan="8"
+                    colspan="9"
                     class="empty-state"
                 >
 
@@ -1572,6 +1867,8 @@ function renderizarItens() {
                 nomeLocal(
                     item.local_id
                 );
+
+            const subsetor = nomeSubsetor(item.subsetor_id);
 
 
             const status =
@@ -1881,6 +2178,26 @@ async function editarItem(id) {
         }
 
 
+        await registrarAuditoria('EDICAO', {
+            item_id: Number(item.id),
+            descricao: `Edição do item: ${item.nome || nome}`,
+            detalhes: {
+                antes: {
+                    nome: item.nome,
+                    descricao: item.descricao,
+                    local_id: item.local_id,
+                    subsetor_id: item.subsetor_id || null,
+                    quantidade: item.quantidade,
+                    status: item.status,
+                    patrimonio: item.patrimonio || null
+                },
+                depois: {
+                    nome,
+                    descricao: novaDescricao.trim()
+                }
+            }
+        });
+
         alert(
             'Item atualizado com sucesso!'
         );
@@ -1984,6 +2301,12 @@ async function excluirItem(id) {
 
     try {
 
+        await registrarAuditoria('EXCLUSAO', {
+            item_id: Number(item.id),
+            descricao: `Exclusão do item: ${item.nome || 'Item'}`,
+            detalhes: { ...item }
+        });
+
         const {
             error
         } =
@@ -2083,8 +2406,9 @@ function carregarItensMovimentacao() {
                         'Item'
                     ) +
                     ' — ' +
-                    nomeLocal(
-                        item.local_id
+                    formatarLocalSubsetor(
+                        item.local_id,
+                        item.subsetor_id
                     ) +
                     ' — ' +
                     quantidade +
@@ -2538,8 +2862,9 @@ function gerarRelatorioLocais() {
         item => {
 
             const local =
-                nomeLocal(
-                    item.local_id
+                formatarLocalSubsetor(
+                    item.local_id,
+                    item.subsetor_id
                 );
 
 
@@ -3014,7 +3339,7 @@ async function carregarHistorico() {
                 .from(
                     'movimentacoes'
                 )
-                .select('*')
+                .select('*, usuarios:usuario_id(nome,email)')
                 .order(
                     'data',
                     {
@@ -3108,6 +3433,9 @@ async function carregarHistorico() {
                         mov.destino_id
                     );
 
+                const origemCompleta = formatarLocalSubsetor(mov.origem_id, mov.origem_subsetor_id);
+                const destinoCompleto = formatarLocalSubsetor(mov.destino_id, mov.destino_subsetor_id);
+
 
                 const data =
                     mov.data
@@ -3142,7 +3470,7 @@ async function carregarHistorico() {
                     <td>
 
                         ${escaparHTML(
-                            origem
+                            origemCompleta
                         )}
 
                     </td>
@@ -3151,7 +3479,7 @@ async function carregarHistorico() {
                     <td>
 
                         ${escaparHTML(
-                            destino
+                            destinoCompleto
                         )}
 
                     </td>
@@ -3166,6 +3494,10 @@ async function carregarHistorico() {
 
                     </td>
 
+
+                    <td>
+                        ${escaparHTML(mov.usuarios?.nome || mov.usuarios?.email || '—')}
+                    </td>
 
                     <td>
 
@@ -3257,7 +3589,7 @@ function preencherOrigemAutomaticamente() {
     }
 
     origemInput.value =
-        nomeLocal(item.local_id);
+        formatarLocalSubsetor(item.local_id, item.subsetor_id);
 
     const quantidadeCampo =
         document.getElementById(
@@ -3337,14 +3669,16 @@ function atualizarResumoMovimentacao() {
     }
 
     const origem =
-        nomeLocal(
-            item.local_id
+        formatarLocalSubsetor(
+            item.local_id,
+            item.subsetor_id
         );
 
     const destino =
         destinoSelect?.value
-            ? nomeLocal(
-                destinoSelect.value
+            ? formatarLocalSubsetor(
+                destinoSelect.value,
+                document.getElementById('destinoSubsetor')?.value || null
             )
             : 'Selecione o destino';
 
@@ -3461,6 +3795,9 @@ async function movimentarItem(event) {
             'destino'
         )?.value || '';
 
+    const destinoSubsetorId =
+        document.getElementById('destinoSubsetor')?.value || null;
+
     const quantidade =
         Math.max(
             1,
@@ -3520,12 +3857,14 @@ async function movimentarItem(event) {
     const origemId =
         Number(item.local_id);
 
+    const origemSubsetorId = item.subsetor_id ? Number(item.subsetor_id) : null;
     const destino =
         Number(destinoId);
+    const destinoSubsetor = destinoSubsetorId ? Number(destinoSubsetorId) : null;
 
     if (
-        origemId ===
-        destino
+        origemId === destino &&
+        origemSubsetorId === destinoSubsetor
     ) {
 
         alert(
@@ -3565,7 +3904,10 @@ async function movimentarItem(event) {
             const dadosAtualizacao = {
 
                 local_id:
-                    destino
+                    destino,
+
+                subsetor_id:
+                    destinoSubsetor
 
             };
 
@@ -3612,6 +3954,15 @@ async function movimentarItem(event) {
 
                         destino_id:
                             destino,
+
+                        origem_subsetor_id:
+                            origemSubsetorId,
+
+                        destino_subsetor_id:
+                            destinoSubsetor,
+
+                        usuario_id:
+                            usuarioLogado?.id || null,
 
                         quantidade:
                             quantidade,
@@ -3667,28 +4018,22 @@ async function movimentarItem(event) {
                 throw erroOrigem;
             }
 
+            let consultaDestino = supabaseClient
+                .from('itens')
+                .select('*')
+                .eq('nome', item.nome)
+                .eq('local_id', destino);
+
+            consultaDestino = destinoSubsetor
+                ? consultaDestino.eq('subsetor_id', destinoSubsetor)
+                : consultaDestino.is('subsetor_id', null);
+
             const {
-                data:
-                    destinoExistente,
-                error:
-                    erroBuscaDestino
-            } =
-                await supabaseClient
-                    .from('itens')
-                    .select('*')
-                    .eq(
-                        'nome',
-                        item.nome
-                    )
-                    .eq(
-                        'local_id',
-                        destino
-                    )
-                    .is(
-                        'patrimonio',
-                        null
-                    )
-                    .maybeSingle();
+                data: destinoExistente,
+                error: erroBuscaDestino
+            } = await consultaDestino
+                .is('patrimonio', null)
+                .maybeSingle();
 
             if (erroBuscaDestino) {
                 throw erroBuscaDestino;
@@ -3748,6 +4093,9 @@ async function movimentarItem(event) {
                             local_id:
                                 destino,
 
+                            subsetor_id:
+                                destinoSubsetor,
+
                             quantidade:
                                 quantidade,
 
@@ -3802,6 +4150,15 @@ async function movimentarItem(event) {
                         destino_id:
                             destino,
 
+                        origem_subsetor_id:
+                            origemSubsetorId,
+
+                        destino_subsetor_id:
+                            destinoSubsetor,
+
+                        usuario_id:
+                            usuarioLogado?.id || null,
+
                         quantidade:
                             quantidade,
 
@@ -3824,6 +4181,20 @@ async function movimentarItem(event) {
             }
 
         }
+
+        await registrarAuditoria('MOVIMENTACAO', {
+            item_id: Number(item.id),
+            descricao: `Movimentação: ${item.nome || item.patrimonio || 'Item'}`,
+            detalhes: {
+                origem_id: origemId,
+                origem_subsetor_id: origemSubsetorId,
+                destino_id: destino,
+                destino_subsetor_id: destinoSubsetor,
+                quantidade,
+                observacao,
+                status: statusNovo || item.status || 'Ativo'
+            }
+        });
 
         alert(
             'Movimentação realizada com sucesso!'
@@ -3869,6 +4240,8 @@ async function movimentarItem(event) {
         if (destinoCampo) {
             destinoCampo.value = '';
         }
+        const destinoSubsetorCampo = document.getElementById('destinoSubsetor');
+        if (destinoSubsetorCampo) destinoSubsetorCampo.value = '';
 
         if (quantidadeCampo) {
             quantidadeCampo.value = 1;
@@ -5958,6 +6331,7 @@ window.addEventListener(
                 );
 
             carregarLocais();
+            await carregarSubsetores();
 
             atualizarMenus();
 
@@ -6908,3 +7282,29 @@ window.alternarTipoControle =
 
 
 })();
+
+/* =========================================================
+   INTEGRAÇÃO DAS NOVAS FUNCIONALIDADES
+========================================================= */
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const local = document.getElementById('local');
+    const destino = document.getElementById('destino');
+    if (local) local.addEventListener('change', popularSubsetoresCadastro);
+    if (destino) destino.addEventListener('change', popularSubsetoresMovimentacao);
+
+    await carregarSubsetores();
+    if (usuarioLogado) {
+        await carregarUsuariosAdmin();
+        await carregarAuditoria();
+    }
+});
+
+window.abrirAdministracao = abrirAdministracao;
+window.criarUsuario = criarUsuario;
+window.alternarStatusUsuario = alternarStatusUsuario;
+window.criarSubsetor = criarSubsetor;
+window.editarSubsetor = editarSubsetor;
+window.inativarSubsetor = inativarSubsetor;
+window.carregarUsuariosAdmin = carregarUsuariosAdmin;
+window.carregarAuditoria = carregarAuditoria;

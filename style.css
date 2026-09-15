@@ -8802,3 +8802,22 @@ body.login-mode .login-footer {
     }
 
 }
+
+/* =========================================================
+   NOVAS FUNCIONALIDADES — ADMINISTRAÇÃO / SUBSETORES / AUDITORIA
+========================================================= */
+.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;}
+.admin-card-wide{grid-column:1/-1;}
+.admin-form-grid{gap:14px;}
+.admin-table{min-width:760px;}
+.admin-actions{display:flex;gap:6px;align-items:center;}
+.btn-small{min-width:34px!important;width:34px;height:34px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;}
+.status-badge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
+.status-badge.ativo{background:var(--green-soft);color:var(--green);}
+.status-badge.inativo{background:var(--red-soft);color:var(--red);}
+.auditoria-badge{display:inline-flex;padding:5px 8px;border-radius:999px;background:var(--mc-blue-soft);color:var(--mc-blue);font-size:9px;font-weight:850;letter-spacing:.4px;}
+.auditoria-exclusao{background:var(--red-soft);color:var(--red);}
+.auditoria-movimentacao{background:var(--orange-soft);color:var(--orange);}
+.auditoria-edicao{background:var(--purple-soft);color:var(--purple);}
+.auditoria-detalhes{max-width:420px;max-height:120px;overflow:auto;white-space:pre-wrap;font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);margin:0;}
+@media (max-width:900px){.admin-grid{grid-template-columns:1fr}.admin-card-wide{grid-column:auto}.admin-table{min-width:720px}}
