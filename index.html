@@ -948,6 +948,18 @@
                         </select>
 
 
+                        <select
+                            id="filtroSubsetorDashboard"
+                            onchange="filtrarDashboard()"
+                        >
+
+                            <option value="">
+                                Todos os Subsetores
+                            </option>
+
+                        </select>
+
+
                     </div>
 
                 </div>
@@ -968,6 +980,10 @@
 
                                 <th>
                                     Local
+                                </th>
+
+                                <th>
+                                    Subsetor
                                 </th>
 
                                 <th>
@@ -1850,7 +1866,9 @@
                         onchange="filtrarItens()"
                         aria-label="Filtrar por subsetor"
                     >
-                        <option value="">Todos os Subsetores</option>
+                        <option value="">
+                            Todos os Subsetores
+                        </option>
                     </select>
 
                 </div>

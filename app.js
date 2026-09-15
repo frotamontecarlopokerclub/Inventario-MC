@@ -765,7 +765,8 @@ async function carregarSubsetores() {
         subsetores = Array.isArray(data) ? data : [];
         popularSubsetoresCadastro();
         popularSubsetoresMovimentacao();
-        popularFiltroSubsetores();
+        popularFiltroSubsetoresEstoque();
+        popularFiltroSubsetoresDashboard();
         const adminLocal = document.getElementById('adminSubsetorLocal');
         if (adminLocal) {
             const valorAdmin = adminLocal.value;
@@ -779,7 +780,6 @@ async function carregarSubsetores() {
     } catch (erro) {
         console.warn('Subsetores ainda não configurados:', erro?.message || erro);
         subsetores = [];
-        popularFiltroSubsetores();
     }
 }
 
@@ -1820,11 +1820,6 @@ function renderizarItens() {
                     'tr'
                 );
 
-            tr.dataset.subsetorId =
-                item.subsetor_id
-                    ? String(item.subsetor_id)
-                    : '';
-
 
             const foto =
                 item.foto_url
@@ -1887,6 +1882,12 @@ function renderizarItens() {
                 quantidadeItem(
                     item
                 );
+
+
+            tr.dataset.subsetorId =
+                item.subsetor_id
+                    ? String(item.subsetor_id)
+                    : '';
 
 
             tr.innerHTML = `
@@ -1952,6 +1953,15 @@ function renderizarItens() {
 
                 <td>
 
+                    ${escaparHTML(
+                        subsetor
+                    )}
+
+                </td>
+
+
+                <td>
+
                     <span
                         class="status-badge ${classeStatus(status)}"
                     >
@@ -2011,63 +2021,98 @@ function renderizarItens() {
    FILTRAR ITENS
 ========================================================= */
 
-function popularFiltroSubsetores() {
+function popularFiltroSubsetoresEstoque() {
 
-    const select = document.getElementById('filtroSubsetor');
+    const select =
+        document.getElementById(
+            'filtroSubsetor'
+        );
 
-    if (!select) return;
+    if (!select) {
+        return;
+    }
 
-    const valorAtual = select.value || '';
+    const valorAtual =
+        select.value || '';
 
-    select.innerHTML = `
-        <option value="">Todos os Subsetores</option>
-    `;
+    select.innerHTML =
+        '<option value="">Todos os Subsetores</option>';
 
-    const lista = Array.isArray(subsetores)
-        ? [...subsetores]
-            .filter(s => s && s.ativo !== false)
-            .sort((a, b) => {
+    const lista =
+        Array.isArray(subsetores)
+            ? [...subsetores]
+                .filter(
+                    s =>
+                        s &&
+                        s.ativo !== false
+                )
+                .sort(
+                    (a, b) => {
 
-                const localA = nomeLocal(a.local_id);
-                const localB = nomeLocal(b.local_id);
+                        const localA =
+                            nomeLocal(
+                                a.local_id
+                            );
 
-                const porLocal =
-                    String(localA).localeCompare(
-                        String(localB),
-                        'pt-BR',
-                        { sensitivity: 'base' }
-                    );
+                        const localB =
+                            nomeLocal(
+                                b.local_id
+                            );
 
-                if (porLocal !== 0) return porLocal;
+                        const porLocal =
+                            String(localA)
+                                .localeCompare(
+                                    String(localB),
+                                    'pt-BR',
+                                    {
+                                        sensitivity:
+                                            'base'
+                                    }
+                                );
 
-                return String(a.nome || '').localeCompare(
-                    String(b.nome || ''),
-                    'pt-BR',
-                    { sensitivity: 'base' }
-                );
-            })
-        : [];
+                        if (porLocal !== 0) {
+                            return porLocal;
+                        }
 
-    lista.forEach(subsetor => {
+                        return String(a.nome || '')
+                            .localeCompare(
+                                String(b.nome || ''),
+                                'pt-BR',
+                                {
+                                    sensitivity:
+                                        'base'
+                                }
+                            );
+                    }
+                )
+            : [];
 
-        const option = document.createElement('option');
+    lista.forEach(
+        s => {
 
-        option.value = String(subsetor.id);
+            select.innerHTML += `
+                <option value="${Number(s.id)}">
+                    ${escaparHTML(
+                        nomeLocal(s.local_id) +
+                        ' / ' +
+                        s.nome
+                    )}
+                </option>
+            `;
 
-        option.textContent =
-            `${nomeLocal(subsetor.local_id)} / ${subsetor.nome}`;
-
-        select.appendChild(option);
-
-    });
+        }
+    );
 
     if (
         valorAtual &&
         [...select.options].some(
-            option => option.value === valorAtual
+            option =>
+                option.value ===
+                valorAtual
         )
     ) {
-        select.value = valorAtual;
+        select.value =
+            valorAtual;
     }
 }
 
@@ -2076,7 +2121,9 @@ function filtrarItens() {
 
     const busca =
         document
-            .getElementById('busca')
+            .getElementById(
+                'busca'
+            )
             ?.value
             ?.trim()
             .toLowerCase() ||
@@ -2084,7 +2131,9 @@ function filtrarItens() {
 
     const filtroSubsetor =
         document
-            .getElementById('filtroSubsetor')
+            .getElementById(
+                'filtroSubsetor'
+            )
             ?.value ||
         '';
 
@@ -2095,48 +2144,59 @@ function filtrarItens() {
 
     let totalVisiveis = 0;
 
-    linhas.forEach(linha => {
+    linhas.forEach(
+        linha => {
 
-        if (!linha.cells || linha.cells.length < 7) {
-            return;
+            if (
+                !linha.cells ||
+                linha.cells.length < 9
+            ) {
+                return;
+            }
+
+            const texto =
+                linha.innerText
+                    .toLowerCase();
+
+            const correspondeBusca =
+                !busca ||
+                texto.includes(
+                    busca
+                );
+
+            const subsetorId =
+                linha.dataset
+                    .subsetorId ||
+                '';
+
+            const correspondeSubsetor =
+                !filtroSubsetor ||
+                String(subsetorId) ===
+                    String(filtroSubsetor);
+
+            const mostrar =
+                correspondeBusca &&
+                correspondeSubsetor;
+
+            linha.style.display =
+                mostrar
+                    ? ''
+                    : 'none';
+
+            if (mostrar) {
+                totalVisiveis++;
+            }
+
         }
+    );
 
-        const texto =
-            linha.innerText
-                .toLowerCase();
+    const total =
+        document.getElementById(
+            'estoqueTotal'
+        );
 
-        const correspondeBusca =
-            !busca ||
-            texto.includes(busca);
-
-        const subsetorId =
-            linha.dataset.subsetorId ||
-            '';
-
-        const correspondeSubsetor =
-            !filtroSubsetor ||
-            String(subsetorId) === String(filtroSubsetor);
-
-        const mostrar =
-            correspondeBusca &&
-            correspondeSubsetor;
-
-        linha.style.display =
-            mostrar
-                ? ''
-                : 'none';
-
-        if (mostrar) {
-            totalVisiveis++;
-        }
-
-    });
-
-    const totalElement =
-        document.getElementById('estoqueTotal');
-
-    if (totalElement) {
-        totalElement.innerText =
+    if (total) {
+        total.innerText =
             totalVisiveis;
     }
 
@@ -2961,8 +3021,12 @@ function gerarRelatorioLocais() {
         item => {
 
             const local =
-                formatarLocalSubsetor(
-                    item.local_id,
+                nomeLocal(
+                    item.local_id
+                );
+
+            const subsetor =
+                nomeSubsetor(
                     item.subsetor_id
                 );
 
@@ -2980,7 +3044,7 @@ function gerarRelatorioLocais() {
 
 
             const chave =
-                `${tipo}||${local}`;
+                `${tipo}||${local}||${subsetor}`;
 
 
             if (
@@ -2994,6 +3058,9 @@ function gerarRelatorioLocais() {
 
                     local:
                         local,
+
+                    subsetor:
+                        subsetor,
 
                     quantidade:
                         0
@@ -3067,7 +3134,7 @@ function gerarRelatorioLocais() {
             <tr>
 
                 <td
-                    colspan="3"
+                    colspan="4"
                     class="empty-state"
                 >
 
@@ -3132,6 +3199,24 @@ function gerarRelatorioLocais() {
                 </td>
 
 
+                <td
+                    data-subsetor="${escaparHTML(
+                        String(
+                            registro.subsetor ||
+                            ''
+                        )
+                        .trim()
+                        .toLowerCase()
+                    )}"
+                >
+
+                    ${escaparHTML(
+                        registro.subsetor
+                    )}
+
+                </td>
+
+
                 <td>
 
                     <strong>
@@ -3183,6 +3268,17 @@ function filtrarDashboard() {
         '';
 
 
+    const filtroSubsetor =
+        document
+            .getElementById(
+                'filtroSubsetorDashboard'
+            )
+            ?.value
+            ?.trim()
+            .toLowerCase() ||
+        '';
+
+
     const linhas =
         document.querySelectorAll(
             '#dashboardLocais tr'
@@ -3206,8 +3302,15 @@ function filtrarDashboard() {
                 '';
 
 
+            const subsetor =
+                linha.children[2]
+                    ?.dataset
+                    ?.subsetor ||
+                '';
+
+
             const texto =
-                `${item} ${local}`;
+                `${item} ${local} ${subsetor}`;
 
 
             const correspondeBusca =
@@ -3223,10 +3326,17 @@ function filtrarDashboard() {
                     filtroLocal;
 
 
+            const correspondeSubsetor =
+                !filtroSubsetor ||
+                subsetor ===
+                    filtroSubsetor;
+
+
             linha.style.display =
                 (
                     correspondeBusca &&
-                    correspondeLocal
+                    correspondeLocal &&
+                    correspondeSubsetor
                 )
                     ? ''
                     : 'none';
@@ -3235,6 +3345,108 @@ function filtrarDashboard() {
     );
 
 }
+
+
+function popularFiltroSubsetoresDashboard() {
+
+    const select =
+        document.getElementById(
+            'filtroSubsetorDashboard'
+        );
+
+    if (!select) {
+        return;
+    }
+
+    const valorAtual =
+        select.value || '';
+
+    select.innerHTML =
+        '<option value="">Todos os Subsetores</option>';
+
+    const lista =
+        Array.isArray(subsetores)
+            ? [...subsetores]
+                .filter(
+                    s =>
+                        s &&
+                        s.ativo !== false
+                )
+                .sort(
+                    (a, b) => {
+
+                        const localA =
+                            nomeLocal(
+                                a.local_id
+                            );
+
+                        const localB =
+                            nomeLocal(
+                                b.local_id
+                            );
+
+                        const porLocal =
+                            String(localA)
+                                .localeCompare(
+                                    String(localB),
+                                    'pt-BR',
+                                    {
+                                        sensitivity:
+                                            'base'
+                                    }
+                                );
+
+                        if (porLocal !== 0) {
+                            return porLocal;
+                        }
+
+                        return String(a.nome || '')
+                            .localeCompare(
+                                String(b.nome || ''),
+                                'pt-BR',
+                                {
+                                    sensitivity:
+                                        'base'
+                                }
+                            );
+                    }
+                )
+            : [];
+
+    lista.forEach(
+        s => {
+
+            select.innerHTML += `
+                <option value="${escaparHTML(
+                    String(s.nome || '')
+                        .trim()
+                        .toLowerCase()
+                )}">
+                    ${escaparHTML(
+                        nomeLocal(s.local_id) +
+                        ' / ' +
+                        s.nome
+                    )}
+                </option>
+            `;
+
+        }
+    );
+
+    if (
+        valorAtual &&
+        [...select.options].some(
+            option =>
+                option.value ===
+                valorAtual
+        )
+    ) {
+        select.value =
+            valorAtual;
+    }
+
+}
+
 
 
 /* =========================================================
