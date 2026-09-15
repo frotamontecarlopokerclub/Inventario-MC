@@ -2701,3 +2701,378 @@ button{
     background:rgba(214,160,74,.25);
     color:#211816;
 }
+
+
+/* =========================================================
+   AJUSTE V2 — LOGOS E ÍCONES
+   Correção forçada para evitar imagens SVG/PNG ocupando
+   a viewport inteira e ícones desproporcionais.
+========================================================= */
+
+/* LOGO DA SIDEBAR */
+.sidebar-logo,
+.logo-imagem{
+    width:100% !important;
+    max-width:100% !important;
+}
+
+.sidebar-logo{
+    height:auto !important;
+    min-height:52px !important;
+}
+
+.logo-imagem{
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+    max-width:40px !important;
+    min-height:40px !important;
+    max-height:40px !important;
+    flex:0 0 40px !important;
+}
+
+.sidebar-logo .logo-imagem img,
+.sidebar-logo img{
+    display:block !important;
+    width:34px !important;
+    height:34px !important;
+    max-width:34px !important;
+    max-height:34px !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    object-fit:contain !important;
+}
+
+/* LOGO DO LOGIN / ACESSO */
+.login-logo{
+    width:100% !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+}
+
+.login-logo-imagem{
+    width:48px !important;
+    height:48px !important;
+    min-width:48px !important;
+    max-width:48px !important;
+    min-height:48px !important;
+    max-height:48px !important;
+    flex:0 0 48px !important;
+    overflow:hidden !important;
+}
+
+.login-logo .login-logo-imagem img,
+.login-logo img{
+    display:block !important;
+    width:40px !important;
+    height:40px !important;
+    max-width:40px !important;
+    max-height:40px !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    object-fit:contain !important;
+}
+
+/* GARANTIA: nenhuma logo pode virar uma imagem de tela cheia */
+.sidebar img[alt*="Monte Carlo"],
+.login-logo img[alt*="Monte Carlo"]{
+    position:static !important;
+    inset:auto !important;
+    transform:none !important;
+}
+
+/* ÍCONES — PADRÃO CORPORATIVO */
+.menu-item i{
+    width:19px !important;
+    min-width:19px !important;
+    max-width:19px !important;
+    font-size:13px !important;
+}
+
+.dash-icon,
+.status-icon,
+.usuario-avatar,
+.header-avatar{
+    flex:0 0 auto !important;
+}
+
+.dash-icon{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+    min-height:32px !important;
+    max-width:32px !important;
+    max-height:32px !important;
+}
+
+.dash-icon i{
+    font-size:13px !important;
+}
+
+.status-icon{
+    width:28px !important;
+    height:28px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+}
+
+.status-icon i{
+    font-size:11px !important;
+}
+
+.usuario-avatar{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+}
+
+.usuario-avatar i{
+    font-size:12px !important;
+}
+
+.header-avatar{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+}
+
+.header-avatar i{
+    font-size:12px !important;
+}
+
+/* BOTÕES COM ÍCONES */
+button i{
+    font-size:11px !important;
+}
+
+.btn-login i{
+    font-size:11px !important;
+}
+
+/* GARANTE QUE ÍCONES FONT-AWESOME NÃO HERDEM TAMANHOS GIGANTES */
+.fa-solid,
+.fa-regular,
+.fa-brands{
+    line-height:1 !important;
+}
+
+/* MODAL: a única imagem que pode ser grande é a foto do item */
+#imagemModal{
+    width:auto !important;
+    height:auto !important;
+    max-width:min(800px,90vw) !important;
+    max-height:82vh !important;
+    object-fit:contain !important;
+}
+
+/* ---------- DIMENSÕES FINAIS DA ÁREA PÚBLICA/LOGIN ---------- */
+
+#loginTela{
+    min-height:calc(100vh - 72px) !important;
+    padding:20px !important;
+}
+
+.login-container{
+    width:100% !important;
+    max-width:390px !important;
+}
+
+.login-card{
+    width:100% !important;
+    max-width:390px !important;
+    padding:24px 26px 19px !important;
+}
+
+/* Evita qualquer imagem decorativa dentro da tela de login
+   de escapar do card */
+#loginTela img{
+    max-width:100% !important;
+}
+
+/* Se a tela pública estiver usando apenas o logo,
+   limita também a imagem fora do card. */
+body.login-mode > .main img[alt*="Monte Carlo"],
+body.login-mode .main > img[alt*="Monte Carlo"]{
+    display:block !important;
+    width:72px !important;
+    height:72px !important;
+    max-width:72px !important;
+    max-height:72px !important;
+    object-fit:contain !important;
+    margin:0 auto !important;
+}
+
+/* RESPONSIVO */
+@media (max-width:480px){
+    .sidebar-logo .logo-imagem img,
+    .sidebar-logo img{
+        width:32px !important;
+        height:32px !important;
+        max-width:32px !important;
+        max-height:32px !important;
+    }
+
+    .login-logo-imagem{
+        width:44px !important;
+        height:44px !important;
+        min-width:44px !important;
+        max-width:44px !important;
+        min-height:44px !important;
+        max-height:44px !important;
+    }
+
+    .login-logo .login-logo-imagem img,
+    .login-logo img{
+        width:36px !important;
+        height:36px !important;
+        max-width:36px !important;
+        max-height:36px !important;
+    }
+
+    .dash-icon{
+        width:30px !important;
+        height:30px !important;
+        min-width:30px !important;
+        min-height:30px !important;
+    }
+}
+
+
+/* =========================================================
+   V3 — LEITURA / TIPOGRAFIA
+   Pequeno aumento geral de fonte para melhorar conforto
+   visual sem perder o layout compacto.
+========================================================= */
+
+body{
+    font-size:14px !important;
+}
+
+/* Navegação */
+.menu-item{
+    font-size:14px !important;
+}
+
+.menu-item span{
+    font-size:14px !important;
+}
+
+/* Cabeçalhos */
+.page-title,
+h1{
+    font-size:28px !important;
+}
+
+h2{
+    font-size:21px !important;
+}
+
+h3{
+    font-size:17px !important;
+}
+
+/* Textos auxiliares */
+.page-subtitle,
+.section-subtitle,
+.card-subtitle{
+    font-size:13px !important;
+}
+
+/* Dashboard */
+.stat-value,
+.kpi-value{
+    font-size:27px !important;
+}
+
+.stat-label,
+.kpi-label{
+    font-size:13px !important;
+}
+
+.status-card .status-value{
+    font-size:24px !important;
+}
+
+.status-card .status-label{
+    font-size:12px !important;
+}
+
+/* Tabelas */
+table{
+    font-size:13px !important;
+}
+
+th{
+    font-size:11px !important;
+}
+
+td{
+    font-size:13px !important;
+}
+
+/* Campos e selects */
+input,
+select,
+textarea{
+    font-size:13px !important;
+}
+
+label{
+    font-size:13px !important;
+}
+
+/* Botões */
+button,
+.btn{
+    font-size:13px !important;
+}
+
+/* Pesquisa e filtros do dashboard */
+.dashboard-filter input,
+.dashboard-filter select,
+.filtro input,
+.filtro select{
+    font-size:13px !important;
+}
+
+/* Usuário no cabeçalho/sidebar */
+.usuario-nome,
+.usuario-email,
+.usuario-perfil,
+.user-name,
+.user-role{
+    font-size:12px !important;
+}
+
+/* Mantém textos pequenos realmente pequenos */
+.eyebrow,
+.section-kicker,
+.badge,
+.tag{
+    font-size:10px !important;
+}
+
+/* Login / consulta */
+.login-card input,
+.login-card select,
+.login-card button{
+    font-size:13px !important;
+}
+
+.login-card label{
+    font-size:13px !important;
+}
+
+.login-card p{
+    font-size:12px !important;
+}
+
+/* Evita que o aumento tipográfico estoure componentes */
+.card,
+.stat-card,
+.status-card,
+.panel,
+.table-card{
+    overflow:hidden;
+}
