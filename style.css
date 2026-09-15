@@ -6707,147 +6707,135 @@ input[type="radio"]{
         grid-template-columns:1fr !important;
     }
 }
-
-
 /* =========================================================
-   CONSULTA DE INVENTÁRIO SEM LOGIN — AJUSTE DE LARGURA
-   SOMENTE ESTA TELA
+   MODAL DE FOTO — VISUALIZAÇÃO AMPLIADA
    ========================================================= */
 
-/* A consulta pública ocupa toda a área disponível da janela,
-   sem herdar a largura reservada ao menu lateral. */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) .main {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: 0 !important;
-    min-width: 0 !important;
-}
+#modalFoto {
+    position: fixed !important;
+    inset: 0 !important;
 
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #consultaPublicaTela {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: calc(100vh - 70px) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 30px !important;
     box-sizing: border-box !important;
-    padding: 28px 32px 42px !important;
+
+    background: rgba(15, 23, 42, 0.88) !important;
+
+    z-index: 99999 !important;
 }
 
-/* Cabeçalho e conteúdo passam a acompanhar toda a largura. */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #consultaPublicaTela .consulta-publica-header,
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #consultaPublicaTela > .consulta-publica-container {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
+/* Quando o modal estiver aberto */
+#modalFoto.active {
+    display: flex !important;
 }
 
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #consultaPublicaTela > .consulta-publica-container {
-    padding: 22px 0 40px !important;
-}
+/* Imagem ampliada */
+#modalFoto #imagemModal {
+    display: block !important;
 
-/* Filtros distribuídos pela largura disponível. */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #consultaPublicaTela .consulta-publica-toolbar {
-    width: 100% !important;
-    grid-template-columns: minmax(320px, 1fr) 220px 210px 190px auto auto !important;
-    box-sizing: border-box !important;
-}
+    max-width: min(92vw, 1200px) !important;
+    max-height: 88vh !important;
 
-/* Cards ocupam a largura inteira e se distribuem de forma uniforme. */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #listaConsultaPublica {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
-    gap: 18px !important;
-    align-items: stretch !important;
-    justify-items: stretch !important;
-}
+    width: auto !important;
+    height: auto !important;
 
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #listaConsultaPublica .consulta-publica-card {
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Mantém todas as fotos com a mesma área visual. */
-body:has(
-    input[placeholder*="Pesquisar item, categoria ou local"]
-) #listaConsultaPublica .consulta-publica-card img {
-    width: 100% !important;
-    height: 190px !important;
     object-fit: contain !important;
+
+    border-radius: 10px !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45) !important;
 }
 
-/* Tablet */
-@media (max-width: 1100px) {
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela .consulta-publica-toolbar {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
+/* Botão X */
+#modalFoto .fechar-modal,
+#modalFoto .modal-fechar,
+#modalFoto .close,
+#modalFoto .btn-fechar {
+    position: absolute !important;
 
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela .consulta-publica-busca {
-        grid-column: 1 / -1 !important;
-    }
+    top: 20px !important;
+    right: 25px !important;
+
+    width: 44px !important;
+    height: 44px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border: 0 !important;
+    border-radius: 50% !important;
+
+    background: rgba(255, 255, 255, 0.95) !important;
+
+    color: #7b3034 !important;
+
+    font-size: 25px !important;
+    font-weight: 700 !important;
+
+    cursor: pointer !important;
+
+    z-index: 100000 !important;
+
+    transition:
+        transform .18s ease,
+        background .18s ease,
+        color .18s ease !important;
 }
 
-/* Celular */
-@media (max-width: 700px) {
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela {
-        min-height: calc(100vh - 60px) !important;
-        padding: 16px 12px 30px !important;
+#modalFoto .fechar-modal:hover,
+#modalFoto .modal-fechar:hover,
+#modalFoto .close:hover,
+#modalFoto .btn-fechar:hover {
+    transform: scale(1.08) !important;
+
+    background: #7b3034 !important;
+
+    color: #ffffff !important;
+}
+
+/* Impede seleção arrastada da imagem */
+#modalFoto #imagemModal {
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* =========================================================
+   MODAL — CELULAR
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    #modalFoto {
+        padding: 15px !important;
     }
 
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela > .consulta-publica-container {
-        padding: 16px 0 30px !important;
+    #modalFoto #imagemModal {
+        max-width: 96vw !important;
+        max-height: 82vh !important;
+
+        border-radius: 8px !important;
     }
 
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela .consulta-publica-toolbar {
-        grid-template-columns: 1fr !important;
-    }
+    #modalFoto .fechar-modal,
+    #modalFoto .modal-fechar,
+    #modalFoto .close,
+    #modalFoto .btn-fechar {
+        top: 12px !important;
+        right: 12px !important;
 
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #consultaPublicaTela .consulta-publica-busca {
-        grid-column: auto !important;
-    }
+        width: 40px !important;
+        height: 40px !important;
 
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #listaConsultaPublica {
-        grid-template-columns: 1fr !important;
-        gap: 14px !important;
-    }
-
-    body:has(
-        input[placeholder*="Pesquisar item, categoria ou local"]
-    ) #listaConsultaPublica .consulta-publica-card img {
-        height: 180px !important;
+        font-size: 22px !important;
     }
 }
