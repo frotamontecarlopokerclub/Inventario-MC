@@ -5841,3 +5841,511 @@ body:has(
         height:150px !important;
     }
 }
+
+
+/* =========================================================
+   MONTE CARLO — V5
+   IDENTIDADE CORPORATIVA GLOBAL
+   Fundo claro + Navy / Azul / Dourado
+   Cards fluidos e alinhados
+========================================================= */
+
+/* ---------- PALETA OFICIAL UTILIZADA NO SISTEMA ----------
+   Mantém as variáveis já existentes no projeto:
+   Navy #0b1220 / #111b2e / #18243a
+   Azul #2457d6 / #1d4ed8
+   Dourado #d2a04a
+--------------------------------------------------------- */
+
+:root{
+    --mc-navy:#0b1220 !important;
+    --mc-navy-2:#111b2e !important;
+    --mc-navy-3:#18243a !important;
+    --mc-blue:#2457d6 !important;
+    --mc-blue-2:#1d4ed8 !important;
+    --mc-blue-soft:#edf3ff !important;
+    --mc-gold:#d2a04a !important;
+    --mc-gold-soft:#fbf5e8 !important;
+
+    --mc-bg-white:#ffffff !important;
+    --mc-surface:#ffffff !important;
+    --mc-border:#e6eaf0 !important;
+}
+
+/* =========================================================
+   1. FUNDO GLOBAL — BRANCO
+========================================================= */
+
+html,
+body{
+    background:#ffffff !important;
+}
+
+body{
+    color:var(--ink) !important;
+}
+
+/* Todas as telas internas devem respirar em branco */
+.main,
+.main-content,
+.content,
+.tela{
+    background:#ffffff !important;
+}
+
+/* =========================================================
+   2. HEADER — LIMPO E CORPORATIVO
+========================================================= */
+
+.main-header,
+.topbar,
+.header{
+    background:#ffffff !important;
+    border-bottom:1px solid #e7ebf0 !important;
+    box-shadow:0 1px 0 rgba(11,18,32,.02) !important;
+}
+
+/* Pequenos textos de identificação */
+.header-subtitulo,
+.breadcrumb,
+.page-title > div > span,
+.dashboard-topo > div > span{
+    color:var(--mc-gold) !important;
+}
+
+/* Títulos */
+.main-header h1,
+.page-title h1,
+.dashboard-topo h1,
+#pageTitle{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   3. SIDEBAR — BRANDBOOK
+========================================================= */
+
+.sidebar{
+    background:
+        linear-gradient(
+            180deg,
+            var(--mc-navy) 0%,
+            var(--mc-navy-2) 100%
+        ) !important;
+
+    border-right:1px solid rgba(210,160,74,.12) !important;
+    box-shadow:10px 0 30px rgba(11,18,32,.10) !important;
+}
+
+/* Logo da sidebar */
+.sidebar-logo{
+    border-bottom:1px solid rgba(255,255,255,.07) !important;
+}
+
+.logo-imagem{
+    background:rgba(210,160,74,.08) !important;
+    border:1px solid rgba(210,160,74,.18) !important;
+}
+
+.logo-imagem img{
+    opacity:1 !important;
+}
+
+.logo-texto strong{
+    color:#ffffff !important;
+}
+
+.logo-texto span{
+    color:var(--mc-gold) !important;
+}
+
+/* Título da seção */
+.sidebar-menu ul::before{
+    color:var(--mc-gold) !important;
+    opacity:.78 !important;
+}
+
+/* Itens */
+.menu-item{
+    color:#cbd5e1 !important;
+}
+
+.menu-item i{
+    color:#94a3b8 !important;
+    transition:color .18s ease, transform .18s ease !important;
+}
+
+.menu-item:hover{
+    color:#ffffff !important;
+    background:rgba(210,160,74,.07) !important;
+}
+
+.menu-item:hover i{
+    color:var(--mc-gold) !important;
+    transform:scale(1.04) !important;
+}
+
+/* Item ativo — azul + detalhe dourado */
+.menu-item.active{
+    color:#ffffff !important;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(36,87,214,.28),
+            rgba(36,87,214,.10)
+        ) !important;
+
+    box-shadow:
+        inset 3px 0 0 var(--mc-gold) !important;
+}
+
+.menu-item.active i{
+    color:var(--mc-gold) !important;
+}
+
+/* Logout */
+.logout-item i{
+    color:#d2a04a !important;
+}
+
+/* Avatar / usuário */
+.user-avatar,
+.header-avatar,
+.topbar-avatar{
+    background:var(--mc-blue-soft) !important;
+    border:1px solid #dbe6ff !important;
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   4. ÁREA PRINCIPAL — SEM CINZA CANSATIVO
+========================================================= */
+
+.main{
+    background:#ffffff !important;
+}
+
+.content{
+    background:#ffffff !important;
+}
+
+/* Cards */
+.card,
+.dash-card,
+.panel,
+.section-card{
+    background:#ffffff !important;
+    border-color:#e7ebf0 !important;
+    box-shadow:0 4px 14px rgba(11,18,32,.045) !important;
+}
+
+/* =========================================================
+   5. ÍCONES — CORES DA IDENTIDADE
+========================================================= */
+
+.dash-icon{
+    background:var(--mc-blue-soft) !important;
+    color:var(--mc-blue) !important;
+}
+
+.form-section-title i,
+.section-title i,
+.card-title i,
+.page-title i{
+    color:var(--mc-gold) !important;
+}
+
+/* Ícones dentro de status / indicadores */
+.status-icon{
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   6. BOTÕES
+========================================================= */
+
+.btn-primary{
+    background:var(--mc-blue) !important;
+    border-color:var(--mc-blue) !important;
+    color:#ffffff !important;
+    box-shadow:0 4px 10px rgba(36,87,214,.12) !important;
+}
+
+.btn-primary:hover{
+    background:var(--mc-blue-2) !important;
+    border-color:var(--mc-blue-2) !important;
+}
+
+.btn-secondary{
+    background:#ffffff !important;
+    border-color:#d9dee7 !important;
+    color:var(--mc-navy) !important;
+}
+
+.btn-secondary:hover{
+    background:var(--mc-gold-soft) !important;
+    border-color:#e4c98f !important;
+    color:var(--mc-navy) !important;
+}
+
+/* Botões de ação */
+.btn-edit{
+    color:var(--mc-blue) !important;
+    background:var(--mc-blue-soft) !important;
+    border-color:#dce7ff !important;
+}
+
+.btn-delete{
+    color:#9b2c2c !important;
+}
+
+/* =========================================================
+   7. CONSULTA PÚBLICA — BRANCA
+========================================================= */
+
+#consultaPublicaTela{
+    background:#ffffff !important;
+    padding:26px 30px 44px !important;
+}
+
+/* Container maior para aproveitar a tela */
+#consultaPublicaTela .consulta-publica-container{
+    width:min(1320px,100%) !important;
+    max-width:1320px !important;
+}
+
+/* Cabeçalho */
+#consultaPublicaTela .consulta-publica-header{
+    margin-bottom:18px !important;
+}
+
+/* Logo */
+#consultaPublicaTela .consulta-publica-logo{
+    background:var(--mc-navy) !important;
+    border-color:rgba(210,160,74,.25) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca span{
+    color:var(--mc-gold) !important;
+}
+
+#consultaPublicaTela .consulta-publica-marca h1{
+    color:var(--mc-navy) !important;
+}
+
+/* =========================================================
+   8. FILTROS — UMA LINHA LIMPA
+========================================================= */
+
+#consultaPublicaTela .consulta-publica-toolbar{
+    grid-template-columns:
+        minmax(340px,1fr)
+        190px
+        180px
+        150px
+        auto !important;
+
+    gap:9px !important;
+    align-items:center !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input,
+#consultaPublicaTela .consulta-publica-toolbar select{
+    background:#ffffff !important;
+    border:1px solid #d8dee8 !important;
+    color:var(--mc-navy) !important;
+}
+
+#consultaPublicaTela .consulta-publica-toolbar input:focus,
+#consultaPublicaTela .consulta-publica-toolbar select:focus{
+    border-color:var(--mc-blue) !important;
+    box-shadow:0 0 0 3px rgba(36,87,214,.09) !important;
+    outline:none !important;
+}
+
+/* Atualizar ocupa apenas o necessário */
+#consultaPublicaTela .consulta-publica-toolbar .btn-primary{
+    min-width:108px !important;
+}
+
+/* =========================================================
+   9. CARDS DA CONSULTA — ALINHAMENTO REAL
+========================================================= */
+
+/*
+   Antes:
+   repeat(4,...)
+   Isso deixava 2 itens presos nas duas primeiras colunas.
+
+   Agora:
+   auto-fit distribui os cards disponíveis pela largura inteira.
+*/
+#listaConsultaPublica{
+    width:100% !important;
+
+    display:grid !important;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(270px,1fr)
+        ) !important;
+
+    gap:14px !important;
+
+    align-items:stretch !important;
+    justify-items:stretch !important;
+}
+
+/* Todos os cards exatamente com a mesma altura */
+#listaConsultaPublica .consulta-publica-card{
+    width:100% !important;
+    height:100% !important;
+    min-width:0 !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+
+    background:#ffffff !important;
+    border:1px solid #e4e8ee !important;
+    border-radius:10px !important;
+
+    box-shadow:
+        0 4px 14px rgba(11,18,32,.055) !important;
+
+    overflow:hidden !important;
+}
+
+/* Área da imagem uniforme */
+#listaConsultaPublica .consulta-publica-card img{
+    width:100% !important;
+    height:150px !important;
+    object-fit:contain !important;
+    background:#ffffff !important;
+}
+
+/* Corpo flexível */
+#listaConsultaPublica .consulta-publica-card-body{
+    flex:1 !important;
+    display:flex !important;
+    flex-direction:column !important;
+}
+
+/* Título consistente */
+#listaConsultaPublica .consulta-publica-card h3{
+    color:var(--mc-navy) !important;
+}
+
+/* Informações */
+#listaConsultaPublica .consulta-publica-card-info{
+    margin-top:auto !important;
+}
+
+/* Localização em azul */
+#listaConsultaPublica .consulta-publica-card-info i{
+    color:var(--mc-blue) !important;
+}
+
+/* =========================================================
+   10. MARCA D'ÁGUA — QUASE IMPERCEPTÍVEL
+========================================================= */
+
+body:has(
+    input[placeholder*="Pesquisar item, categoria ou local"]
+) #consultaPublicaTela > .consulta-publica-container::after{
+    width:190px !important;
+    height:190px !important;
+    opacity:.022 !important;
+}
+
+/* =========================================================
+   11. LOGIN — MESMA IDENTIDADE
+========================================================= */
+
+body.login-mode,
+body.login-mode #loginTela{
+    background:#ffffff !important;
+}
+
+body.login-mode .login-card{
+    background:#ffffff !important;
+    border-color:#e3e7ed !important;
+    box-shadow:
+        0 12px 34px rgba(11,18,32,.07) !important;
+}
+
+body.login-mode .login-logo-imagem{
+    background:var(--mc-navy) !important;
+    border-color:rgba(210,160,74,.25) !important;
+}
+
+body.login-mode .login-logo > span{
+    color:var(--mc-gold) !important;
+}
+
+body.login-mode .login-titulo h2{
+    color:var(--mc-navy) !important;
+}
+
+body.login-mode .btn-login{
+    background:var(--mc-blue) !important;
+    border-color:var(--mc-blue) !important;
+}
+
+body.login-mode .btn-consulta-publica{
+    color:var(--mc-blue) !important;
+    border-color:#d7e2f8 !important;
+    background:#ffffff !important;
+}
+
+body.login-mode .btn-consulta-publica:hover{
+    color:var(--mc-navy) !important;
+    background:var(--mc-blue-soft) !important;
+    border-color:#bfd0f5 !important;
+}
+
+/* =========================================================
+   12. RESPONSIVO
+========================================================= */
+
+@media (max-width:900px){
+    #consultaPublicaTela{
+        padding:20px 18px 35px !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr 1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca{
+        grid-column:1 / -1 !important;
+    }
+
+    #listaConsultaPublica{
+        grid-template-columns:
+            repeat(2,minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width:600px){
+    #consultaPublicaTela{
+        padding:16px 12px 30px !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-toolbar{
+        grid-template-columns:1fr !important;
+    }
+
+    #consultaPublicaTela .consulta-publica-busca{
+        grid-column:auto !important;
+    }
+
+    #listaConsultaPublica{
+        grid-template-columns:1fr !important;
+        gap:11px !important;
+    }
+
+    #listaConsultaPublica .consulta-publica-card img{
+        height:135px !important;
+    }
+}
