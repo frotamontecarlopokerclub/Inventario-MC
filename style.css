@@ -7792,3 +7792,216 @@ body.modal-aberto{ overflow:hidden; }
 @media (max-width:820px){
     .onde-card:has(.onde-sem-foto) .onde-foto{ display:none; }
 }
+
+/* =========================================================
+   V6 — CADASTRO COM DISTRIBUIÇÃO POR LOCAL / SETOR
+   Mantenha este bloco no FINAL do style.css.
+========================================================= */
+
+.dist-cabecalho,
+.dist-linha{
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) 130px 40px;
+    gap:10px;
+    align-items:center;
+}
+
+.dist-cabecalho{
+    padding:0 2px 6px;
+    color:#8a8186;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+}
+
+.dist-linhas{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.dist-linha{
+    padding:8px;
+    border:1px solid var(--v4-line);
+    border-radius:12px;
+    background:#fff;
+    transition:border-color .15s ease, background .15s ease;
+}
+
+.dist-linha:focus-within{
+    border-color:#e0c9cc;
+    background:#fffdfd;
+}
+
+.dist-linha.repetida{
+    border-color:#f2c9c5;
+    background:#fffafa;
+}
+
+.dist-linha.repetida::after{
+    content:"Local e setor repetidos — junte numa linha só";
+    grid-column:1 / -1;
+    color:var(--v4-bad);
+    font-size:11px;
+    font-weight:700;
+    padding:0 4px;
+}
+
+.dist-linha select,
+.dist-linha input{
+    height:42px !important;
+    min-height:42px !important;
+}
+
+.dist-linha .dist-qtd{
+    text-align:right;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+}
+
+.dist-remover{
+    width:38px !important;
+    height:38px !important;
+}
+
+.dist-adicionar{
+    margin-top:10px;
+}
+
+.dist-rodape{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:18px;
+    align-items:end;
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px dashed #eadfe1;
+}
+
+.dist-esperado{
+    max-width:360px;
+}
+
+.dist-total{
+    min-width:220px;
+    padding:12px 16px;
+    border-radius:12px;
+    background:var(--v4-marsala-soft);
+    text-align:right;
+}
+
+.dist-total small{
+    display:block;
+    color:#8a8186;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+}
+
+.dist-total strong{
+    display:block;
+    margin:2px 0;
+    color:var(--v4-marsala-dark);
+    font-size:30px;
+    font-weight:800;
+    line-height:1.1;
+    font-variant-numeric:tabular-nums;
+}
+
+.dist-status{
+    display:block;
+    min-height:16px;
+    color:#8a8186;
+    font-size:11.5px;
+    font-weight:700;
+}
+
+.dist-status.ok{ color:var(--v4-ok); }
+.dist-status.falta{ color:var(--v4-warn); }
+.dist-status.sobra{ color:var(--v4-bad); }
+
+/* Peça já existente: distribuição atual */
+
+.dist-atual{
+    margin-bottom:16px;
+    padding:14px 16px;
+    border:1px solid #e6dcc9;
+    border-radius:12px;
+    background:var(--v4-gold-soft, #faf5ec);
+}
+
+.dist-atual[hidden]{ display:none; }
+
+.dist-atual-topo{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    margin-bottom:8px;
+}
+
+.dist-atual-topo i{
+    margin-top:2px;
+    color:var(--v4-gold);
+}
+
+.dist-atual-topo strong{
+    display:block;
+    color:var(--v4-ink);
+    font-size:13px;
+}
+
+.dist-atual-topo span{
+    color:var(--v4-muted);
+    font-size:12px;
+}
+
+.dist-atual ul{
+    list-style:none;
+    margin:0;
+    padding:0 0 0 24px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:4px 18px;
+}
+
+.dist-atual li{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:4px 0;
+    border-bottom:1px dotted #e6dcc9;
+    font-size:12.5px;
+    color:var(--v4-ink);
+}
+
+.dist-atual li em{
+    margin-left:6px;
+    color:var(--v4-warn);
+    font-size:10.5px;
+    font-style:normal;
+    font-weight:700;
+}
+
+@media (max-width:820px){
+    .dist-cabecalho{ display:none; }
+
+    .dist-linha{
+        grid-template-columns:minmax(0,1fr) 90px 40px;
+        grid-template-areas:
+            "local local remover"
+            "setor qtd qtd";
+    }
+
+    .dist-linha .dist-local{ grid-area:local; }
+    .dist-linha .dist-setor{ grid-area:setor; }
+    .dist-linha .dist-qtd{ grid-area:qtd; }
+    .dist-linha .dist-remover{ grid-area:remover; }
+
+    .dist-rodape{ grid-template-columns:1fr; }
+    .dist-esperado{ max-width:none; }
+    .dist-total{ min-width:0; }
+}
+
+#cadastroTela .mc-dica{ margin-bottom:12px; }

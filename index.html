@@ -1319,7 +1319,7 @@
                 </h2>
 
                 <p>
-                    Informe a peça, quantas são e onde ficam (local e setor). Esse será o local fixo delas.
+                    Informe a peça e distribua a quantidade pelos locais e setores. Esse será o local fixo de cada grupo.
                 </p>
 
             </div>
@@ -1481,103 +1481,53 @@
 
 
 
-                <!-- QUANTIDADE / LOCAL -->
+                <!-- ONDE FICAM AS PEÇAS (DISTRIBUIÇÃO POR LOCAL / SETOR) -->
 
                 <div class="form-section">
 
                     <div class="form-section-title">
 
-                        <i class="fa-solid fa-layer-group"></i>
+                        <i class="fa-solid fa-map-location-dot"></i>
 
-                        Quantidade e localização
-
-                    </div>
-
-
-                    <div class="grid-2">
-
-
-                        <div
-                            class="input-group"
-                            id="quantidadeCadastroGroup"
-                        >
-
-                            <label for="quantidadeLote">
-                                Quantidade
-                            </label>
-
-                            <input
-                                type="number"
-                                id="quantidadeLote"
-                                min="1"
-                                value="1"
-                                placeholder="Quantidade"
-                            >
-
-                            <small>
-                                Quantas peças iguais ficam neste local e setor.
-                            </small>
-
-                        </div>
-
-
-                        <div class="input-group">
-
-                            <label for="local">
-                                Local
-                            </label>
-
-                            <select
-                                id="local"
-                                required
-                            >
-
-                                <option value="">
-                                    Selecione o Local
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <div class="input-group">
-                            <label for="subsetorCadastro">Setor</label>
-                            <select id="subsetorCadastro">
-                                <option value="">Sem subsetor</option>
-                            </select>
-                            <small>Opcional. Os setores de cada local são criados na Administração.</small>
-                        </div>
-
+                        Onde ficam as peças
 
                     </div>
 
+                    <div id="distribuicaoAtual" class="dist-atual" hidden></div>
 
+                    <div class="dist-cabecalho" aria-hidden="true">
+                        <span>Local</span>
+                        <span>Setor</span>
+                        <span>Quantidade</span>
+                        <span></span>
+                    </div>
 
-                    <!-- PATRIMÔNIO -->
+                    <div id="linhasDistribuicao" class="dist-linhas"></div>
 
-                    <div
-                        class="input-group"
-                        id="patrimonioCadastroGroup"
-                        style="display:none;"
+                    <button
+                        type="button"
+                        class="btn-secondary btn-small dist-adicionar"
+                        onclick="adicionarLinhaDistribuicao()"
                     >
+                        <i class="fa-solid fa-plus"></i>
+                        Adicionar outro local
+                    </button>
 
-                        <label for="patrimonioManual">
-                            Número do Patrimônio
-                        </label>
+                    <div class="dist-rodape">
 
-                        <input
-                            type="text"
-                            id="patrimonioManual"
-                            placeholder="Ex.: 0001"
-                        >
+                        <div class="input-group dist-esperado">
+                            <label for="totalEsperado">Quantidade total da peça (opcional)</label>
+                            <input type="number" id="totalEsperado" min="1" step="1" placeholder="Ex.: 100">
+                            <small>Se informar, o sistema confere se a distribuição fecha com o total.</small>
+                        </div>
 
-                        <small>
-                            Utilize somente quando o item possuir
-                            identificação patrimonial individual.
-                        </small>
+                        <div class="dist-total">
+                            <small>Total distribuído</small>
+                            <strong id="totalDistribuido">0</strong>
+                            <span id="statusDistribuicao" class="dist-status"></span>
+                        </div>
 
                     </div>
-
 
                 </div>
 
@@ -1601,7 +1551,7 @@
                         <div class="input-group">
 
                             <label for="status">
-                                Status Inicial
+                                Status (vale para todas as linhas)
                             </label>
 
                             <select id="status">

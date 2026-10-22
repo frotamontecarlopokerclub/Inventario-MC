@@ -9521,3 +9521,380 @@ Object.assign(window, {
     abrirOndeEsta, renderizarOndeEsta, abrirForaDoLugar, renderizarForaDoLugar,
     devolverPeca, movimentarPeca, preencherOrigemAutomaticamente, exportarExcel
 });
+
+
+/* ######################## V6 — CADASTRO COM DISTRIBUIÇÃO (manter no final) ######################## */
+
+/* =========================================================
+   V6 — CADASTRO DE PEÇA COM DISTRIBUIÇÃO POR LOCAL / SETOR
+   Requer migration_inventario_v5.sql.
+   (Mantenha este bloco no FINAL do app.js.)
+
+   Ex.: Cadeira Dealer Marrom — 100
+        MONTE CARLO / Quarto Andar ...... 25
+        MONTE CARLO / Terceiro Andar .... 35
+        MONTE CARLO / Segundo Andar ..... 20
+        MIRAGE / Vip .................... 10
+        CD1 / Estoque ................... 10
+========================================================= */
+
+const NOVO_SETOR = '__novo__';
+let contadorLinhasDistribuicao = 0;
+
+
+/* =========================================================
+   LINHAS
+========================================================= */
+
+function opcoesLocaisDistribuicao(selecionado = '') {
+    return '<option value="">Selecione o local</option>' + LOCAIS
+        .map(local => `<option value="${local.id}" ${String(local.id) === String(selecionado) ? 'selected' : ''}>${escaparHTML(local.nome)}</option>`)
+        .join('');
+}
+
+function opcoesSetoresDistribuicao(localId, selecionado = '') {
+    if (!localId) return '<option value="">Escolha o local primeiro</option>';
+
+    const setores = subsetores
+        .filter(setor => String(setor.local_id) === String(localId) && setor.ativo !== false)
+        .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }));
+
+    return '<option value="">Sem setor</option>' +
+        setores.map(setor =>
+            `<option value="${setor.id}" ${String(setor.id) === String(selecionado) ? 'selected' : ''}>${escaparHTML(setor.nome)}</option>`
+        ).join('') +
+        (podeAdministrar() ? `<option value="${NOVO_SETOR}">＋ Criar setor neste local…</option>` : '');
+}
+
+function adicionarLinhaDistribuicao(dados = {}) {
+    const area = document.getElementById('linhasDistribuicao');
+    if (!area) return;
+
+    const id = ++contadorLinhasDistribuicao;
+    const linha = document.createElement('div');
+    linha.className = 'dist-linha';
+    linha.dataset.linha = id;
+    linha.innerHTML = `
+        <select class="dist-local" aria-label="Local">${opcoesLocaisDistribuicao(dados.local_id)}</select>
+        <select class="dist-setor" aria-label="Setor">${opcoesSetoresDistribuicao(dados.local_id, dados.subsetor_id)}</select>
+        <input class="dist-qtd" type="number" min="1" step="1" inputmode="numeric" placeholder="Qtde" aria-label="Quantidade"
+               value="${dados.quantidade ? Number(dados.quantidade) : ''}">
+        <button type="button" class="btn-icon btn-excluir dist-remover" title="Remover linha" aria-label="Remover linha">
+            <i class="fa-solid fa-xmark"></i>
+        </button>`;
+    area.appendChild(linha);
+
+    const local = linha.querySelector('.dist-local');
+    const setor = linha.querySelector('.dist-setor');
+
+    local.addEventListener('change', () => {
+        setor.innerHTML = opcoesSetoresDistribuicao(local.value);
+        recalcularDistribuicao();
+    });
+    setor.addEventListener('change', () => {
+        if (setor.value === NOVO_SETOR) criarSetorNaLinha(linha);
+        else recalcularDistribuicao();
+    });
+    linha.querySelector('.dist-qtd').addEventListener('input', recalcularDistribuicao);
+    linha.querySelector('.dist-remover').addEventListener('click', () => {
+        linha.remove();
+        if (!area.children.length) adicionarLinhaDistribuicao();
+        recalcularDistribuicao();
+    });
+
+    recalcularDistribuicao();
+    if (!dados.local_id) local.focus({ preventScroll: true });
+}
+
+function lerDistribuicao() {
+    return [...document.querySelectorAll('#linhasDistribuicao .dist-linha')].map(linha => ({
+        elemento: linha,
+        local_id: linha.querySelector('.dist-local').value,
+        subsetor_id: linha.querySelector('.dist-setor').value === NOVO_SETOR ? '' : linha.querySelector('.dist-setor').value,
+        quantidade: parseInt(linha.querySelector('.dist-qtd').value || '0', 10)
+    }));
+}
+
+function recalcularDistribuicao() {
+    const linhas = lerDistribuicao();
+    const total = linhas.reduce((soma, linha) => soma + (linha.quantidade > 0 ? linha.quantidade : 0), 0);
+    const esperado = parseInt(document.getElementById('totalEsperado')?.value || '0', 10);
+    const status = document.getElementById('statusDistribuicao');
+
+    definirTexto('totalDistribuido', numero.format(total));
+
+    // Marca linhas repetidas (mesmo local + setor).
+    const vistos = new Map();
+    linhas.forEach(linha => {
+        linha.elemento.classList.remove('repetida');
+        if (!linha.local_id) return;
+        const chave = `${linha.local_id}|${linha.subsetor_id}`;
+        if (vistos.has(chave)) {
+            linha.elemento.classList.add('repetida');
+            vistos.get(chave).classList.add('repetida');
+        } else {
+            vistos.set(chave, linha.elemento);
+        }
+    });
+
+    if (!status) return;
+    status.className = 'dist-status';
+
+    if (!esperado) {
+        status.textContent = linhas.filter(l => l.local_id && l.quantidade > 0).length > 1
+            ? `em ${linhas.filter(l => l.local_id && l.quantidade > 0).length} locais/setores` : '';
+        return;
+    }
+    if (total === esperado) {
+        status.classList.add('ok');
+        status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Fecha com o total';
+    } else if (total < esperado) {
+        status.classList.add('falta');
+        status.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Faltam ${numero.format(esperado - total)} para distribuir`;
+    } else {
+        status.classList.add('sobra');
+        status.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Passou ${numero.format(total - esperado)} do total`;
+    }
+}
+
+function limparDistribuicao() {
+    const area = document.getElementById('linhasDistribuicao');
+    if (area) area.innerHTML = '';
+    const esperado = document.getElementById('totalEsperado');
+    if (esperado) esperado.value = '';
+    adicionarLinhaDistribuicao();
+    mostrarDistribuicaoAtual();
+}
+
+function criarSetorNaLinha(linha) {
+    const local = linha.querySelector('.dist-local');
+    const setor = linha.querySelector('.dist-setor');
+    setor.value = '';
+
+    if (!local.value) return avisar('Escolha o local antes de criar o setor.', 'info');
+
+    abrirFormulario({
+        titulo: 'Novo setor',
+        subtitulo: `No local ${nomeLocal(local.value)}`,
+        textoSalvar: 'Criar setor',
+        campos: [{ id: 'nome', rotulo: 'Nome do setor', obrigatorio: true, placeholder: 'Ex.: Quarto Andar, Vip, Estoque', largo: true }],
+        aoSalvar: async ({ nome }) => {
+            const existente = subsetores.find(s =>
+                String(s.local_id) === String(local.value) && normalizarTexto(s.nome) === normalizarTexto(nome));
+            if (existente) {
+                setor.innerHTML = opcoesSetoresDistribuicao(local.value, existente.id);
+                recalcularDistribuicao();
+                avisar(`O setor "${existente.nome}" já existia e foi selecionado.`, 'info');
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('subsetores')
+                .insert([{ local_id: Number(local.value), nome, ativo: true, created_by: usuarioLogado?.id }])
+                .select('id');
+            if (error) throw error;
+
+            await carregarSubsetores();
+            const novoId = data?.[0]?.id || subsetores.find(s =>
+                String(s.local_id) === String(local.value) && normalizarTexto(s.nome) === normalizarTexto(nome))?.id;
+
+            document.querySelectorAll('#linhasDistribuicao .dist-linha').forEach(outra => {
+                const outroLocal = outra.querySelector('.dist-local').value;
+                const outroSetor = outra.querySelector('.dist-setor');
+                if (outroLocal === local.value) {
+                    outroSetor.innerHTML = opcoesSetoresDistribuicao(outroLocal, outra === linha ? novoId : outroSetor.value);
+                }
+            });
+            recalcularDistribuicao();
+            avisar(`Setor "${nome}" criado em ${nomeLocal(local.value)}.`);
+        }
+    });
+}
+
+
+/* =========================================================
+   PEÇA JÁ EXISTENTE: mostra onde ela está hoje
+========================================================= */
+
+function mostrarDistribuicaoAtual() {
+    const caixa = document.getElementById('distribuicaoAtual');
+    if (!caixa) return;
+
+    const produto = produtoPorNome(document.getElementById('nome')?.value);
+    const grupos = produto
+        ? itens.filter(item => Number(item.produto_id) === Number(produto.id) && quantidadeItem(item) > 0)
+        : [];
+
+    if (!grupos.length) {
+        caixa.hidden = true;
+        caixa.innerHTML = '';
+        return;
+    }
+
+    const total = grupos.reduce((soma, item) => soma + quantidadeItem(item), 0);
+    caixa.hidden = false;
+    caixa.innerHTML = `
+        <div class="dist-atual-topo">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+                <strong>"${escaparHTML(produto.nome)}" já tem ${numero.format(total)} peça(s) cadastrada(s).</strong>
+                <span>As quantidades abaixo serão <b>somadas</b> a estas. Para corrigir uma contagem, use Movimentações.</span>
+            </div>
+        </div>
+        <ul>${grupos
+            .sort((a, b) => quantidadeItem(b) - quantidadeItem(a))
+            .map(item => `<li><span>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}
+                ${estaForaDoLugar(item) ? '<em>fora do lugar</em>' : ''}</span>
+                <strong>${numero.format(quantidadeItem(item))}</strong></li>`).join('')}</ul>`;
+}
+
+
+/* =========================================================
+   SALVAR
+========================================================= */
+
+async function salvarItem(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (!usuarioLogado) return avisar('Faça login primeiro.', 'erro'), false;
+    if (perfilUsuario === 'consulta') return avisar('Seu perfil não pode cadastrar peças.', 'erro'), false;
+
+    const valor = id => document.getElementById(id)?.value?.trim() || '';
+    const nome = valor('nome');
+
+    if (!nome) {
+        document.getElementById('nome')?.focus();
+        return avisar('Informe o nome da peça.', 'erro'), false;
+    }
+
+    const linhas = lerDistribuicao().filter(linha => linha.local_id || linha.quantidade);
+
+    if (!linhas.length) return avisar('Informe pelo menos um local com quantidade.', 'erro'), false;
+
+    const semLocal = linhas.find(linha => !linha.local_id);
+    if (semLocal) {
+        semLocal.elemento.querySelector('.dist-local').focus();
+        return avisar('Há uma linha com quantidade mas sem local.', 'erro'), false;
+    }
+
+    const semQuantidade = linhas.find(linha => !(linha.quantidade >= 1));
+    if (semQuantidade) {
+        semQuantidade.elemento.querySelector('.dist-qtd').focus();
+        return avisar(`Informe a quantidade em ${nomeLocal(semQuantidade.local_id)}.`, 'erro'), false;
+    }
+
+    if (document.querySelector('#linhasDistribuicao .dist-linha.repetida')) {
+        return avisar('Há local/setor repetido. Junte as quantidades numa linha só.', 'erro'), false;
+    }
+
+    const total = linhas.reduce((soma, linha) => soma + linha.quantidade, 0);
+    const esperado = parseInt(valor('totalEsperado') || '0', 10);
+    if (esperado && esperado !== total &&
+        !confirm(`O total informado é ${esperado}, mas a distribuição soma ${total}.\n\nSalvar mesmo assim com ${total} peça(s)?`)) {
+        return false;
+    }
+
+    const botao = document.getElementById('btnSalvarItem');
+    const textoBotao = botao?.innerHTML;
+    if (botao) {
+        botao.disabled = true;
+        botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+    }
+
+    let foto = null;
+
+    try {
+        const arquivo = document.getElementById('foto')?.files?.[0];
+        if (arquivo) foto = await enviarFoto(arquivo, 'inventario');
+
+        const { data, error } = await supabaseClient.rpc('registrar_pecas', {
+            p_nome: nome,
+            p_distribuicao: linhas.map(linha => ({
+                local_id: Number(linha.local_id),
+                subsetor_id: linha.subsetor_id ? Number(linha.subsetor_id) : null,
+                quantidade: linha.quantidade
+            })),
+            p_categoria: valor('tipoItem') || null,
+            p_descricao: valor('descricao') || null,
+            p_foto_url: foto?.url || null,
+            p_status: valor('status') || 'Ativo'
+        });
+
+        if (error) throw error;
+
+        avisar(`${numero.format(data?.total ?? total)} peça(s) de "${nome}" cadastrada(s) em ${data?.linhas ?? linhas.length} local(is)/setor(es).`);
+
+        limparFormularioCadastro();
+        await carregarDashboard();
+    } catch (erro) {
+        console.error('ERRO AO CADASTRAR PEÇAS:', erro);
+        if (foto) await supabaseClient.storage.from('inventario').remove([foto.caminho]);
+
+        const mensagem = /registrar_pecas/.test(erro?.message || '') && /not find|does not exist/i.test(erro?.message || '')
+            ? 'A migração v5 ainda não foi executada no Supabase.'
+            : traduzirErro(erro);
+        avisar('Não foi possível cadastrar: ' + mensagem, 'erro');
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.innerHTML = textoBotao;
+        }
+    }
+
+    return false;
+}
+
+function limparFormularioCadastro() {
+    ['nome', 'tipoItem', 'descricao'].forEach(id => {
+        const campo = document.getElementById(id);
+        if (campo) campo.value = '';
+    });
+    const status = document.getElementById('status');
+    if (status) status.value = 'Ativo';
+    const foto = document.getElementById('foto');
+    if (foto) foto.value = '';
+    limparDistribuicao();
+}
+
+
+/* =========================================================
+   LIGAÇÕES
+========================================================= */
+
+(function () {
+    // Setores/locais mudaram: atualiza as linhas sem perder o que foi digitado.
+    const subsetoresOriginal = carregarSubsetores;
+    carregarSubsetores = async function () {
+        await subsetoresOriginal();
+        document.querySelectorAll('#linhasDistribuicao .dist-linha').forEach(linha => {
+            const local = linha.querySelector('.dist-local');
+            const setor = linha.querySelector('.dist-setor');
+            const atualLocal = local.value;
+            const atualSetor = setor.value;
+            local.innerHTML = opcoesLocaisDistribuicao(atualLocal);
+            setor.innerHTML = opcoesSetoresDistribuicao(atualLocal, atualSetor);
+        });
+    };
+
+    const carregarItensOriginal = carregarItens;
+    carregarItens = async function () {
+        await carregarItensOriginal();
+        mostrarDistribuicaoAtual();
+    };
+
+    const dicaOriginal = atualizarDicaProduto;
+    atualizarDicaProduto = function () {
+        dicaOriginal();
+        mostrarDistribuicaoAtual();
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('totalEsperado')?.addEventListener('input', recalcularDistribuicao);
+    if (!document.querySelector('#linhasDistribuicao .dist-linha')) adicionarLinhaDistribuicao();
+});
+
+Object.assign(window, {
+    adicionarLinhaDistribuicao, salvarItem, limparFormularioCadastro, limparFormulario: limparFormularioCadastro
+});
