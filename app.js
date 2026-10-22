@@ -722,9 +722,9 @@ function limparFormulario() {
 ========================================================= */
 
 function nomeSubsetor(subsetorId) {
-    if (!subsetorId) return 'Sem subsetor';
+    if (!subsetorId) return 'Sem setor definido';
     const s = subsetores.find(x => String(x.id) === String(subsetorId));
-    return s?.nome || 'Sem subsetor';
+    return s?.nome || 'Sem setor definido';
 }
 
 function formatarLocalSubsetor(localId, subsetorId) {
@@ -778,7 +778,7 @@ async function carregarSubsetores() {
     }
 }
 
-function popularSubsetorSelect(selectId, localId, placeholder = 'Sem subsetor') {
+function popularSubsetorSelect(selectId, localId, placeholder = 'Local inteiro (sem setor definido)') {
     const select = document.getElementById(selectId);
     if (!select) return;
     const valorAtual = select.value;
@@ -793,11 +793,11 @@ function popularSubsetorSelect(selectId, localId, placeholder = 'Sem subsetor') 
 }
 
 function popularSubsetoresCadastro() {
-    popularSubsetorSelect('subsetorCadastro', document.getElementById('local')?.value, 'Sem subsetor');
+    popularSubsetorSelect('subsetorCadastro', document.getElementById('local')?.value, 'Local inteiro (sem setor definido)');
 }
 
 function popularSubsetoresMovimentacao() {
-    popularSubsetorSelect('destinoSubsetor', document.getElementById('destino')?.value, 'Sem subsetor');
+    popularSubsetorSelect('destinoSubsetor', document.getElementById('destino')?.value, 'Local inteiro (sem setor definido)');
 }
 
 async function registrarAuditoria(acao, payload = {}) {
@@ -9410,7 +9410,7 @@ function renderizarItens() {
                 <td>${escaparHTML(item.tipo && item.tipo !== item.nome ? item.tipo : '—')}</td>
                 <td class="num"><strong>${numero.format(quantidadeItem(item))}</strong></td>
                 <td>${escaparHTML(nomeLocal(item.local_id))}</td>
-                <td>${escaparHTML(item.subsetor_id ? nomeSubsetor(item.subsetor_id) : '—')}</td>
+                <td>${item.subsetor_id ? escaparHTML(nomeSubsetor(item.subsetor_id)) : '<span class="texto-suave">Local inteiro</span>'}</td>
                 <td>${fora
                     ? `<span class="selo-fora ${retornoAtrasado(item) ? 'atrasado' : ''}"><i class="fa-solid fa-house"></i>
                        ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}</span>`
@@ -9559,7 +9559,7 @@ function opcoesSetoresDistribuicao(localId, selecionado = '') {
         .filter(setor => String(setor.local_id) === String(localId) && setor.ativo !== false)
         .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }));
 
-    return '<option value="">Sem setor</option>' +
+    return '<option value="">Local inteiro (sem setor definido)</option>' +
         setores.map(setor =>
             `<option value="${setor.id}" ${String(setor.id) === String(selecionado) ? 'selected' : ''}>${escaparHTML(setor.nome)}</option>`
         ).join('') +
