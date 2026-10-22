@@ -6839,3 +6839,956 @@ input[type="radio"]{
         font-size: 22px !important;
     }
 }
+
+/* =========================================================
+   V4 — CATÁLOGO, LOCAIS, JANELAS E AVISOS
+   Mantenha este bloco no FINAL do style.css.
+   Usa a paleta Marsala (V6) já definida acima.
+========================================================= */
+
+:root{
+    --v4-marsala:#955251;
+    --v4-marsala-dark:#6f3038;
+    --v4-marsala-soft:#f7eeee;
+    --v4-gold:#c49a5a;
+    --v4-ink:#24151a;
+    --v4-muted:#6b6268;
+    --v4-line:#ece4e6;
+    --v4-ok:#127a45;
+    --v4-ok-soft:#ebf8f1;
+    --v4-warn:#b45309;
+    --v4-warn-soft:#fff6e8;
+    --v4-bad:#b42318;
+    --v4-bad-soft:#fdeeee;
+    --v4-info:#5b4a8b;
+    --v4-info-soft:#f3f0fb;
+}
+
+/* ---------- Badges de status (antes sem estilo) ---------- */
+
+.status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    min-height:24px;
+    padding:0 10px;
+    border-radius:999px;
+    border:1px solid transparent !important;
+    font-size:10.5px;
+    font-weight:750;
+    white-space:nowrap;
+    background:#f3f1f2;
+    color:var(--v4-muted);
+}
+
+.status-badge::before{
+    content:"";
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:currentColor;
+    opacity:.8;
+}
+
+.status-badge.ativo{ background:var(--v4-ok-soft); color:var(--v4-ok); }
+.status-badge.manutencao{ background:var(--v4-warn-soft); color:var(--v4-warn); }
+.status-badge.baixado{ background:var(--v4-bad-soft); color:var(--v4-bad); }
+.status-badge.extraviado{ background:var(--v4-info-soft); color:var(--v4-info); }
+.status-badge.inativo,
+.status-badge.neutro{ background:#f3f1f2; color:#8a8186; }
+
+/* ---------- Tabelas: fotos, ações, números ---------- */
+
+.foto-tabela,
+.inventory-table img.foto-tabela{
+    width:46px !important;
+    height:46px !important;
+    object-fit:cover;
+    border-radius:9px;
+    border:1px solid var(--v4-line);
+    cursor:zoom-in;
+    display:block;
+}
+
+.sem-foto{
+    width:46px;
+    height:46px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#faf7f7;
+    border:1px dashed #e2d6d8;
+    color:#c8b8bb;
+}
+
+.acoes-tabela,
+.admin-actions{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.btn-icon{
+    width:34px;
+    height:34px;
+    min-height:34px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:9px;
+    border:1px solid var(--v4-line);
+    background:#fff;
+    color:var(--v4-marsala);
+    font-size:13px;
+}
+
+.btn-icon:hover{
+    background:var(--v4-marsala-soft);
+    border-color:#e3cfd1;
+}
+
+.btn-icon.btn-excluir{ color:var(--v4-bad); }
+.btn-icon.btn-excluir:hover{ background:var(--v4-bad-soft); border-color:#f3d0cc; }
+
+.btn-small{
+    min-height:34px !important;
+    height:34px;
+    padding:0 12px !important;
+    font-size:11.5px !important;
+}
+
+.inventory-table .num{
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+}
+
+.celula-sub{
+    display:block;
+    margin-top:3px;
+    color:#8a8186;
+    font-size:11px;
+    line-height:1.35;
+    max-width:340px;
+}
+
+.linha-inativa td{ opacity:.55; }
+
+/* Ícones dentro de botões primários ficam brancos
+   (o CSS antigo pinta ícones de títulos com a cor do botão). */
+.page-title .btn-primary i,
+.admin-card-titulo .btn-primary i,
+.mc-modal .btn-primary i{
+    color:#fff !important;
+}
+
+/* ---------- Tela de Produtos ---------- */
+
+.produtos-toolbar{
+    flex-wrap:wrap;
+    justify-content:flex-start;
+}
+
+.produtos-toolbar .estoque-busca{
+    flex:1 1 280px;
+}
+
+.produtos-toolbar select{
+    width:220px;
+}
+
+.produtos-toolbar .estoque-info{
+    margin-left:auto;
+}
+
+.produtos-table{
+    min-width:980px;
+}
+
+.mc-check{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:44px;
+    padding:0 12px;
+    border:1px solid var(--v4-line);
+    border-radius:9px;
+    background:#fff;
+    color:var(--v4-ink);
+    font-size:12px;
+    font-weight:650;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+}
+
+.mc-check input[type="checkbox"]{
+    width:17px !important;
+    height:17px !important;
+    min-height:0 !important;
+    margin:0;
+    padding:0;
+    flex:0 0 17px;
+    accent-color:var(--v4-marsala);
+}
+
+/* ---------- Dica do cadastro ---------- */
+
+.mc-dica{
+    display:block;
+    min-height:18px;
+    margin-top:7px;
+    font-size:11px !important;
+    line-height:1.45;
+    color:#8a8186;
+}
+
+.mc-dica i{ margin-right:4px; }
+.mc-dica-ok{ color:var(--v4-ok) !important; }
+.mc-dica-novo{ color:var(--v4-warn) !important; }
+
+input[readonly]#tipoItem{
+    background:#faf7f7 !important;
+    color:var(--v4-muted) !important;
+}
+
+/* ---------- Dashboard: faixa de valor e alertas ---------- */
+
+.dash-extra{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin:0 0 18px;
+}
+
+.dash-extra[hidden]{ display:none; }
+
+.dash-extra-item{
+    display:flex;
+    align-items:center;
+    gap:13px;
+    min-height:72px;
+    padding:14px 18px;
+    border:1px solid var(--v4-line);
+    border-radius:14px;
+    background:#fff;
+    text-align:left;
+    font:inherit;
+    color:inherit;
+}
+
+.dash-extra-item > i:first-child{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    background:var(--v4-marsala-soft);
+    color:var(--v4-marsala);
+}
+
+.dash-extra-item small{
+    display:block;
+    margin-bottom:3px;
+    color:#8a8186;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+}
+
+.dash-extra-item strong{
+    color:var(--v4-ink);
+    font-size:17px;
+    font-weight:800;
+    letter-spacing:-.2px;
+}
+
+.dash-extra-alerta{
+    cursor:pointer;
+}
+
+.dash-extra-alerta:hover{ border-color:#e0cdd0; }
+
+.dash-extra-alerta strong{ font-size:13.5px; }
+
+.dash-extra-alerta > i:first-child{
+    background:var(--v4-ok-soft);
+    color:var(--v4-ok);
+}
+
+.dash-extra-alerta.tem-alerta{
+    border-color:#f2c9c5;
+    background:#fffafa;
+}
+
+.dash-extra-alerta.tem-alerta > i:first-child{
+    background:var(--v4-bad-soft);
+    color:var(--v4-bad);
+}
+
+.dash-extra-alerta.tem-alerta strong{ color:var(--v4-bad); }
+
+.dash-extra-seta{
+    margin-left:auto;
+    color:#c3b5b8;
+    font-size:12px;
+}
+
+/* ---------- Administração (antes sem estilo) ---------- */
+
+.admin-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+    align-items:start;
+}
+
+.admin-grid > .card{ min-width:0; }
+
+.admin-card-wide{ grid-column:1 / -1; }
+
+.admin-card-titulo{
+    justify-content:space-between;
+}
+
+.admin-card-titulo > span{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+}
+
+.admin-table{ min-width:0 !important; }
+
+.auditoria-detalhes{
+    max-width:420px;
+    max-height:120px;
+    overflow:auto;
+    margin:0;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#faf7f7;
+    font-size:10.5px;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.auditoria-badge{
+    display:inline-block;
+    padding:3px 8px;
+    border-radius:6px;
+    background:var(--v4-marsala-soft);
+    color:var(--v4-marsala-dark);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.3px;
+    white-space:nowrap;
+}
+
+/* ---------- Janela de formulário ---------- */
+
+body.modal-aberto{ overflow:hidden; }
+
+.mc-modal{
+    position:fixed;
+    inset:0;
+    z-index:5000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(36,21,26,.55);
+    backdrop-filter:blur(3px);
+    animation:mcFade .15s ease;
+}
+
+.mc-modal[hidden]{ display:none; }
+
+.mc-modal-caixa{
+    width:min(640px,100%);
+    max-height:calc(100vh - 40px);
+    display:flex;
+    flex-direction:column;
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 30px 80px rgba(36,21,26,.28);
+    animation:mcSobe .18s ease;
+}
+
+.mc-modal-topo{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:22px 24px 16px;
+    border-bottom:1px solid var(--v4-line);
+}
+
+.mc-modal-topo h3{
+    margin:0;
+    color:var(--v4-ink);
+    font-size:18px;
+    font-weight:800;
+}
+
+.mc-modal-topo p{
+    margin:5px 0 0;
+    color:#8a8186;
+    font-size:12px;
+}
+
+.mc-modal-x{
+    width:34px;
+    height:34px;
+    min-height:34px;
+    padding:0;
+    flex:0 0 34px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:#8a8186;
+    font-size:16px;
+}
+
+.mc-modal-x:hover{ background:#f6f1f2; color:var(--v4-ink); }
+
+.mc-modal-corpo{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px 16px;
+    padding:20px 24px;
+    overflow:auto;
+}
+
+.mc-modal-corpo .mc-campo-largo{ grid-column:1 / -1; }
+
+.mc-modal-corpo .input-group label b{ color:var(--v4-marsala); }
+
+.mc-modal-corpo .mc-check{ justify-self:start; }
+
+.mc-foto-linha{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.mc-foto-linha > div:last-child{ flex:1; min-width:0; }
+
+.mc-previa-foto{
+    width:72px;
+    height:72px;
+    flex:0 0 72px;
+    border-radius:12px;
+    object-fit:cover;
+    border:1px solid var(--v4-line);
+}
+
+.mc-previa-vazia{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#faf7f7;
+    color:#c8b8bb;
+    font-size:22px;
+}
+
+.mc-modal-erro{
+    margin:0 24px 4px;
+    padding:10px 12px;
+    border-radius:9px;
+    background:var(--v4-bad-soft);
+    color:var(--v4-bad);
+    font-size:12px;
+    font-weight:650;
+}
+
+.mc-modal-erro[hidden]{ display:none; }
+
+.mc-modal-rodape{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    padding:16px 24px 20px;
+    border-top:1px solid var(--v4-line);
+}
+
+/* ---------- Avisos (toasts) ---------- */
+
+.mc-avisos{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:6000;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-width:min(380px,calc(100vw - 32px));
+}
+
+.mc-aviso{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 14px;
+    border-radius:12px;
+    background:var(--v4-ink);
+    color:#fff;
+    font-size:12.5px;
+    line-height:1.45;
+    box-shadow:0 14px 34px rgba(36,21,26,.25);
+    animation:mcSobe .18s ease;
+    transition:opacity .35s ease, transform .35s ease;
+}
+
+.mc-aviso i{ margin-top:2px; }
+.mc-aviso-sucesso i{ color:#6fe0a5; }
+.mc-aviso-erro{ background:#7a1d1d; }
+.mc-aviso-erro i{ color:#ffc9c3; }
+.mc-aviso-info i{ color:var(--v4-gold); }
+.mc-aviso.saindo{ opacity:0; transform:translateY(6px); }
+
+@keyframes mcFade{ from{opacity:0} to{opacity:1} }
+@keyframes mcSobe{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width:1100px){
+    .admin-grid{ grid-template-columns:1fr; }
+}
+
+@media (max-width:820px){
+    .dash-extra{ grid-template-columns:1fr; }
+
+    .produtos-toolbar select,
+    .produtos-toolbar .mc-check,
+    .produtos-toolbar .estoque-info{
+        width:100%;
+        margin-left:0;
+    }
+
+    .mc-modal{
+        align-items:flex-end;
+        padding:0;
+    }
+
+    .mc-modal-caixa{
+        width:100%;
+        max-height:92vh;
+        border-radius:18px 18px 0 0;
+    }
+
+    .mc-modal-corpo{ grid-template-columns:1fr; }
+
+    .mc-modal-rodape .btn-primary,
+    .mc-modal-rodape .btn-secondary{ flex:1; }
+
+    .mc-avisos{
+        left:16px;
+        right:16px;
+        bottom:16px;
+        max-width:none;
+    }
+}
+
+/* =========================================================
+   V5 — ONDE ESTÁ? · FORA DO LUGAR
+   Mantenha este bloco no FINAL do style.css.
+========================================================= */
+
+/* ---------- Selo no menu ---------- */
+
+.menu-badge{
+    margin-left:auto;
+    min-width:22px;
+    height:20px;
+    padding:0 6px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:rgba(196,154,90,.22);
+    color:#f1d9b0;
+    font-size:10.5px;
+    font-weight:800;
+}
+
+.menu-badge[hidden]{ display:none; }
+.menu-badge.atrasado{ background:#c0392b; color:#fff; }
+
+/* ---------- Onde está? ---------- */
+
+#ondeEstaTela{
+    max-width:1180px;
+    margin:0 auto;
+}
+
+.onde-hero{
+    padding:30px 32px 24px;
+    margin-bottom:22px;
+    border:1px solid var(--v4-line);
+    border-radius:20px;
+    background:
+        radial-gradient(circle at 100% 0, rgba(196,154,90,.12), transparent 45%),
+        linear-gradient(180deg,#fff, #fcf9f9);
+}
+
+.onde-hero > span{
+    display:block;
+    margin-bottom:6px;
+    color:var(--v4-gold);
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:1.4px;
+}
+
+.onde-hero h2{
+    margin:0;
+    color:var(--v4-ink);
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-.6px;
+}
+
+.onde-hero p{
+    margin:6px 0 18px;
+    color:#8a8186;
+    font-size:13px;
+}
+
+.onde-busca{
+    position:relative;
+}
+
+.onde-busca i{
+    position:absolute;
+    left:20px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--v4-marsala);
+    font-size:18px;
+    pointer-events:none;
+}
+
+.onde-busca input{
+    height:60px !important;
+    min-height:60px !important;
+    padding:0 20px 0 54px !important;
+    border-radius:14px !important;
+    border:1.5px solid #e3d4d6 !important;
+    font-size:17px !important;
+    background:#fff !important;
+    box-shadow:0 6px 20px rgba(36,21,26,.05);
+}
+
+.onde-busca input:focus{
+    border-color:var(--v4-marsala) !important;
+    box-shadow:0 0 0 4px rgba(149,82,81,.12) !important;
+}
+
+.onde-filtros{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    margin-top:12px;
+}
+
+.onde-filtros select{ width:240px; }
+
+.onde-contador{
+    margin-left:auto;
+    color:#8a8186;
+    font-size:12px;
+    font-weight:650;
+}
+
+.onde-resultados{
+    display:grid;
+    gap:14px;
+}
+
+.onde-card{
+    display:grid;
+    grid-template-columns:132px minmax(0,1fr);
+    border:1px solid var(--v4-line);
+    border-radius:16px;
+    background:#fff;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(36,21,26,.03);
+}
+
+.onde-foto{
+    background:#faf7f7;
+    min-height:132px;
+}
+
+.onde-foto img{
+    width:100%;
+    height:100%;
+    min-height:132px;
+    object-fit:cover;
+    display:block;
+    cursor:zoom-in;
+}
+
+.onde-sem-foto{
+    height:100%;
+    min-height:132px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#d6c6c9;
+    font-size:30px;
+}
+
+.onde-corpo{
+    min-width:0;
+    padding:16px 18px 12px;
+}
+
+.onde-corpo header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:10px;
+}
+
+.onde-corpo h3{
+    margin:0;
+    color:var(--v4-ink);
+    font-size:16.5px;
+    font-weight:800;
+}
+
+.onde-corpo header p{
+    margin:3px 0 0;
+    color:#8a8186;
+    font-size:12px;
+    line-height:1.4;
+}
+
+.onde-total{
+    text-align:right;
+    flex:0 0 auto;
+}
+
+.onde-total strong{
+    display:block;
+    color:var(--v4-marsala);
+    font-size:24px;
+    font-weight:800;
+    line-height:1;
+}
+
+.onde-total span{
+    color:#8a8186;
+    font-size:11px;
+}
+
+.onde-total b{ color:var(--v4-warn); }
+
+.onde-lista{
+    list-style:none;
+    margin:0;
+    padding:0;
+    border-top:1px solid #f1eaeb;
+}
+
+.onde-lista li{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 64px auto;
+    align-items:center;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px solid #f6f0f1;
+}
+
+.onde-lista li:last-child{ border-bottom:0; }
+
+.onde-local{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+}
+
+.onde-local > i{
+    margin-top:3px;
+    color:var(--v4-marsala);
+}
+
+.onde-local strong{
+    color:var(--v4-ink);
+    font-size:13px;
+    font-weight:750;
+    margin-right:6px;
+}
+
+.onde-lista li.fora .onde-local > i{ color:var(--v4-warn); }
+
+.onde-qtd{
+    text-align:right;
+    color:var(--v4-ink);
+    font-size:15px;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+}
+
+.onde-acoes{
+    display:flex;
+    gap:6px;
+}
+
+.btn-devolver{
+    color:var(--v4-ok) !important;
+}
+
+.btn-devolver:hover{
+    background:var(--v4-ok-soft) !important;
+    border-color:#bfe5cf !important;
+}
+
+.selo-fora{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    margin-top:4px;
+    padding:3px 8px;
+    border-radius:6px;
+    background:var(--v4-warn-soft);
+    color:var(--v4-warn);
+    font-size:10.5px;
+    font-weight:700;
+    line-height:1.3;
+}
+
+.selo-fora.atrasado{
+    background:var(--v4-bad-soft);
+    color:var(--v4-bad);
+}
+
+.onde-vazio{
+    padding:50px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    text-align:center;
+    color:#8a8186;
+    border:1px dashed #e6dadc;
+    border-radius:16px;
+}
+
+.onde-vazio i{
+    font-size:34px;
+    color:#d6c6c9;
+    margin-bottom:4px;
+}
+
+.onde-vazio strong{
+    color:var(--v4-ink);
+    font-size:15px;
+}
+
+.onde-vazio span{ font-size:12.5px; max-width:420px; }
+
+.onde-mais{
+    text-align:center;
+    color:#8a8186;
+    font-size:12px;
+    margin:6px 0 0;
+}
+
+/* ---------- Fora do lugar ---------- */
+
+.fora-table{ min-width:1000px; }
+
+.linha-atrasada td{ background:#fffafa; }
+.linha-atrasada td:first-child{ box-shadow:inset 3px 0 0 var(--v4-bad); }
+
+.destino-origem{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:var(--v4-ok);
+    font-weight:700;
+}
+
+.texto-suave{
+    color:#a59ca0;
+    font-size:11.5px;
+}
+
+#foraLugarTela .page-title .estoque-info{
+    min-height:44px;
+}
+
+/* ---------- Movimentação ---------- */
+
+.mov-retorno{ margin-top:14px; }
+
+.mov-info-origem{
+    margin:14px 0 0;
+    padding:11px 14px;
+    border-radius:10px;
+    background:#faf7f7;
+    color:var(--v4-muted);
+    font-size:12px;
+    line-height:1.5;
+}
+
+.mov-info-origem:empty{ display:none; }
+.mov-info-origem i{ color:var(--v4-marsala); margin-right:4px; }
+.mov-info-origem .ok{ color:var(--v4-ok); }
+
+.mov-tipo{
+    display:inline-block;
+    padding:3px 8px;
+    border-radius:6px;
+    background:#f3f1f2;
+    color:var(--v4-muted);
+    font-size:10.5px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.mov-saida_temporaria{ background:var(--v4-warn-soft); color:var(--v4-warn); }
+.mov-devolucao{ background:var(--v4-ok-soft); color:var(--v4-ok); }
+.mov-remanejamento{ background:var(--v4-marsala-soft); color:var(--v4-marsala-dark); }
+.mov-entrada{ background:#eef4fb; color:#2f5d8a; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width:820px){
+    .onde-hero{ padding:22px 18px 18px; }
+    .onde-hero h2{ font-size:24px; }
+    .onde-busca input{ height:54px !important; min-height:54px !important; font-size:16px !important; }
+    .onde-filtros select{ width:100%; }
+    .onde-contador{ margin-left:0; width:100%; }
+
+    .onde-card{ grid-template-columns:1fr; }
+    .onde-foto, .onde-foto img, .onde-sem-foto{ min-height:150px; max-height:190px; }
+
+    .onde-lista li{ grid-template-columns:minmax(0,1fr) 44px; }
+    .onde-acoes{ grid-column:1 / -1; justify-content:flex-end; }
+}
+
+/* Ajustes finos */
+#foraLugarTela .page-title .estoque-info span{
+    display:inline;
+    margin:0;
+    color:#667085;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0;
+    text-transform:none;
+}
+
+@media (max-width:820px){
+    .onde-card:has(.onde-sem-foto) .onde-foto{ display:none; }
+}

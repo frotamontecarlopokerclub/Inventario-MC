@@ -104,6 +104,44 @@
         <ul>
 
 
+            <!-- ONDE ESTÁ? -->
+
+            <li
+                id="menuOndeEsta"
+                class="menu-item"
+                style="display:none;"
+                onclick="abrirOndeEsta()"
+            >
+
+                <i class="fa-solid fa-magnifying-glass-location"></i>
+
+                <span>
+                    Onde está?
+                </span>
+
+            </li>
+
+
+            <!-- FORA DO LUGAR -->
+
+            <li
+                id="menuForaLugar"
+                class="menu-item"
+                style="display:none;"
+                onclick="abrirForaDoLugar()"
+            >
+
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                <span>
+                    Fora do lugar
+                </span>
+
+                <b id="badgeForaLugar" class="menu-badge" hidden>0</b>
+
+            </li>
+
+
             <!-- DASHBOARD -->
 
             <li
@@ -134,7 +172,7 @@
                 <i class="fa-solid fa-box-open"></i>
 
                 <span>
-                    Cadastro
+                    Cadastrar peças
                 </span>
 
             </li>
@@ -170,7 +208,25 @@
                 <i class="fa-solid fa-warehouse"></i>
 
                 <span>
-                    Estoque
+                    Inventário
+                </span>
+
+            </li>
+
+
+            <!-- CATÁLOGO DE PEÇAS -->
+
+            <li
+                id="menuProdutos"
+                class="menu-item"
+                style="display:none;"
+                onclick="abrirTela('produtosTela', this)"
+            >
+
+                <i class="fa-solid fa-couch"></i>
+
+                <span>
+                    Catálogo
                 </span>
 
             </li>
@@ -765,6 +821,113 @@
 
 
     <!-- =================================================
+         ONDE ESTÁ?
+    ================================================== -->
+
+    <section
+        id="ondeEstaTela"
+        class="tela"
+    >
+
+        <div class="onde-hero">
+
+            <span>LOCALIZAR</span>
+            <h2>Onde está?</h2>
+            <p>Digite o nome da peça, a categoria ou um local. Ex.: "vaso azul", "quadro", "CASA 2".</p>
+
+            <div class="onde-busca">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input
+                    type="search"
+                    id="buscaOndeEsta"
+                    placeholder="O que você está procurando?"
+                    autocomplete="off"
+                    aria-label="Buscar peça"
+                >
+            </div>
+
+            <div class="onde-filtros">
+                <select id="filtroLocalOndeEsta" aria-label="Filtrar por local">
+                    <option value="">Todos os locais</option>
+                </select>
+                <label class="mc-check">
+                    <input type="checkbox" id="filtroSomenteFora">
+                    <span>Só peças fora do lugar</span>
+                </label>
+                <span id="contadorOndeEsta" class="onde-contador"></span>
+            </div>
+
+        </div>
+
+        <div id="resultadosOndeEsta" class="onde-resultados"></div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FORA DO LUGAR
+    ================================================== -->
+
+    <section
+        id="foraLugarTela"
+        class="tela"
+    >
+
+        <div class="page-title">
+            <div>
+                <span>CONTROLE</span>
+                <h2>Fora do lugar</h2>
+                <p>Peças que saíram do seu local fixo e ainda não voltaram. Devolva com um clique quando retornarem.</p>
+            </div>
+            <div class="estoque-info">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <span>Peças fora:</span>
+                <strong id="totalForaLugar">0</strong>
+            </div>
+        </div>
+
+        <div class="card">
+
+            <div class="estoque-toolbar produtos-toolbar">
+                <div class="input-wrapper estoque-busca">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="buscaForaLugar" placeholder="Buscar peça ou local..." autocomplete="off">
+                </div>
+                <select id="filtroOrigemFora" aria-label="Filtrar por local de origem">
+                    <option value="">Todas as origens</option>
+                </select>
+                <label class="mc-check">
+                    <input type="checkbox" id="filtroAtrasados">
+                    <span>Só retornos atrasados</span>
+                </label>
+            </div>
+
+            <div class="table-area">
+                <table class="inventory-table fora-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Peça</th>
+                            <th class="num">Qtde</th>
+                            <th>Está em</th>
+                            <th>Deveria estar em</th>
+                            <th>Fora desde</th>
+                            <th>Retorno previsto</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaForaLugar"></tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
          DASHBOARD
     ================================================== -->
 
@@ -815,7 +978,7 @@
                     </h3>
 
                     <p>
-                        Total de Itens
+                        Total de peças
                     </p>
 
                 </div>
@@ -894,6 +1057,39 @@
 
         </div>
 
+
+
+        <!-- LOCAL DE ORIGEM: FORA DO LUGAR E VALOR -->
+
+        <div id="dashExtra" class="dash-extra" hidden>
+
+            <button type="button" id="dashForaItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar()">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <div>
+                    <small>Fora do lugar</small>
+                    <strong id="dashForaLugar">—</strong>
+                </div>
+                <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
+            </button>
+
+            <button type="button" id="dashAtrasoItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar(true)">
+                <i class="fa-solid fa-clock"></i>
+                <div>
+                    <small>Retorno atrasado</small>
+                    <strong id="dashAtrasados">—</strong>
+                </div>
+                <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
+            </button>
+
+            <div class="dash-extra-item">
+                <i class="fa-solid fa-sack-dollar"></i>
+                <div>
+                    <small>Valor de referência do acervo</small>
+                    <strong id="dashValorPatrimonio">—</strong>
+                </div>
+            </div>
+
+        </div>
 
 
         <!-- RELATÓRIO -->
@@ -1119,11 +1315,11 @@
                 </span>
 
                 <h2>
-                    Cadastro
+                    Cadastrar peças
                 </h2>
 
                 <p>
-                    Cadastre patrimônios individuais ou itens de estoque.
+                    Informe a peça, quantas são e onde ficam (local e setor). Esse será o local fixo delas.
                 </p>
 
             </div>
@@ -1140,9 +1336,9 @@
             >
 
 
-                <!-- TIPO DE CONTROLE -->
+                <!-- TIPO DE CONTROLE (oculto: o inventário é por grupo de peças) -->
 
-                <div class="form-section">
+                <div class="form-section" style="display:none;">
 
                     <div class="form-section-title">
 
@@ -1163,7 +1359,6 @@
                                 name="tipoControle"
                                 value="estoque"
                                 checked
-                                onchange="alternarTipoControle()"
                                 onchange="alternarTipoControle()"
                             >
 
@@ -1226,7 +1421,7 @@
 
                         <i class="fa-solid fa-box"></i>
 
-                        Informações do Item
+                        Informações da peça
 
                     </div>
 
@@ -1237,15 +1432,16 @@
                         <div class="input-group">
 
                             <label for="nome">
-                                Nome do Item
+                                Nome da peça
                             </label>
 
                             <input
                                 type="text"
                                 id="nome"
-                                placeholder="Ex.: Copo de vidro"
+                                placeholder="Ex.: Mesa de jantar oval"
                                 required
                             >
+                            <small id="dicaProdutoCadastro" class="mc-dica"></small>
 
                         </div>
 
@@ -1259,7 +1455,7 @@
                             <input
                                 type="text"
                                 id="tipoItem"
-                                placeholder="Ex.: Utensílio"
+                                placeholder="Ex.: Mesas, Quadros, Vasos"
                             >
 
                         </div>
@@ -1293,7 +1489,7 @@
 
                         <i class="fa-solid fa-layer-group"></i>
 
-                        Controle de Quantidade e Localização
+                        Quantidade e localização
 
                     </div>
 
@@ -1319,7 +1515,7 @@
                             >
 
                             <small>
-                                Para estoque, informe a quantidade total.
+                                Quantas peças iguais ficam neste local e setor.
                             </small>
 
                         </div>
@@ -1345,11 +1541,11 @@
                         </div>
 
                         <div class="input-group">
-                            <label for="subsetorCadastro">Subsetor</label>
+                            <label for="subsetorCadastro">Setor</label>
                             <select id="subsetorCadastro">
                                 <option value="">Sem subsetor</option>
                             </select>
-                            <small>Opcional. Os subsetores são definidos pela Administração.</small>
+                            <small>Opcional. Os setores de cada local são criados na Administração.</small>
                         </div>
 
 
@@ -1534,7 +1730,7 @@
                 </h2>
 
                 <p>
-                    Transfira itens entre os locais cadastrados.
+                    Leve peças de um lugar para outro — temporariamente (deve voltar) ou de forma definitiva.
                 </p>
 
             </div>
@@ -1552,12 +1748,11 @@
                 <div>
 
                     <strong>
-                        Movimentação de estoque
+                        Movimente só a quantidade necessária
                     </strong>
 
                     <p>
-                        Para itens de estoque, você pode movimentar
-                        somente a quantidade desejada.
+                        Ex.: 10 das 40 cadeiras. O sistema guarda de onde elas são e mostra o que ainda não voltou em "Fora do lugar".
                     </p>
 
                 </div>
@@ -1584,7 +1779,7 @@
                     <div class="input-group">
 
                         <label for="itemMov">
-                            Item / Lote / Patrimônio
+                            Peça
                         </label>
 
                         <select
@@ -1604,7 +1799,7 @@
                     <div class="input-group">
 
                         <label for="origemNome">
-                            Local Atual
+                            Está em
                         </label>
 
                         <input
@@ -1659,7 +1854,7 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="destinoSubsetor">Subsetor de Destino</label>
+                        <label for="destinoSubsetor">Setor de destino</label>
                         <select id="destinoSubsetor">
                             <option value="">Sem subsetor</option>
                         </select>
@@ -1679,15 +1874,59 @@
                             value="1"
                         >
 
-                        <small>
-                            Para patrimônio individual, utilize 1.
-                        </small>
+                        <small id="ajudaQuantidadeMov"></small>
 
                     </div>
 
 
                 </div>
 
+
+            </div>
+
+
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <i class="fa-solid fa-route"></i>
+
+                    Tipo de movimentação
+
+                </div>
+
+                <div class="controle-grid">
+
+                    <label class="controle-option">
+                        <input type="radio" name="tipoMovimentacao" value="temporaria" checked>
+                        <div>
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <strong>Temporária</strong>
+                            <span>A peça vai e deve voltar (evento, empréstimo, conserto). Continua sendo do local de origem.</span>
+                        </div>
+                    </label>
+
+                    <label class="controle-option">
+                        <input type="radio" name="tipoMovimentacao" value="definitiva">
+                        <div>
+                            <i class="fa-solid fa-house-circle-check"></i>
+                            <strong>Definitiva</strong>
+                            <span>Remanejamento: o destino passa a ser o novo local fixo da peça.</span>
+                        </div>
+                    </label>
+
+                </div>
+
+                <div class="grid-2 mov-retorno">
+                    <div class="input-group" id="grupoRetornoPrevisto">
+                        <label for="retornoPrevisto">Retorno previsto (opcional)</label>
+                        <input type="date" id="retornoPrevisto">
+                        <small>Depois desta data, a peça aparece como "retorno atrasado".</small>
+                    </div>
+                </div>
+
+                <p id="infoOrigemFixa" class="mov-info-origem"></p>
 
             </div>
 
@@ -1811,11 +2050,11 @@
                 </span>
 
                 <h2>
-                    Estoque
+                    Inventário
                 </h2>
 
                 <p>
-                    Consulte todos os itens cadastrados no inventário.
+                    Todas as peças, onde estão e qual é o local fixo de cada grupo.
                 </p>
 
             </div>
@@ -1850,7 +2089,7 @@
                     <input
                         type="text"
                         id="busca"
-                        placeholder="Buscar patrimônio, item, local..."
+                        placeholder="Buscar peça, categoria ou local..."
                         onkeyup="filtrarItens()"
                     >
 
@@ -1864,7 +2103,7 @@
                     <select
                         id="filtroSubsetor"
                         onchange="filtrarItens()"
-                        aria-label="Filtrar por subsetor"
+                        aria-label="Filtrar por setor"
                     >
                         <option value="">
                             Todos os Subsetores
@@ -1899,47 +2138,17 @@
 
 
                     <thead>
-
                         <tr>
-
-                            <th>
-                                Foto
-                            </th>
-
-                            <th>
-                                Patrimônio / Lote
-                            </th>
-
-                            <th>
-                                Tipo
-                            </th>
-
-                            <th>
-                                Nome
-                            </th>
-
-                            <th>
-                                Descrição
-                            </th>
-
-                            <th>
-                                Local
-                            </th>
-
-                            <th>
-                                Subsetor
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Ações
-                            </th>
-
+                            <th>Foto</th>
+                            <th>Peça</th>
+                            <th>Categoria</th>
+                            <th class="num">Qtde</th>
+                            <th>Local</th>
+                            <th>Setor</th>
+                            <th>Local fixo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
                         </tr>
-
                     </thead>
 
 
@@ -1955,6 +2164,97 @@
 
         </div>
 
+
+    </section>
+
+
+
+    <!-- =================================================
+         CATÁLOGO DE PEÇAS
+    ================================================== -->
+
+    <section
+        id="produtosTela"
+        class="tela"
+    >
+
+        <div class="page-title">
+
+            <div>
+                <span>CATÁLOGO</span>
+                <h2>Catálogo de peças</h2>
+                <p>Cada peça cadastrada uma única vez: nome, categoria, descrição e foto. A quantidade e os locais vêm do inventário.</p>
+            </div>
+
+            <button
+                type="button"
+                class="btn-primary somente-gestao"
+                onclick="novoProduto()"
+            >
+                <i class="fa-solid fa-plus"></i>
+                Nova peça
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <div class="estoque-toolbar produtos-toolbar">
+
+                <div class="input-wrapper estoque-busca">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="text"
+                        id="buscaProduto"
+                        placeholder="Buscar peça, categoria ou descrição..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <select
+                    id="filtroCategoriaProduto"
+                    aria-label="Filtrar por categoria"
+                >
+                    <option value="">Todas as categorias</option>
+                </select>
+
+                <label class="mc-check">
+                    <input type="checkbox" id="filtroProdutosInativos">
+                    <span>Mostrar inativas</span>
+                </label>
+
+                <div class="estoque-info">
+                    <i class="fa-solid fa-couch"></i>
+                    <span>Peças:</span>
+                    <strong id="produtosTotal">0</strong>
+                </div>
+
+            </div>
+
+            <div class="table-area">
+
+                <table class="inventory-table produtos-table">
+
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Peça</th>
+                            <th>Categoria</th>
+                            <th class="num">Quantidade</th>
+                            <th class="num">Locais</th>
+                            <th class="num">Valor ref.</th>
+                            <th>Situação</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="listaProdutos"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
     </section>
 
@@ -2004,11 +2304,11 @@
                         <tr>
 
                             <th>
-                                Patrimônio
+                                Tipo
                             </th>
 
                             <th>
-                                Item
+                                Peça
                             </th>
 
                             <th>
@@ -2114,6 +2414,21 @@
                     <table class="inventory-table admin-table">
                         <thead><tr><th>Local</th><th>Subsetor</th><th>Status</th><th>Ações</th></tr></thead>
                         <tbody id="listaSubsetoresAdmin"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-section-title admin-card-titulo">
+                    <span><i class="fa-solid fa-location-dot"></i> Locais</span>
+                    <button type="button" class="btn-primary btn-small" onclick="novoLocal()">
+                        <i class="fa-solid fa-plus"></i> Novo local
+                    </button>
+                </div>
+                <div class="table-area">
+                    <table class="inventory-table admin-table">
+                        <thead><tr><th>Local</th><th>Unidades</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="listaLocaisAdmin"></tbody>
                     </table>
                 </div>
             </div>

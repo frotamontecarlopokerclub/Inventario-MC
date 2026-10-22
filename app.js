@@ -44,7 +44,7 @@ let subsetores = [];
    LOCAIS
 ========================================================= */
 
-const LOCAIS = [
+let LOCAIS = [
     { id: 1, nome: 'CASA 1' },
     { id: 2, nome: 'CASA 2' },
     { id: 3, nome: 'CASA 3' },
@@ -250,12 +250,7 @@ async function login(event) {
         atualizarUsuarioInterface();
 
 
-        abrirTela(
-            'dashboardTela',
-            document.getElementById(
-                'menuDashboard'
-            )
-        );
+        abrirTela(document.getElementById('ondeEstaTela') ? 'ondeEstaTela' : 'dashboardTela', document.getElementById('menuOndeEsta') || document.getElementById('menuDashboard'));
 
 
         await carregarDashboard();
@@ -6682,6 +6677,7 @@ window.addEventListener(
                     'login-mode'
                 );
 
+            await carregarLocaisBanco();
             carregarLocais();
             await carregarSubsetores();
 
@@ -6732,12 +6728,7 @@ window.addEventListener(
 
                 atualizarUsuarioInterface();
 
-                abrirTela(
-                    'dashboardTela',
-                    document.getElementById(
-                        'menuDashboard'
-                    )
-                );
+                abrirTela(document.getElementById('ondeEstaTela') ? 'ondeEstaTela' : 'dashboardTela', document.getElementById('menuOndeEsta') || document.getElementById('menuDashboard'));
 
                 await carregarDashboard();
 
@@ -7662,7 +7653,7 @@ window.carregarUsuariosAdmin = carregarUsuariosAdmin;
 window.carregarAuditoria = carregarAuditoria;
 
 
-/* ######################## PATCH ESTOQUE V3 (mantenha no FINAL do arquivo) ######################## */
+/* ######################## V3 — MOVIMENTAÇÃO SEGURA (manter no final) ######################## */
 
 
 
@@ -7813,7 +7804,7 @@ function carregarItensMovimentacao() {
 
 async function carregarDashboard() {
     try {
-        await carregarItens();
+        await Promise.all([carregarItens(), carregarProdutos()]);
 
         const { data: resumo, error } = await supabaseClient.rpc('resumo_dashboard');
 
@@ -7830,6 +7821,8 @@ async function carregarDashboard() {
             definirTexto('dashBaixado', resumo.baixados);
             definirTexto('dashExtraviado', resumo.extraviados);
         }
+
+        renderizarResumoExtra(error ? null : resumo);
 
         definirTexto('totalLocais', LOCAIS.length);
 
@@ -7902,16 +7895,9 @@ async function salvarItem(event) {
         let fotoUrl = null;
 
         if (arquivo) {
-            const extensao = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
-            caminhoFoto = `inventario/${crypto.randomUUID()}.${extensao}`;
-
-            const { error } = await supabaseClient.storage
-                .from('inventario')
-                .upload(caminhoFoto, arquivo, { upsert: false, contentType: arquivo.type });
-
-            if (error) throw new Error('Erro ao enviar a foto: ' + error.message);
-
-            fotoUrl = supabaseClient.storage.from('inventario').getPublicUrl(caminhoFoto).data.publicUrl;
+            const foto = await enviarFoto(arquivo, 'inventario');
+            caminhoFoto = foto.caminho;
+            fotoUrl = foto.url;
         }
 
         const { error } = await supabaseClient.rpc('registrar_entrada', {
@@ -7984,14 +7970,19 @@ async function movimentarItem(event) {
             p_quantidade: quantidade,
             p_destino_subsetor_id: destinoSubsetorId ? Number(destinoSubsetorId) : null,
             p_status: valor('statusMov') || null,
-            p_observacao: valor('observacaoMov') || null
+            p_observacao: valor('observacaoMov') || null,
+            p_definitivo: document.querySelector('input[name="tipoMovimentacao"]:checked')?.value === 'definitiva',
+            p_retorno_previsto: valor('retornoPrevisto') || null
         });
 
         if (error) throw error;
 
         alert(
-            'Movimentação realizada com sucesso!' +
-            (data?.saldo_origem > 0 ? `\n\nSaldo restante na origem: ${data.saldo_origem} unidade(s).` : '')
+            ({ SAIDA_TEMPORARIA: 'Saída temporária registrada! A peça aparece em "Fora do lugar" até voltar.',
+               REMANEJAMENTO: 'Remanejamento registrado! O destino agora é o local fixo da peça.',
+               DEVOLUCAO: 'Devolução registrada! A peça voltou ao local de origem.',
+               STATUS: 'Status alterado com sucesso!' }[data?.tipo] || 'Movimentação realizada com sucesso!') +
+            (data?.saldo_origem > 0 ? `\n\nRestam ${data.saldo_origem} peça(s) no local de saída.` : '')
         );
 
         limparFormularioMovimentacao();
@@ -8044,8 +8035,11 @@ async function excluirItem(id) {
 ========================================================= */
 
 const ROTULOS_MOVIMENTO = {
-    ENTRADA: 'Entrada',
+    ENTRADA: 'Cadastro',
     TRANSFERENCIA: 'Transferência',
+    SAIDA_TEMPORARIA: 'Saída temporária',
+    REMANEJAMENTO: 'Remanejamento',
+    DEVOLUCAO: 'Devolução',
     STATUS: 'Mudança de status'
 };
 
@@ -8076,14 +8070,14 @@ async function carregarHistorico() {
             const destino = formatarLocalSubsetor(mov.destino_id, mov.destino_subsetor_id);
             const mudouStatus = mov.status_anterior && mov.status_novo && mov.status_anterior !== mov.status_novo;
             const observacao = [
-                ROTULOS_MOVIMENTO[mov.tipo_movimento] || '',
                 mudouStatus ? `${mov.status_anterior} → ${mov.status_novo}` : '',
+                mov.retorno_previsto ? `Retorno previsto: ${new Date(mov.retorno_previsto + 'T12:00:00').toLocaleDateString('pt-BR')}` : '',
                 mov.observacao || ''
             ].filter(Boolean).join(' · ') || '—';
 
             return `
                 <tr>
-                    <td>${escaparHTML(item?.patrimonio || 'Estoque')}</td>
+                    <td><span class="mov-tipo mov-${escaparHTML(String(mov.tipo_movimento || '').toLowerCase())}">${escaparHTML(ROTULOS_MOVIMENTO[mov.tipo_movimento] || 'Movimentação')}</span></td>
                     <td><strong>${escaparHTML(nomeItem)}</strong></td>
                     <td>${escaparHTML(origem)}</td>
                     <td>${escaparHTML(destino)}</td>
@@ -8147,3 +8141,1383 @@ function exportarExcel() {
         });
     };
 })();
+
+
+/* ######################## V4 — CATÁLOGO E LOCAIS (manter no final) ######################## */
+
+/* =========================================================
+   V4 — CATÁLOGO DE PEÇAS + LOCAIS ADMINISTRÁVEIS
+   Requer migration_inventario_v4.sql.
+   (Mantenha este bloco no FINAL do app.js.)
+========================================================= */
+
+
+/* =========================================================
+   ESTADO
+========================================================= */
+
+let LOCAIS_TODOS = LOCAIS.map(local => ({ ...local, ativo: true }));
+let produtos = [];
+
+
+const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const numero = new Intl.NumberFormat('pt-BR');
+
+function normalizarTexto(valor) {
+    return String(valor || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function chaveNome(valor) {
+    return String(valor || '').toLowerCase().trim();
+}
+
+
+/* =========================================================
+   AVISOS (substituem o alert nas telas novas)
+========================================================= */
+
+function avisar(mensagem, tipo = 'sucesso') {
+    let area = document.getElementById('mcAvisos');
+    if (!area) {
+        area = Object.assign(document.createElement('div'), { id: 'mcAvisos', className: 'mc-avisos' });
+        area.setAttribute('aria-live', 'polite');
+        document.body.appendChild(area);
+    }
+
+    const icones = { sucesso: 'fa-circle-check', erro: 'fa-circle-exclamation', info: 'fa-circle-info' };
+    const aviso = document.createElement('div');
+    aviso.className = `mc-aviso mc-aviso-${tipo}`;
+    aviso.innerHTML = `<i class="fa-solid ${icones[tipo] || icones.info}"></i><span>${escaparHTML(mensagem)}</span>`;
+    area.appendChild(aviso);
+
+    setTimeout(() => aviso.classList.add('saindo'), tipo === 'erro' ? 6000 : 3500);
+    setTimeout(() => aviso.remove(), tipo === 'erro' ? 6400 : 3900);
+}
+
+function traduzirErro(erro) {
+    const codigo = erro?.code;
+    const texto = erro?.message || String(erro || '');
+
+    if (codigo === '23505' && /produtos/.test(texto)) return 'Já existe uma peça com esse nome no catálogo.';
+    if (codigo === '23505' && /locais/.test(texto)) return 'Já existe um local com esse nome.';
+    if (codigo === '42501' || /row-level security|permission denied/i.test(texto)) {
+        return 'Seu perfil não tem permissão para esta operação.';
+    }
+    if (/relation .* does not exist|Could not find the table/i.test(texto)) {
+        return 'A migração v4 ainda não foi executada no Supabase.';
+    }
+    return texto || 'Erro desconhecido.';
+}
+
+
+/* =========================================================
+   FORMULÁRIO EM JANELA (substitui o prompt)
+========================================================= */
+
+let formularioAtual = null;
+
+function garantirModalFormulario() {
+    let modal = document.getElementById('mcModalForm');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mcModalForm';
+    modal.className = 'mc-modal';
+    modal.hidden = true;
+    modal.innerHTML = `
+        <div class="mc-modal-caixa" role="dialog" aria-modal="true" aria-labelledby="mcModalTitulo">
+            <header class="mc-modal-topo">
+                <div>
+                    <h3 id="mcModalTitulo"></h3>
+                    <p id="mcModalSubtitulo"></p>
+                </div>
+                <button type="button" class="mc-modal-x" aria-label="Fechar" data-fechar>
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </header>
+            <form id="mcModalCorpo" class="mc-modal-corpo" novalidate></form>
+            <div id="mcModalErro" class="mc-modal-erro" hidden></div>
+            <footer class="mc-modal-rodape">
+                <button type="button" class="btn-secondary" data-fechar>Cancelar</button>
+                <button type="submit" form="mcModalCorpo" class="btn-primary" id="mcModalSalvar">Salvar</button>
+            </footer>
+        </div>`;
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', evento => {
+        if (evento.target === modal || evento.target.closest('[data-fechar]')) fecharFormulario();
+    });
+    document.addEventListener('keydown', evento => {
+        if (evento.key === 'Escape' && !modal.hidden) fecharFormulario();
+    });
+    modal.querySelector('#mcModalCorpo').addEventListener('submit', enviarFormulario);
+
+    return modal;
+}
+
+function campoFormularioHTML(campo) {
+    const id = `mcCampo_${campo.id}`;
+    const valor = campo.valor ?? '';
+    const obrigatorio = campo.obrigatorio ? 'required' : '';
+    const classe = `input-group mc-campo ${campo.largo ? 'mc-campo-largo' : ''}`;
+    const ajuda = campo.ajuda ? `<small>${escaparHTML(campo.ajuda)}</small>` : '';
+    const rotulo = `<label for="${id}">${escaparHTML(campo.rotulo)}${campo.obrigatorio ? ' <b>*</b>' : ''}</label>`;
+
+    if (campo.tipo === 'checkbox') {
+        return `<label class="mc-check ${campo.largo ? 'mc-campo-largo' : ''}">
+                    <input type="checkbox" id="${id}" ${valor ? 'checked' : ''}>
+                    <span>${escaparHTML(campo.rotulo)}</span>
+                </label>`;
+    }
+    if (campo.tipo === 'textarea') {
+        return `<div class="${classe}">${rotulo}
+                    <textarea id="${id}" rows="3" ${obrigatorio} placeholder="${escaparHTML(campo.placeholder || '')}">${escaparHTML(valor)}</textarea>${ajuda}</div>`;
+    }
+    if (campo.tipo === 'select') {
+        const opcoes = (campo.opcoes || []).map(opcao =>
+            `<option value="${escaparHTML(opcao.valor)}" ${String(opcao.valor) === String(valor) ? 'selected' : ''}>${escaparHTML(opcao.texto)}</option>`
+        ).join('');
+        return `<div class="${classe}">${rotulo}<select id="${id}" ${obrigatorio}>${opcoes}</select>${ajuda}</div>`;
+    }
+    if (campo.tipo === 'file') {
+        const previa = campo.valor
+            ? `<img src="${escaparHTML(campo.valor)}" alt="Foto atual" class="mc-previa-foto" id="${id}_previa">`
+            : `<div class="mc-previa-foto mc-previa-vazia" id="${id}_previa"><i class="fa-solid fa-image"></i></div>`;
+        return `<div class="${classe} mc-campo-foto">${rotulo}
+                    <div class="mc-foto-linha">${previa}
+                        <div><input type="file" id="${id}" accept="image/*">
+                        <small>A imagem é reduzida automaticamente antes do envio.</small></div>
+                    </div></div>`;
+    }
+    return `<div class="${classe}">${rotulo}
+                <input id="${id}" type="${campo.tipo || 'text'}" value="${escaparHTML(valor)}" ${obrigatorio}
+                    ${campo.lista ? `list="${campo.lista}"` : ''}
+                    ${campo.min !== undefined ? `min="${campo.min}"` : ''}
+                    ${campo.step ? `step="${campo.step}"` : ''}
+                    placeholder="${escaparHTML(campo.placeholder || '')}" autocomplete="off">${ajuda}</div>`;
+}
+
+function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar', aoSalvar }) {
+    const modal = garantirModalFormulario();
+    formularioAtual = { campos, aoSalvar };
+
+    modal.querySelector('#mcModalTitulo').textContent = titulo;
+    modal.querySelector('#mcModalSubtitulo').textContent = subtitulo;
+    modal.querySelector('#mcModalSalvar').textContent = textoSalvar;
+    modal.querySelector('#mcModalErro').hidden = true;
+    modal.querySelector('#mcModalCorpo').innerHTML = campos.map(campoFormularioHTML).join('');
+
+    campos.filter(campo => campo.tipo === 'file').forEach(campo => {
+        const entrada = document.getElementById(`mcCampo_${campo.id}`);
+        entrada?.addEventListener('change', () => {
+            const arquivo = entrada.files?.[0];
+            const previa = document.getElementById(`mcCampo_${campo.id}_previa`);
+            if (!arquivo || !previa) return;
+            const img = Object.assign(document.createElement('img'), {
+                src: URL.createObjectURL(arquivo), className: 'mc-previa-foto', id: previa.id, alt: 'Nova foto'
+            });
+            previa.replaceWith(img);
+        });
+    });
+
+    modal.hidden = false;
+    document.body.classList.add('modal-aberto');
+    setTimeout(() => modal.querySelector('input:not([type=checkbox]):not([type=file]), select, textarea')?.focus(), 30);
+}
+
+function fecharFormulario() {
+    const modal = document.getElementById('mcModalForm');
+    if (modal) modal.hidden = true;
+    document.body.classList.remove('modal-aberto');
+    formularioAtual = null;
+}
+
+function lerFormulario() {
+    const valores = {};
+    formularioAtual.campos.forEach(campo => {
+        const elemento = document.getElementById(`mcCampo_${campo.id}`);
+        if (!elemento) return;
+        if (campo.tipo === 'checkbox') valores[campo.id] = elemento.checked;
+        else if (campo.tipo === 'file') valores[campo.id] = elemento.files?.[0] || null;
+        else if (campo.tipo === 'number') valores[campo.id] = elemento.value === '' ? null : Number(elemento.value);
+        else valores[campo.id] = elemento.value.trim();
+    });
+    return valores;
+}
+
+async function enviarFormulario(evento) {
+    evento.preventDefault();
+    if (!formularioAtual) return;
+
+    const modal = document.getElementById('mcModalForm');
+    const erro = modal.querySelector('#mcModalErro');
+    const botao = modal.querySelector('#mcModalSalvar');
+    const valores = lerFormulario();
+
+    const faltando = formularioAtual.campos.find(campo => campo.obrigatorio && !valores[campo.id] && valores[campo.id] !== 0);
+    if (faltando) {
+        erro.textContent = `Preencha o campo "${faltando.rotulo}".`;
+        erro.hidden = false;
+        document.getElementById(`mcCampo_${faltando.id}`)?.focus();
+        return;
+    }
+
+    const textoBotao = botao.textContent;
+    botao.disabled = true;
+    botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+    erro.hidden = true;
+
+    try {
+        await formularioAtual.aoSalvar(valores);
+        fecharFormulario();
+    } catch (falha) {
+        console.error('ERRO NO FORMULÁRIO:', falha);
+        erro.textContent = traduzirErro(falha);
+        erro.hidden = false;
+    } finally {
+        botao.disabled = false;
+        botao.textContent = textoBotao;
+    }
+}
+
+
+/* =========================================================
+   FOTOS — reduzidas no navegador antes do envio
+   (fotos de celular têm 4–8 MB; viram ~200–400 KB)
+========================================================= */
+
+async function comprimirImagem(arquivo, ladoMaximo = 1600, qualidade = 0.82) {
+    if (!arquivo?.type?.startsWith('image/') || /gif|svg/.test(arquivo.type)) return arquivo;
+
+    try {
+        const bitmap = await createImageBitmap(arquivo);
+        const escala = Math.min(1, ladoMaximo / Math.max(bitmap.width, bitmap.height));
+        if (escala === 1 && arquivo.size < 600 * 1024) return arquivo;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(bitmap.width * escala);
+        canvas.height = Math.round(bitmap.height * escala);
+        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolver => canvas.toBlob(resolver, 'image/jpeg', qualidade));
+        if (!blob || blob.size >= arquivo.size) return arquivo;
+
+        const nome = arquivo.name.replace(/\.[^.]+$/, '') + '.jpg';
+        return new File([blob], nome, { type: 'image/jpeg' });
+    } catch (erro) {
+        console.warn('Não foi possível reduzir a imagem; enviando original.', erro);
+        return arquivo;
+    }
+}
+
+async function enviarFoto(arquivo, pasta = 'inventario') {
+    const final = await comprimirImagem(arquivo);
+    const extensao = (final.name.split('.').pop() || 'jpg').toLowerCase();
+    const caminho = `${pasta}/${crypto.randomUUID()}.${extensao}`;
+
+    const { error } = await supabaseClient.storage
+        .from('inventario')
+        .upload(caminho, final, { upsert: false, contentType: final.type });
+
+    if (error) throw new Error('Erro ao enviar a foto: ' + error.message);
+
+    return {
+        caminho,
+        url: supabaseClient.storage.from('inventario').getPublicUrl(caminho).data.publicUrl
+    };
+}
+
+
+/* =========================================================
+   LOCAIS — agora vêm do banco
+========================================================= */
+
+async function carregarLocaisBanco() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('locais')
+            .select('id, nome, ativo, ordem')
+            .order('ordem', { ascending: true })
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        if (!data?.length) return;
+
+        LOCAIS_TODOS = data;
+        LOCAIS = data.filter(local => local.ativo !== false).map(local => ({ id: local.id, nome: local.nome }));
+    } catch (erro) {
+        console.warn('Tabela de locais indisponível; usando a lista do app.js.', erro?.message || erro);
+    }
+}
+
+function nomeLocal(localId) {
+    const local = LOCAIS_TODOS.find(registro => String(registro.id) === String(localId));
+    if (!local) return 'SEM LOCAL';
+    return local.ativo === false ? `${local.nome} (inativo)` : local.nome;
+}
+
+function atualizarLocaisNaTela() {
+    carregarLocais();
+    carregarFiltroLocaisDashboard();
+    carregarLocaisConsultaPublica();
+    carregarSubsetores();
+    renderizarLocaisAdmin();
+    definirTexto('totalLocais', LOCAIS.length);
+}
+
+function renderizarLocaisAdmin() {
+    const tbody = document.getElementById('listaLocaisAdmin');
+    if (!tbody) return;
+
+    const unidadesPorLocal = {};
+    itens.forEach(item => {
+        unidadesPorLocal[item.local_id] = (unidadesPorLocal[item.local_id] || 0) + quantidadeItem(item);
+    });
+
+    tbody.innerHTML = LOCAIS_TODOS.map(local => {
+        const ativo = local.ativo !== false;
+        return `
+            <tr class="${ativo ? '' : 'linha-inativa'}">
+                <td><strong>${escaparHTML(local.nome)}</strong></td>
+                <td>${numero.format(unidadesPorLocal[local.id] || 0)}</td>
+                <td><span class="status-badge ${ativo ? 'ativo' : 'inativo'}">${ativo ? 'Ativo' : 'Inativo'}</span></td>
+                <td class="admin-actions">
+                    <button type="button" class="btn-icon" title="Renomear" onclick="editarLocal(${Number(local.id)})">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn-icon" title="${ativo ? 'Inativar' : 'Reativar'}" onclick="alternarLocal(${Number(local.id)})">
+                        <i class="fa-solid ${ativo ? 'fa-ban' : 'fa-rotate-left'}"></i>
+                    </button>
+                </td>
+            </tr>`;
+    }).join('') || '<tr><td colspan="4" class="empty-state">Nenhum local cadastrado.</td></tr>';
+}
+
+function novoLocal() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador gerencia locais.', 'erro');
+
+    abrirFormulario({
+        titulo: 'Novo local',
+        subtitulo: 'O local fica disponível imediatamente em todas as telas.',
+        textoSalvar: 'Criar local',
+        campos: [{ id: 'nome', rotulo: 'Nome do local', obrigatorio: true, placeholder: 'Ex.: CASA 7', largo: true }],
+        aoSalvar: async ({ nome }) => {
+            const ordem = Math.max(0, ...LOCAIS_TODOS.map(local => Number(local.ordem) || 0)) + 1;
+            const { error } = await supabaseClient.from('locais').insert([{ nome: nome.toUpperCase(), ordem }]);
+            if (error) throw error;
+            await carregarLocaisBanco();
+            atualizarLocaisNaTela();
+            avisar(`Local "${nome.toUpperCase()}" criado.`);
+        }
+    });
+}
+
+function editarLocal(id) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador gerencia locais.', 'erro');
+    const local = LOCAIS_TODOS.find(registro => Number(registro.id) === Number(id));
+    if (!local) return;
+
+    abrirFormulario({
+        titulo: 'Renomear local',
+        subtitulo: 'O nome muda em todo o sistema, inclusive no histórico.',
+        campos: [{ id: 'nome', rotulo: 'Nome do local', valor: local.nome, obrigatorio: true, largo: true }],
+        aoSalvar: async ({ nome }) => {
+            const { error } = await supabaseClient.from('locais').update({ nome: nome.toUpperCase() }).eq('id', id);
+            if (error) throw error;
+            await carregarLocaisBanco();
+            atualizarLocaisNaTela();
+            avisar('Local renomeado.');
+        }
+    });
+}
+
+async function alternarLocal(id) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador gerencia locais.', 'erro');
+    const local = LOCAIS_TODOS.find(registro => Number(registro.id) === Number(id));
+    if (!local) return;
+
+    const ativar = local.ativo === false;
+    const unidades = itens.filter(item => Number(item.local_id) === Number(id))
+        .reduce((total, item) => total + quantidadeItem(item), 0);
+
+    const mensagem = ativar
+        ? `Reativar o local "${local.nome}"?`
+        : `Inativar o local "${local.nome}"?` +
+          (unidades ? `\n\nEle possui ${numero.format(unidades)} unidade(s). Elas continuam registradas lá, ` +
+                      `mas não será possível enviar novos itens para este local.` : '');
+
+    if (!confirm(mensagem)) return;
+
+    const { error } = await supabaseClient.from('locais').update({ ativo: ativar }).eq('id', id);
+    if (error) return avisar(traduzirErro(error), 'erro');
+
+    await carregarLocaisBanco();
+    atualizarLocaisNaTela();
+    avisar(ativar ? 'Local reativado.' : 'Local inativado.');
+}
+
+
+/* =========================================================
+   PRODUTOS — catálogo
+========================================================= */
+
+async function carregarProdutos() {
+    try {
+        produtos = await buscarTodasLinhas(() =>
+            supabaseClient
+                .from('vw_produtos_saldo')
+                .select('*')
+                .order('nome', { ascending: true })
+        );
+    } catch (erro) {
+        console.warn('Catálogo de produtos indisponível:', erro?.message || erro);
+        produtos = [];
+    }
+
+    popularListasCatalogo();
+    popularFiltroCategoriasProduto();
+    renderizarProdutos();
+    atualizarDicaProduto();
+}
+
+function categoriasExistentes() {
+    const mapa = new Map();
+    produtos.forEach(produto => {
+        const categoria = String(produto.categoria || '').trim();
+        if (categoria) mapa.set(normalizarTexto(categoria), categoria);
+    });
+    return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function popularListasCatalogo() {
+    const garantirLista = id => {
+        let lista = document.getElementById(id);
+        if (!lista) {
+            lista = Object.assign(document.createElement('datalist'), { id });
+            document.body.appendChild(lista);
+        }
+        return lista;
+    };
+
+    garantirLista('dlProdutos').innerHTML = produtos
+        .filter(produto => produto.ativo !== false)
+        .map(produto => `<option value="${escaparHTML(produto.nome)}">${escaparHTML(produto.categoria || '')}</option>`)
+        .join('');
+
+    garantirLista('dlCategorias').innerHTML = categoriasExistentes()
+        .map(categoria => `<option value="${escaparHTML(categoria)}"></option>`)
+        .join('');
+}
+
+function popularFiltroCategoriasProduto() {
+    const select = document.getElementById('filtroCategoriaProduto');
+    if (!select) return;
+    const atual = select.value;
+    select.innerHTML = '<option value="">Todas as categorias</option>' +
+        categoriasExistentes().map(categoria =>
+            `<option value="${escaparHTML(categoria)}">${escaparHTML(categoria)}</option>`).join('');
+    if ([...select.options].some(opcao => opcao.value === atual)) select.value = atual;
+}
+
+function produtoPorNome(nome) {
+    const chave = chaveNome(nome);
+    return chave ? produtos.find(produto => chaveNome(produto.nome) === chave) : null;
+}
+
+function situacaoProduto(produto) {
+    return produto.ativo === false
+        ? { classe: 'inativo', texto: 'Inativa' }
+        : { classe: 'ativo', texto: 'Ativa' };
+}
+
+function renderizarProdutos() {
+    const tbody = document.getElementById('listaProdutos');
+    if (!tbody) return;
+
+    const busca = normalizarTexto(document.getElementById('buscaProduto')?.value);
+    const categoria = document.getElementById('filtroCategoriaProduto')?.value || '';
+    const mostrarInativos = document.getElementById('filtroProdutosInativos')?.checked;
+    const gestao = podeAdministrar();
+
+    const lista = produtos.filter(produto =>
+        (mostrarInativos || produto.ativo !== false) &&
+        (!categoria || normalizarTexto(produto.categoria) === normalizarTexto(categoria)) &&
+        (!busca || normalizarTexto(`${produto.nome} ${produto.categoria} ${produto.descricao}`).includes(busca))
+    );
+
+    definirTexto('produtosTotal', numero.format(lista.length));
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">
+            <i class="fa-solid fa-couch"></i>
+            ${produtos.length ? 'Nenhuma peça encontrada com esses filtros.' : 'Nenhuma peça no catálogo.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(produto => {
+        const situacao = situacaoProduto(produto);
+        const total = Number(produto.saldo_total) || 0;
+        const manutencao = Number(produto.saldo_manutencao) || 0;
+        const valor = Number(produto.custo_unitario) || 0;
+        const foto = produto.foto_url
+            ? `<img src="${escaparHTML(produto.foto_url)}" alt="" class="foto-tabela" loading="lazy"
+                   onclick="abrirModalFoto('${escaparHTML(produto.foto_url)}')">`
+            : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>';
+
+        return `
+            <tr class="${produto.ativo === false ? 'linha-inativa' : ''}">
+                <td>${foto}</td>
+                <td>
+                    <strong>${escaparHTML(produto.nome)}</strong>
+                    ${produto.descricao ? `<small class="celula-sub">${escaparHTML(produto.descricao)}</small>` : ''}
+                </td>
+                <td>${escaparHTML(produto.categoria || '—')}</td>
+                <td class="num">
+                    <strong>${numero.format(total)}</strong>
+                    ${manutencao ? `<small class="celula-sub">${numero.format(manutencao)} em manutenção</small>` : ''}
+                </td>
+                <td class="num">${numero.format(Number(produto.locais) || 0)}</td>
+                <td class="num">${valor ? moeda.format(valor) : '—'}</td>
+                <td><span class="status-badge ${situacao.classe}">${situacao.texto}</span></td>
+                <td>
+                    <div class="acoes-tabela">
+                        <button type="button" class="btn-icon" title="Onde está" onclick="verProdutoNoEstoque(${Number(produto.id)})">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </button>
+                        ${gestao ? `<button type="button" class="btn-icon" title="Editar peça" onclick="abrirProduto(${Number(produto.id)})">
+                            <i class="fa-solid fa-pen"></i></button>` : ''}
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
+function camposProduto(produto = {}) {
+    const campos = [
+        { id: 'nome', rotulo: 'Nome da peça', valor: produto.nome, obrigatorio: true, placeholder: 'Ex.: Mesa de jantar oval' },
+        { id: 'categoria', rotulo: 'Categoria', valor: produto.categoria, lista: 'dlCategorias', placeholder: 'Ex.: Mesas, Quadros, Vasos',
+          ajuda: 'Escolha uma existente para manter o padrão.' },
+        { id: 'descricao', rotulo: 'Descrição', tipo: 'textarea', valor: produto.descricao, largo: true,
+          placeholder: 'Cor, material, medidas, detalhes que ajudam a reconhecer a peça...' },
+        { id: 'custo_unitario', rotulo: 'Valor de referência por peça (R$) — opcional', tipo: 'number', min: 0, step: '0.01',
+          valor: produto.custo_unitario || '', placeholder: '0,00', ajuda: 'Para seguro e controle patrimonial.', largo: true },
+        { id: 'foto', rotulo: 'Foto', tipo: 'file', valor: produto.foto_url, largo: true }
+    ];
+    if (produto.id) campos.push({ id: 'ativo', rotulo: 'Peça ativa (aparece nas sugestões do cadastro)', tipo: 'checkbox', valor: produto.ativo !== false, largo: true });
+    return campos;
+}
+
+async function salvarProduto(id, valores) {
+    let foto = null;
+
+    try {
+        if (valores.foto) foto = await enviarFoto(valores.foto, 'produtos');
+
+        const dados = {
+            nome: valores.nome,
+            categoria: valores.categoria || null,
+            custo_unitario: Math.max(0, Number(valores.custo_unitario) || 0),
+            descricao: valores.descricao || null
+        };
+        if (foto) dados.foto_url = foto.url;
+        if (id) dados.ativo = valores.ativo !== false;
+
+        const consulta = id
+            ? supabaseClient.from('produtos').update(dados).eq('id', id).select('id')
+            : supabaseClient.from('produtos').insert([dados]).select('id');
+
+        const { data, error } = await consulta;
+        if (error) throw error;
+        if (!data?.length) throw new Error('Seu perfil não tem permissão para esta operação.');
+    } catch (erro) {
+        if (foto) await supabaseClient.storage.from('inventario').remove([foto.caminho]);
+        throw erro;
+    }
+
+    await Promise.all([carregarProdutos(), carregarItens()]);
+}
+
+function novoProduto(nomeSugerido = '') {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador cria peças no catálogo.', 'erro');
+
+    abrirFormulario({
+        titulo: 'Nova peça no catálogo',
+        subtitulo: 'Depois, use "Cadastrar peças" para informar quantidade, local e setor.',
+        textoSalvar: 'Criar peça',
+        campos: camposProduto({ nome: nomeSugerido }),
+        aoSalvar: async valores => {
+            await salvarProduto(null, valores);
+            avisar(`Peça "${valores.nome}" criada no catálogo.`);
+        }
+    });
+}
+
+function abrirProduto(id) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita o catálogo.', 'erro');
+    const produto = produtos.find(registro => Number(registro.id) === Number(id));
+    if (!produto) return avisar('Peça não encontrada. Atualize a página.', 'erro');
+
+    const total = Number(produto.saldo_total) || 0;
+    abrirFormulario({
+        titulo: 'Editar peça',
+        subtitulo: total
+            ? `${numero.format(total)} peça(s) em ${produto.locais || 0} local(is). A alteração vale para todas.`
+            : 'Nenhuma unidade cadastrada no momento.',
+        campos: camposProduto(produto),
+        aoSalvar: async valores => {
+            await salvarProduto(id, valores);
+            avisar('Peça atualizada.');
+        }
+    });
+}
+
+function verProdutoNoEstoque(id) {
+    const produto = produtos.find(registro => Number(registro.id) === Number(id));
+    if (!produto) return;
+    abrirOndeEsta(produto.nome);
+}
+
+/* O botão de editar da tabela de Estoque agora edita o produto. */
+function editarItem(id) {
+    const item = itens.find(registro => Number(registro.id) === Number(id));
+    if (!item) return avisar('Item não encontrado.', 'erro');
+    if (!podeAdministrar()) {
+        return avisar('Nome, categoria, descrição e foto ficam no Catálogo, editado por Gestor ou Administrador.', 'info');
+    }
+    if (!item.produto_id) return avisar('Execute a migração v4 para editar pelo catálogo.', 'erro');
+    abrirProduto(item.produto_id);
+}
+
+
+/* =========================================================
+   CADASTRO — usa o catálogo
+========================================================= */
+
+function atualizarDicaProduto() {
+    const campoNome = document.getElementById('nome');
+    const campoCategoria = document.getElementById('tipoItem');
+    const dica = document.getElementById('dicaProdutoCadastro');
+    if (!campoNome || !dica) return;
+
+    const nome = campoNome.value.trim();
+    const produto = produtoPorNome(nome);
+
+    if (!nome) {
+        dica.className = 'mc-dica';
+        dica.innerHTML = produtos.length
+            ? `<i class="fa-solid fa-magnifying-glass"></i> Digite para buscar entre ${numero.format(produtos.length)} peças do catálogo.`
+            : '';
+        if (campoCategoria) campoCategoria.readOnly = false;
+        return;
+    }
+
+    if (produto) {
+        if (campoCategoria) {
+            campoCategoria.value = produto.categoria || '';
+            campoCategoria.readOnly = true;
+        }
+        const total = Number(produto.saldo_total) || 0;
+        dica.className = 'mc-dica mc-dica-ok';
+        dica.innerHTML = `<i class="fa-solid fa-circle-check"></i> Peça já existe no catálogo ·
+            <strong>${numero.format(total)}</strong> cadastrada(s) em ${numero.format(Number(produto.locais) || 0)} local(is).
+            A quantidade será somada no local escolhido.`;
+    } else {
+        if (campoCategoria) campoCategoria.readOnly = false;
+        dica.className = 'mc-dica mc-dica-novo';
+        dica.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Peça nova — será criada no catálogo ao salvar.
+            Confira nas sugestões se ela não existe com outro nome.`;
+    }
+}
+
+(function () {
+    const limparOriginal = limparFormularioCadastro;
+    limparFormularioCadastro = function () {
+        limparOriginal();
+        const categoria = document.getElementById('tipoItem');
+        if (categoria) categoria.readOnly = false;
+        atualizarDicaProduto();
+    };
+})();
+
+
+/* =========================================================
+   SUBSETORES — edição em janela (sem prompt)
+========================================================= */
+
+function editarSubsetor(id) {
+    if (!podeAdministrar()) return avisar('Usuário sem permissão.', 'erro');
+    const atual = subsetores.find(subsetor => Number(subsetor.id) === Number(id));
+    if (!atual) return;
+
+    abrirFormulario({
+        titulo: 'Renomear subsetor',
+        subtitulo: nomeLocal(atual.local_id),
+        campos: [{ id: 'nome', rotulo: 'Nome do subsetor', valor: atual.nome, obrigatorio: true, largo: true }],
+        aoSalvar: async ({ nome }) => {
+            const { error } = await supabaseClient.from('subsetores').update({ nome }).eq('id', id);
+            if (error) throw error;
+            await carregarSubsetores();
+            avisar('Subsetor renomeado.');
+        }
+    });
+}
+
+
+/* =========================================================
+   DASHBOARD — valor do patrimônio e alertas
+========================================================= */
+
+function renderizarResumoExtra(resumo) {
+    const area = document.getElementById('dashExtra');
+    if (!area) return;
+
+    const temOrigem = resumo && 'fora_do_lugar' in resumo;
+    area.hidden = !temOrigem;
+    if (!temOrigem) return;
+
+    const fora = Number(resumo.fora_do_lugar) || 0;
+    const atrasados = Number(resumo.retornos_atrasados) || 0;
+    const valor = Number(resumo.valor_patrimonio) || 0;
+
+    definirTexto('dashForaLugar', fora ? `${numero.format(fora)} peça(s)` : 'Tudo no lugar');
+    definirTexto('dashAtrasados', atrasados ? `${numero.format(atrasados)} peça(s)` : 'Nenhum');
+    definirTexto('dashValorPatrimonio', valor > 0 ? moeda.format(valor) : 'Não informado');
+
+    document.getElementById('dashForaItem')?.classList.toggle('tem-alerta', fora > 0);
+    document.getElementById('dashAtrasoItem')?.classList.toggle('tem-alerta', atrasados > 0);
+}
+
+/* =========================================================
+   MENUS, ADMINISTRAÇÃO E EVENTOS
+========================================================= */
+
+(function () {
+    const menusOriginal = atualizarMenus;
+    atualizarMenus = function () {
+        menusOriginal();
+        const menuProdutos = document.getElementById('menuProdutos');
+        if (menuProdutos) menuProdutos.style.display = usuarioLogado ? 'flex' : 'none';
+        document.querySelectorAll('.somente-gestao').forEach(elemento => {
+            elemento.style.display = podeAdministrar() ? '' : 'none';
+        });
+    };
+
+    const administracaoOriginal = abrirAdministracao;
+    abrirAdministracao = async function () {
+        await administracaoOriginal();
+        if (podeAdministrar()) renderizarLocaisAdmin();
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const nome = document.getElementById('nome');
+    if (nome) {
+        nome.setAttribute('list', 'dlProdutos');
+        nome.setAttribute('autocomplete', 'off');
+        nome.addEventListener('input', atualizarDicaProduto);
+        nome.addEventListener('change', atualizarDicaProduto);
+    }
+    document.getElementById('tipoItem')?.setAttribute('list', 'dlCategorias');
+
+    ['buscaProduto', 'filtroCategoriaProduto', 'filtroProdutosInativos'].forEach(id => {
+        const elemento = document.getElementById(id);
+        elemento?.addEventListener(['checkbox', 'select-one'].includes(elemento.type) ? 'change' : 'input', renderizarProdutos);
+    });
+
+    popularListasCatalogo();
+});
+
+Object.assign(window, {
+    novoProduto, abrirProduto, verProdutoNoEstoque, renderizarProdutos,
+    novoLocal, editarLocal, alternarLocal, editarSubsetor, editarItem,
+    abrirFormulario, fecharFormulario, avisar
+});
+
+
+/* ######################## V5 — ONDE ESTÁ / FORA DO LUGAR (manter no final) ######################## */
+
+/* =========================================================
+   V5 — ONDE ESTÁ? · LOCAL DE ORIGEM · FORA DO LUGAR
+   Requer migration_inventario_v4.sql (versão com local de origem).
+   (Mantenha este bloco no FINAL do app.js.)
+========================================================= */
+
+
+/* =========================================================
+   AUXILIARES
+========================================================= */
+
+function localCompleto(localId, subsetorId) {
+    return subsetorId ? `${nomeLocal(localId)} / ${nomeSubsetor(subsetorId)}` : nomeLocal(localId);
+}
+
+function temOrigem(item) {
+    return item && item.origem_local_id !== undefined && item.origem_local_id !== null;
+}
+
+function estaForaDoLugar(item) {
+    if (!temOrigem(item) || quantidadeItem(item) <= 0) return false;
+    if (['Baixado', 'Extraviado'].includes(item.status)) return false;
+    return String(item.local_id) !== String(item.origem_local_id) ||
+           String(item.subsetor_id || '') !== String(item.origem_subsetor_id || '');
+}
+
+function dataCurta(valor) {
+    if (!valor) return '';
+    const data = /^\d{4}-\d{2}-\d{2}$/.test(valor) ? new Date(valor + 'T12:00:00') : new Date(valor);
+    return data.toLocaleDateString('pt-BR');
+}
+
+function hojeISO() {
+    const agora = new Date();
+    return new Date(agora.getTime() - agora.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+function retornoAtrasado(item) {
+    return Boolean(item?.retorno_previsto) && item.retorno_previsto < hojeISO() && estaForaDoLugar(item);
+}
+
+function diasDesde(valor) {
+    if (!valor) return null;
+    return Math.max(0, Math.floor((Date.now() - new Date(valor).getTime()) / 86400000));
+}
+
+function fotoDoItem(item) {
+    if (item.foto_url) return item.foto_url;
+    return produtos.find(produto => Number(produto.id) === Number(item.produto_id))?.foto_url || '';
+}
+
+function podeMovimentar() {
+    return Boolean(usuarioLogado) && perfilUsuario !== 'consulta';
+}
+
+function seloFora(item) {
+    if (!estaForaDoLugar(item)) return '';
+    const atrasado = retornoAtrasado(item);
+    const prazo = item.retorno_previsto
+        ? (atrasado ? ` · retorno atrasado (${dataCurta(item.retorno_previsto)})` : ` · volta até ${dataCurta(item.retorno_previsto)}`)
+        : '';
+    return `<span class="selo-fora ${atrasado ? 'atrasado' : ''}">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                Fora do lugar · é de ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}${prazo}
+            </span>`;
+}
+
+
+/* =========================================================
+   TELA "ONDE ESTÁ?"
+========================================================= */
+
+const LIMITE_GRUPOS_ONDE_ESTA = 40;
+let temporizadorOndeEsta = null;
+
+function abrirOndeEsta(texto) {
+    abrirTela('ondeEstaTela', document.getElementById('menuOndeEsta'));
+    const campo = document.getElementById('buscaOndeEsta');
+    if (campo && texto !== undefined) campo.value = texto;
+    renderizarOndeEsta();
+    setTimeout(() => campo?.focus(), 50);
+}
+
+function popularFiltroLocalOndeEsta() {
+    const select = document.getElementById('filtroLocalOndeEsta');
+    if (!select) return;
+    const atual = select.value;
+    select.innerHTML = '<option value="">Todos os locais</option>' +
+        LOCAIS_TODOS.map(local => `<option value="${local.id}">${escaparHTML(nomeLocal(local.id))}</option>`).join('');
+    if ([...select.options].some(opcao => opcao.value === atual)) select.value = atual;
+}
+
+function agruparPorPeca(lista) {
+    const grupos = new Map();
+    lista.forEach(item => {
+        const chave = item.produto_id ? `p${item.produto_id}` : `n${chaveNome(item.nome)}`;
+        if (!grupos.has(chave)) {
+            const produto = produtos.find(registro => Number(registro.id) === Number(item.produto_id));
+            grupos.set(chave, {
+                nome: produto?.nome || item.nome,
+                categoria: produto?.categoria || (item.tipo !== item.nome ? item.tipo : ''),
+                descricao: produto?.descricao || item.descricao || '',
+                foto: produto?.foto_url || item.foto_url || '',
+                itens: []
+            });
+        }
+        const grupo = grupos.get(chave);
+        grupo.itens.push(item);
+        if (!grupo.foto && item.foto_url) grupo.foto = item.foto_url;
+    });
+    return [...grupos.values()];
+}
+
+function renderizarOndeEsta() {
+    const area = document.getElementById('resultadosOndeEsta');
+    if (!area) return;
+
+    const busca = normalizarTexto(document.getElementById('buscaOndeEsta')?.value);
+    const localFiltro = document.getElementById('filtroLocalOndeEsta')?.value || '';
+    const somenteFora = document.getElementById('filtroSomenteFora')?.checked;
+
+    const lista = itens.filter(item => {
+        if (quantidadeItem(item) <= 0) return false;
+        if (localFiltro && String(item.local_id) !== localFiltro && String(item.origem_local_id) !== localFiltro) return false;
+        if (somenteFora && !estaForaDoLugar(item)) return false;
+        if (!busca) return true;
+        const texto = normalizarTexto([
+            item.nome, item.tipo, item.descricao,
+            localCompleto(item.local_id, item.subsetor_id),
+            temOrigem(item) ? localCompleto(item.origem_local_id, item.origem_subsetor_id) : ''
+        ].join(' '));
+        return busca.split(' ').every(parte => texto.includes(parte));
+    });
+
+    const grupos = agruparPorPeca(lista)
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
+
+    const totalPecas = lista.reduce((total, item) => total + quantidadeItem(item), 0);
+    definirTexto('contadorOndeEsta', grupos.length
+        ? `${numero.format(grupos.length)} tipo(s) de peça · ${numero.format(totalPecas)} peça(s)`
+        : '');
+
+    if (!grupos.length) {
+        area.innerHTML = `
+            <div class="onde-vazio">
+                <i class="fa-solid fa-magnifying-glass-location"></i>
+                <strong>${itens.length ? 'Nada encontrado' : 'Carregando inventário...'}</strong>
+                <span>${itens.length ? 'Tente outro nome, uma categoria (ex.: "vaso", "quadro") ou o nome de um local.' : ''}</span>
+            </div>`;
+        return;
+    }
+
+    const mostrar = grupos.slice(0, LIMITE_GRUPOS_ONDE_ESTA);
+    const movimentar = podeMovimentar();
+
+    area.innerHTML = mostrar.map(grupo => {
+        const total = grupo.itens.reduce((soma, item) => soma + quantidadeItem(item), 0);
+        const fora = grupo.itens.filter(estaForaDoLugar).reduce((soma, item) => soma + quantidadeItem(item), 0);
+
+        const linhas = grupo.itens
+            .sort((a, b) => Number(estaForaDoLugar(b)) - Number(estaForaDoLugar(a)) ||
+                            nomeLocal(a.local_id).localeCompare(nomeLocal(b.local_id), 'pt-BR'))
+            .map(item => `
+                <li class="${estaForaDoLugar(item) ? 'fora' : ''}">
+                    <div class="onde-local">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div>
+                            <strong>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</strong>
+                            ${item.status !== 'Ativo' ? `<span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status)}</span>` : ''}
+                            ${seloFora(item)}
+                        </div>
+                    </div>
+                    <div class="onde-qtd">${numero.format(quantidadeItem(item))}</div>
+                    ${movimentar ? `
+                    <div class="onde-acoes">
+                        ${estaForaDoLugar(item) ? `<button type="button" class="btn-icon btn-devolver" title="Devolver ao local de origem"
+                            onclick="devolverPeca(${Number(item.id)})"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                        <button type="button" class="btn-icon" title="Movimentar" onclick="movimentarPeca(${Number(item.id)})">
+                            <i class="fa-solid fa-right-left"></i></button>
+                    </div>` : ''}
+                </li>`).join('');
+
+        const foto = grupo.foto
+            ? `<img src="${escaparHTML(grupo.foto)}" alt="" loading="lazy" onclick="abrirModalFoto('${escaparHTML(grupo.foto)}')">`
+            : '<div class="onde-sem-foto"><i class="fa-solid fa-couch"></i></div>';
+
+        return `
+            <article class="onde-card">
+                <div class="onde-foto">${foto}</div>
+                <div class="onde-corpo">
+                    <header>
+                        <div>
+                            <h3>${escaparHTML(grupo.nome)}</h3>
+                            <p>${[grupo.categoria, grupo.descricao].filter(Boolean).map(escaparHTML).join(' · ') || '&nbsp;'}</p>
+                        </div>
+                        <div class="onde-total">
+                            <strong>${numero.format(total)}</strong>
+                            <span>peça(s)${fora ? ` · <b>${numero.format(fora)} fora</b>` : ''}</span>
+                        </div>
+                    </header>
+                    <ul class="onde-lista">${linhas}</ul>
+                </div>
+            </article>`;
+    }).join('') + (grupos.length > LIMITE_GRUPOS_ONDE_ESTA
+        ? `<p class="onde-mais">Mostrando ${LIMITE_GRUPOS_ONDE_ESTA} de ${numero.format(grupos.length)}. Digite mais detalhes para refinar.</p>`
+        : '');
+}
+
+
+/* =========================================================
+   TELA "FORA DO LUGAR"
+========================================================= */
+
+function abrirForaDoLugar(somenteAtrasados = false) {
+    abrirTela('foraLugarTela', document.getElementById('menuForaLugar'));
+    const filtro = document.getElementById('filtroAtrasados');
+    if (filtro) filtro.checked = Boolean(somenteAtrasados);
+    renderizarForaDoLugar();
+}
+
+function popularFiltroOrigemFora() {
+    const select = document.getElementById('filtroOrigemFora');
+    if (!select) return;
+    const atual = select.value;
+    const origens = [...new Set(itens.filter(estaForaDoLugar).map(item => String(item.origem_local_id)))];
+    select.innerHTML = '<option value="">Todas as origens</option>' + origens
+        .sort((a, b) => nomeLocal(a).localeCompare(nomeLocal(b), 'pt-BR'))
+        .map(id => `<option value="${id}">É de ${escaparHTML(nomeLocal(id))}</option>`).join('');
+    if ([...select.options].some(opcao => opcao.value === atual)) select.value = atual;
+}
+
+function atualizarContadorFora() {
+    const fora = itens.filter(estaForaDoLugar);
+    const pecas = fora.reduce((total, item) => total + quantidadeItem(item), 0);
+    const atrasadas = fora.filter(retornoAtrasado).length;
+
+    const selo = document.getElementById('badgeForaLugar');
+    if (selo) {
+        selo.textContent = pecas > 99 ? '99+' : String(pecas);
+        selo.hidden = pecas === 0;
+        selo.classList.toggle('atrasado', atrasadas > 0);
+    }
+}
+
+function renderizarForaDoLugar() {
+    const tbody = document.getElementById('listaForaLugar');
+    atualizarContadorFora();
+    popularFiltroOrigemFora();
+    if (!tbody) return;
+
+    const busca = normalizarTexto(document.getElementById('buscaForaLugar')?.value);
+    const origem = document.getElementById('filtroOrigemFora')?.value || '';
+    const somenteAtrasados = document.getElementById('filtroAtrasados')?.checked;
+    const movimentar = podeMovimentar();
+
+    const lista = itens.filter(item =>
+        estaForaDoLugar(item) &&
+        (!origem || String(item.origem_local_id) === origem) &&
+        (!somenteAtrasados || retornoAtrasado(item)) &&
+        (!busca || normalizarTexto(`${item.nome} ${item.tipo} ${localCompleto(item.local_id, item.subsetor_id)} ${localCompleto(item.origem_local_id, item.origem_subsetor_id)}`).includes(busca))
+    ).sort((a, b) =>
+        Number(retornoAtrasado(b)) - Number(retornoAtrasado(a)) ||
+        String(a.fora_desde || '').localeCompare(String(b.fora_desde || ''))
+    );
+
+    const pecas = lista.reduce((total, item) => total + quantidadeItem(item), 0);
+    definirTexto('totalForaLugar', numero.format(pecas));
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">
+            <i class="fa-solid fa-circle-check"></i>
+            ${itens.some(estaForaDoLugar) ? 'Nada encontrado com esses filtros.' : 'Tudo no lugar! Nenhuma peça fora do local de origem.'}
+        </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(item => {
+        const atrasado = retornoAtrasado(item);
+        const dias = diasDesde(item.fora_desde);
+        const foto = fotoDoItem(item);
+
+        return `
+            <tr class="${atrasado ? 'linha-atrasada' : ''}">
+                <td>${foto
+                    ? `<img src="${escaparHTML(foto)}" alt="" class="foto-tabela" loading="lazy" onclick="abrirModalFoto('${escaparHTML(foto)}')">`
+                    : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>'}</td>
+                <td><strong>${escaparHTML(item.nome)}</strong>
+                    ${item.status !== 'Ativo' ? `<small class="celula-sub">${escaparHTML(item.status)}</small>` : ''}</td>
+                <td class="num"><strong>${numero.format(quantidadeItem(item))}</strong></td>
+                <td>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</td>
+                <td><span class="destino-origem"><i class="fa-solid fa-house"></i>
+                    ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}</span></td>
+                <td>${item.fora_desde
+                    ? `${dataCurta(item.fora_desde)}<small class="celula-sub">${dias === 0 ? 'hoje' : `há ${dias} dia(s)`}</small>`
+                    : '—'}</td>
+                <td>${item.retorno_previsto
+                    ? `<span class="status-badge ${atrasado ? 'baixado' : 'neutro'}">${atrasado ? 'Atrasado · ' : ''}${dataCurta(item.retorno_previsto)}</span>`
+                    : '<span class="texto-suave">Sem prazo</span>'}</td>
+                <td>${movimentar ? `
+                    <div class="acoes-tabela">
+                        <button type="button" class="btn-primary btn-small" onclick="devolverPeca(${Number(item.id)})">
+                            <i class="fa-solid fa-rotate-left"></i> Devolver
+                        </button>
+                        <button type="button" class="btn-icon" title="Movimentar para outro lugar" onclick="movimentarPeca(${Number(item.id)})">
+                            <i class="fa-solid fa-right-left"></i>
+                        </button>
+                    </div>` : ''}</td>
+            </tr>`;
+    }).join('');
+}
+
+
+/* =========================================================
+   AÇÕES: DEVOLVER E MOVIMENTAR
+========================================================= */
+
+function devolverPeca(id) {
+    if (!podeMovimentar()) return avisar('Seu perfil não pode movimentar peças.', 'erro');
+    const item = itens.find(registro => Number(registro.id) === Number(id));
+    if (!item) return avisar('Peça não encontrada. Atualize a página.', 'erro');
+
+    const quantidade = quantidadeItem(item);
+
+    abrirFormulario({
+        titulo: `Devolver ${item.nome}`,
+        subtitulo: `De ${localCompleto(item.local_id, item.subsetor_id)} para ${localCompleto(item.origem_local_id, item.origem_subsetor_id)}`,
+        textoSalvar: 'Confirmar devolução',
+        campos: [
+            { id: 'quantidade', rotulo: 'Quantidade que voltou', tipo: 'number', min: 1, step: '1', valor: quantidade,
+              obrigatorio: true, ajuda: `Há ${quantidade} peça(s) fora. Informe menos se só uma parte voltou.` },
+            { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', largo: true, placeholder: 'Ex.: voltou do evento de sábado' }
+        ],
+        aoSalvar: async ({ quantidade: qtd, observacao }) => {
+            if (!(qtd >= 1) || qtd > quantidade) throw new Error(`Informe uma quantidade entre 1 e ${quantidade}.`);
+            const { error } = await supabaseClient.rpc('devolver_item', {
+                p_item_id: Number(item.id),
+                p_quantidade: Math.round(qtd),
+                p_observacao: observacao || null
+            });
+            if (error) throw error;
+            await carregarDashboard();
+            await carregarHistorico();
+            avisar(`${qtd} peça(s) devolvida(s) a ${nomeLocal(item.origem_local_id)}.`);
+        }
+    });
+}
+
+function movimentarPeca(id) {
+    if (!podeMovimentar()) return avisar('Seu perfil não pode movimentar peças.', 'erro');
+    abrirTela('movimentacaoTela', document.getElementById('menuMovimentacao'));
+    const select = document.getElementById('itemMov');
+    if (select) select.value = String(id);
+    preencherOrigemAutomaticamente();
+    document.getElementById('destino')?.focus();
+}
+
+
+/* =========================================================
+   MOVIMENTAÇÃO — temporária × definitiva
+========================================================= */
+
+function carregarItensMovimentacao() {
+    const select = document.getElementById('itemMov');
+    if (!select) return;
+
+    const valorAtual = select.value;
+
+    const opcoes = itens
+        .filter(item => item.status !== 'Baixado' && quantidadeItem(item) > 0)
+        .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' }) ||
+                        nomeLocal(a.local_id).localeCompare(nomeLocal(b.local_id), 'pt-BR'))
+        .map(item => {
+            const texto = [
+                item.nome,
+                localCompleto(item.local_id, item.subsetor_id),
+                `${quantidadeItem(item)} peça(s)`,
+                item.status !== 'Ativo' ? item.status : '',
+                estaForaDoLugar(item) ? `fora do lugar (é de ${nomeLocal(item.origem_local_id)})` : ''
+            ].filter(Boolean).join(' — ');
+            return `<option value="${Number(item.id)}">${escaparHTML(texto)}</option>`;
+        });
+
+    select.innerHTML = '<option value="">Selecione a peça</option>' + opcoes.join('');
+    if (valorAtual && [...select.options].some(opcao => opcao.value === valorAtual)) select.value = valorAtual;
+}
+
+function atualizarAjudaMovimentacao() {
+    const item = itens.find(registro => String(registro.id) === document.getElementById('itemMov')?.value);
+    const tipo = document.querySelector('input[name="tipoMovimentacao"]:checked')?.value || 'temporaria';
+    const destino = document.getElementById('destino')?.value || '';
+    const destinoSetor = document.getElementById('destinoSubsetor')?.value || '';
+    const info = document.getElementById('infoOrigemFixa');
+    const grupoRetorno = document.getElementById('grupoRetornoPrevisto');
+
+    if (grupoRetorno) grupoRetorno.style.display = tipo === 'temporaria' ? '' : 'none';
+
+    if (!info) return;
+    if (!item || !temOrigem(item)) { info.innerHTML = ''; return; }
+
+    const casa = localCompleto(item.origem_local_id, item.origem_subsetor_id);
+    const voltaParaCasa = destino && String(destino) === String(item.origem_local_id) &&
+                          String(destinoSetor) === String(item.origem_subsetor_id || '');
+
+    let texto = `<i class="fa-solid fa-house"></i> Local fixo desta peça: <strong>${escaparHTML(casa)}</strong>.`;
+    if (voltaParaCasa) texto += ' <b class="ok">Isto é uma devolução ao local de origem.</b>';
+    else if (destino && tipo === 'temporaria') texto += ' Ela continuará sendo de lá e aparecerá em "Fora do lugar".';
+    else if (destino && tipo === 'definitiva') texto += ' O destino passará a ser o novo local fixo.';
+
+    info.innerHTML = texto;
+}
+
+function preencherOrigemAutomaticamente() {
+    const item = itens.find(registro => String(registro.id) === String(document.getElementById('itemMov')?.value));
+    const origem = document.getElementById('origemNome');
+    const quantidade = document.getElementById('quantidadeMov');
+
+    if (origem) origem.value = item ? localCompleto(item.local_id, item.subsetor_id) : '';
+
+    if (item && quantidade) {
+        const disponivel = quantidadeItem(item);
+        quantidade.max = disponivel;
+        if (Number(quantidade.value) > disponivel || !quantidade.value) quantidade.value = disponivel;
+        const ajuda = document.getElementById('ajudaQuantidadeMov');
+        if (ajuda) ajuda.textContent = `${disponivel} peça(s) disponível(is) neste local.`;
+    }
+
+    atualizarAjudaMovimentacao();
+}
+
+(function () {
+    const limparOriginal = limparFormularioMovimentacao;
+    limparFormularioMovimentacao = function () {
+        limparOriginal();
+        const temporaria = document.querySelector('input[name="tipoMovimentacao"][value="temporaria"]');
+        if (temporaria) temporaria.checked = true;
+        const retorno = document.getElementById('retornoPrevisto');
+        if (retorno) retorno.value = '';
+        const ajuda = document.getElementById('ajudaQuantidadeMov');
+        if (ajuda) ajuda.textContent = '';
+        atualizarAjudaMovimentacao();
+    };
+})();
+
+
+/* =========================================================
+   INVENTÁRIO (tabela completa) — mostra o local fixo
+========================================================= */
+
+function renderizarItens() {
+    const tbody = document.getElementById('listaItens');
+    if (!tbody) return;
+
+    if (!itens.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhuma peça cadastrada.</td></tr>';
+        return;
+    }
+
+    const gestao = podeAdministrar();
+
+    tbody.innerHTML = itens.map(item => {
+        const foto = fotoDoItem(item);
+        const fora = estaForaDoLugar(item);
+        return `
+            <tr data-subsetor-id="${item.subsetor_id ? Number(item.subsetor_id) : ''}" data-item-id="${Number(item.id)}">
+                <td>${foto
+                    ? `<img src="${escaparHTML(foto)}" alt="" class="foto-tabela" loading="lazy" onclick="abrirModalFoto('${escaparHTML(foto)}')">`
+                    : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>'}</td>
+                <td><strong>${escaparHTML(item.nome || '—')}</strong>
+                    ${item.descricao ? `<small class="celula-sub">${escaparHTML(item.descricao)}</small>` : ''}</td>
+                <td>${escaparHTML(item.tipo && item.tipo !== item.nome ? item.tipo : '—')}</td>
+                <td class="num"><strong>${numero.format(quantidadeItem(item))}</strong></td>
+                <td>${escaparHTML(nomeLocal(item.local_id))}</td>
+                <td>${escaparHTML(item.subsetor_id ? nomeSubsetor(item.subsetor_id) : '—')}</td>
+                <td>${fora
+                    ? `<span class="selo-fora ${retornoAtrasado(item) ? 'atrasado' : ''}"><i class="fa-solid fa-house"></i>
+                       ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}</span>`
+                    : '<span class="texto-suave">No lugar</span>'}</td>
+                <td><span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status || 'Ativo')}</span></td>
+                <td>
+                    <div class="acoes-tabela">
+                        ${podeMovimentar() ? `<button type="button" class="btn-icon" title="Movimentar" onclick="movimentarPeca(${Number(item.id)})">
+                            <i class="fa-solid fa-right-left"></i></button>` : ''}
+                        ${gestao ? `<button type="button" class="btn-icon btn-editar" title="Editar peça no catálogo" onclick="editarItem(${Number(item.id)})">
+                            <i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-icon btn-excluir" title="Excluir" onclick="excluirItem(${Number(item.id)})">
+                            <i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
+function exportarExcel() {
+    const visiveis = new Set(
+        [...document.querySelectorAll('#listaItens tr')]
+            .filter(linha => linha.style.display !== 'none')
+            .map(linha => linha.dataset.itemId)
+    );
+    const lista = itens.filter(item => visiveis.size === 0 || visiveis.has(String(item.id)));
+    if (!lista.length) return avisar('Nenhuma peça para exportar.', 'info');
+
+    const colunas = ['PEÇA', 'CATEGORIA', 'DESCRIÇÃO', 'QUANTIDADE', 'LOCAL', 'SETOR',
+                     'LOCAL FIXO', 'SETOR FIXO', 'FORA DO LUGAR', 'RETORNO PREVISTO', 'STATUS'];
+    const linhas = lista.map(item => [
+        item.nome || '',
+        item.tipo && item.tipo !== item.nome ? item.tipo : '',
+        item.descricao || '',
+        quantidadeItem(item),
+        nomeLocal(item.local_id),
+        item.subsetor_id ? nomeSubsetor(item.subsetor_id) : '',
+        temOrigem(item) ? nomeLocal(item.origem_local_id) : '',
+        item.origem_subsetor_id ? nomeSubsetor(item.origem_subsetor_id) : '',
+        estaForaDoLugar(item) ? 'SIM' : 'NÃO',
+        dataCurta(item.retorno_previsto),
+        item.status || ''
+    ].map(valor => `"${String(valor).replace(/"/g, '""')}"`).join(';'));
+
+    const csv = '﻿' + [colunas.join(';'), ...linhas].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    Object.assign(document.createElement('a'), {
+        href: url, download: `inventario-monte-carlo-${hojeISO()}.csv`
+    }).click();
+    URL.revokeObjectURL(url);
+}
+
+
+/* =========================================================
+   LIGAÇÕES
+========================================================= */
+
+(function () {
+    const carregarItensOriginal = carregarItens;
+    carregarItens = async function () {
+        await carregarItensOriginal();
+        popularFiltroLocalOndeEsta();
+        renderizarOndeEsta();
+        renderizarForaDoLugar();
+    };
+
+    const atualizarLocaisOriginal = atualizarLocaisNaTela;
+    atualizarLocaisNaTela = function () {
+        atualizarLocaisOriginal();
+        popularFiltroLocalOndeEsta();
+    };
+
+    const menusOriginal = atualizarMenus;
+    atualizarMenus = function () {
+        menusOriginal();
+        ['menuOndeEsta', 'menuForaLugar'].forEach(id => {
+            const menu = document.getElementById(id);
+            if (menu) menu.style.display = usuarioLogado ? 'flex' : 'none';
+        });
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const busca = document.getElementById('buscaOndeEsta');
+    busca?.addEventListener('input', () => {
+        clearTimeout(temporizadorOndeEsta);
+        temporizadorOndeEsta = setTimeout(renderizarOndeEsta, 150);
+    });
+    document.getElementById('filtroLocalOndeEsta')?.addEventListener('change', renderizarOndeEsta);
+    document.getElementById('filtroSomenteFora')?.addEventListener('change', renderizarOndeEsta);
+
+    document.getElementById('buscaForaLugar')?.addEventListener('input', renderizarForaDoLugar);
+    document.getElementById('filtroOrigemFora')?.addEventListener('change', renderizarForaDoLugar);
+    document.getElementById('filtroAtrasados')?.addEventListener('change', renderizarForaDoLugar);
+
+    document.querySelectorAll('input[name="tipoMovimentacao"]').forEach(radio =>
+        radio.addEventListener('change', atualizarAjudaMovimentacao));
+    ['destino', 'destinoSubsetor'].forEach(id =>
+        document.getElementById(id)?.addEventListener('change', atualizarAjudaMovimentacao));
+
+    const retorno = document.getElementById('retornoPrevisto');
+    if (retorno) retorno.min = hojeISO();
+
+    atualizarAjudaMovimentacao();
+});
+
+Object.assign(window, {
+    abrirOndeEsta, renderizarOndeEsta, abrirForaDoLugar, renderizarForaDoLugar,
+    devolverPeca, movimentarPeca, preencherOrigemAutomaticamente, exportarExcel
+});
