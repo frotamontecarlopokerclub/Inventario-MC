@@ -281,3 +281,12 @@ Ilustração no estilo Monte Carlo (marsala e dourado) com a rota entre as unida
 **Como instalar:** no Supabase, rode `supabase/12_equipe_campo.sql`. No GitHub, envie `app.js`, `styles.css`, `README.md` e o `.sql` dentro da pasta `supabase`. Confira em **Authentication → Sign In / Providers → Email** que *Confirm email* continua desligado (Etapa 3); sem isso, o cadastro por usuário não funciona.
 
 > Os logins por usuário usam internamente o endereço `usuario@campo.facilities-mc.com`, que não recebe e-mail. Para trocar esse final, inclua `dominioUsuarios: "seu.dominio.com"` no `config.js` antes de criar as primeiras contas.
+
+## Atualização 15.1 · Nomes dos acessos
+
+Em **Cadastros → Usuários**, os acessos ficaram com nomes que dizem o que cada um faz, com um quadro explicativo no topo:
+- **Equipe de campo · só executa:** motoristas, ajudantes e técnicos. Veem no celular só as missões em que foram escalados. Não criam nem alteram OS.
+- **Gestão · cria e distribui OS:** o antigo "Facilities · equipe". Recebe os pedidos, cria as OS e escala equipe, veículo e horário.
+- **Solicitante**, **Somente leitura** e **Bloqueado** continuam iguais.
+
+Quem já estava como "Facilities · equipe" continua com o mesmo acesso, agora chamado Gestão. Mude para *Equipe de campo* quem deve só executar.
