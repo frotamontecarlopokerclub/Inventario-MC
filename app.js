@@ -8265,6 +8265,9 @@ function campoFormularioHTML(campo) {
     const ajuda = campo.ajuda ? `<small>${escaparHTML(campo.ajuda)}</small>` : '';
     const rotulo = `<label for="${id}">${escaparHTML(campo.rotulo)}${campo.obrigatorio ? ' <b>*</b>' : ''}</label>`;
 
+    if (campo.tipo === 'html') {
+        return `<div class="mc-campo-largo">${campo.html || ''}</div>`;
+    }
     if (campo.tipo === 'checkbox') {
         return `<label class="mc-check ${campo.largo ? 'mc-campo-largo' : ''}">
                     <input type="checkbox" id="${id}" ${valor ? 'checked' : ''}>
@@ -8306,6 +8309,7 @@ function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar
     modal.querySelector('#mcModalTitulo').textContent = titulo;
     modal.querySelector('#mcModalSubtitulo').textContent = subtitulo;
     modal.querySelector('#mcModalSalvar').textContent = textoSalvar;
+    modal.querySelector('.mc-modal-rodape [data-fechar]').hidden = Boolean(arguments[0].semCancelar);
     modal.querySelector('#mcModalErro').hidden = true;
     modal.querySelector('#mcModalCorpo').innerHTML = campos.map(campoFormularioHTML).join('');
 
@@ -8324,7 +8328,11 @@ function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar
 
     modal.hidden = false;
     document.body.classList.add('modal-aberto');
-    setTimeout(() => modal.querySelector('input:not([type=checkbox]):not([type=file]), select, textarea')?.focus(), 30);
+    setTimeout(() => {
+        // Só posiciona o cursor se a pessoa ainda não clicou em nenhum campo.
+        if (modal.contains(document.activeElement) && document.activeElement.matches('input, select, textarea')) return;
+        modal.querySelector('input:not([type=checkbox]):not([type=file]), select, textarea')?.focus();
+    }, 30);
 }
 
 function fecharFormulario() {
@@ -9897,4 +9905,483 @@ document.addEventListener('DOMContentLoaded', () => {
 
 Object.assign(window, {
     adicionarLinhaDistribuicao, salvarItem, limparFormularioCadastro, limparFormulario: limparFormularioCadastro
+});
+
+
+/* ######################## V7 — RÁDIOS HT (manter no final) ######################## */
+
+/* =========================================================
+   V7 — RÁDIOS HT + TERMO DE RESPONSABILIDADE
+   Requer migration_inventario_v6.sql e a página termo.html.
+   (Mantenha este bloco no FINAL do app.js.)
+========================================================= */
+
+let radios = [];
+let radiosSelecionados = new Set();
+
+const STATUS_RADIO = ['Ativo', 'Reserva', 'Em manutenção', 'Extraviado', 'Baixado'];
+
+const SITUACAO_TERMO = {
+    ASSINADO:        { texto: 'Assinado',          classe: 'ativo',      icone: 'fa-circle-check' },
+    PENDENTE:        { texto: 'Aguardando assinatura', classe: 'manutencao', icone: 'fa-hourglass-half' },
+    EXPIRADO:        { texto: 'Link expirado',     classe: 'baixado',    icone: 'fa-clock' },
+    SEM_TERMO:       { texto: 'Sem termo',         classe: 'baixado',    icone: 'fa-file-circle-exclamation' },
+    SEM_RESPONSAVEL: { texto: 'Sem responsável',   classe: 'neutro',     icone: 'fa-user-slash' }
+};
+
+
+/* =========================================================
+   CARREGAR E LISTAR
+========================================================= */
+
+async function carregarRadios() {
+    try {
+        radios = await buscarTodasLinhas(() =>
+            supabaseClient.from('vw_radios').select('*').order('identificacao', { ascending: true, nullsFirst: false }).order('numero_serie')
+        );
+    } catch (erro) {
+        console.warn('Rádios indisponíveis:', erro?.message || erro);
+        radios = [];
+        const tbody = document.getElementById('listaRadios');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">
+                ${/does not exist|Could not find/i.test(erro?.message || '') ? 'Execute a migração v6 no Supabase para ativar os rádios.' : 'Não foi possível carregar os rádios.'}
+            </td></tr>`;
+        }
+        return;
+    }
+
+    radiosSelecionados = new Set([...radiosSelecionados].filter(id => radios.some(r => Number(r.id) === id)));
+    popularFiltrosRadios();
+    popularListasRadios();
+    renderizarRadios();
+}
+
+function abrirRadios() {
+    abrirTela('radiosTela', document.getElementById('menuRadios'));
+    carregarRadios();
+}
+
+function valoresUnicos(campo) {
+    const mapa = new Map();
+    radios.forEach(r => {
+        const valor = String(r[campo] || '').trim();
+        if (valor) mapa.set(normalizarTexto(valor), valor);
+    });
+    return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function popularFiltrosRadios() {
+    const select = document.getElementById('filtroSetorRadio');
+    if (!select) return;
+    const atual = select.value;
+    select.innerHTML = '<option value="">Todos os setores</option>' +
+        valoresUnicos('setor').map(s => `<option value="${escaparHTML(s)}">${escaparHTML(s)}</option>`).join('');
+    if ([...select.options].some(o => o.value === atual)) select.value = atual;
+}
+
+function popularListasRadios() {
+    const garantir = id => {
+        let lista = document.getElementById(id);
+        if (!lista) {
+            lista = Object.assign(document.createElement('datalist'), { id });
+            document.body.appendChild(lista);
+        }
+        return lista;
+    };
+    garantir('dlSetoresRadio').innerHTML = valoresUnicos('setor').map(v => `<option value="${escaparHTML(v)}">`).join('');
+    garantir('dlResponsaveisRadio').innerHTML = valoresUnicos('responsavel_nome').map(v => `<option value="${escaparHTML(v)}">`).join('');
+    garantir('dlModelosRadio').innerHTML = valoresUnicos('modelo').map(v => `<option value="${escaparHTML(v)}">`).join('');
+    garantir('dlMarcasRadio').innerHTML = valoresUnicos('marca').map(v => `<option value="${escaparHTML(v)}">`).join('');
+}
+
+function radiosFiltrados() {
+    const busca = normalizarTexto(document.getElementById('buscaRadio')?.value);
+    const setor = document.getElementById('filtroSetorRadio')?.value || '';
+    const situacao = document.getElementById('filtroSituacaoRadio')?.value || '';
+    const status = document.getElementById('filtroStatusRadio')?.value || '';
+
+    return radios.filter(r =>
+        (!setor || normalizarTexto(r.setor) === normalizarTexto(setor)) &&
+        (!situacao || r.situacao_termo === situacao) &&
+        (!status || r.status === status) &&
+        (!busca || busca.split(' ').every(parte => normalizarTexto(
+            [r.numero_serie, r.identificacao, r.marca, r.modelo, r.setor, r.responsavel_nome, nomeLocal(r.local_id)].join(' ')
+        ).includes(parte)))
+    );
+}
+
+function renderizarRadios() {
+    const tbody = document.getElementById('listaRadios');
+    if (!tbody) return;
+
+    const gestao = podeAdministrar();
+    const lista = radiosFiltrados();
+
+    const contar = s => radios.filter(r => r.situacao_termo === s).length;
+    definirTexto('radiosTotal', numero.format(radios.length));
+    definirTexto('radiosAssinados', numero.format(contar('ASSINADO')));
+    definirTexto('radiosPendentes', numero.format(contar('PENDENTE') + contar('EXPIRADO')));
+    definirTexto('radiosSemTermo', numero.format(contar('SEM_TERMO')));
+    definirTexto('radiosListados', numero.format(lista.length));
+
+    atualizarBarraSelecaoRadios();
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-walkie-talkie"></i>
+            ${radios.length ? 'Nenhum rádio com esses filtros.' : 'Nenhum rádio cadastrado ainda.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(r => {
+        const situacao = SITUACAO_TERMO[r.situacao_termo] || SITUACAO_TERMO.SEM_TERMO;
+        const marcado = radiosSelecionados.has(Number(r.id));
+        const dataTermo = r.situacao_termo === 'ASSINADO' && r.termo_assinado_em
+            ? `<small class="celula-sub">em ${dataCurta(r.termo_assinado_em)}</small>`
+            : (r.situacao_termo === 'PENDENTE' && r.termo_expira_em ? `<small class="celula-sub">link válido até ${dataCurta(r.termo_expira_em)}</small>` : '');
+
+        let acaoTermo = '';
+        if (gestao && r.responsavel_nome) {
+            if (r.situacao_termo === 'ASSINADO' && r.termo_token) {
+                acaoTermo = `<button type="button" class="btn-icon" title="Ver termo assinado" onclick="abrirLinkTermo('${escaparHTML(r.termo_token)}')">
+                    <i class="fa-solid fa-file-circle-check"></i></button>`;
+            } else if (r.situacao_termo === 'PENDENTE' && r.termo_token) {
+                acaoTermo = `<button type="button" class="btn-icon btn-destaque" title="Enviar link do termo" onclick="mostrarLinkTermo('${escaparHTML(r.termo_token)}', ${Number(r.id)})">
+                    <i class="fa-solid fa-share-from-square"></i></button>`;
+            } else {
+                acaoTermo = `<button type="button" class="btn-icon btn-destaque" title="Gerar termo" onclick="gerarTermoDoResponsavel(${Number(r.id)})">
+                    <i class="fa-solid fa-file-signature"></i></button>`;
+            }
+        }
+
+        return `
+            <tr class="${marcado ? 'linha-selecionada' : ''}">
+                ${gestao ? `<td class="col-check"><input type="checkbox" aria-label="Selecionar rádio" ${marcado ? 'checked' : ''}
+                    onchange="alternarSelecaoRadio(${Number(r.id)}, this.checked)"></td>` : ''}
+                <td>
+                    <strong>${escaparHTML(r.identificacao || r.numero_serie)}</strong>
+                    <small class="celula-sub serie">${r.identificacao ? `Série ${escaparHTML(r.numero_serie)} · ` : ''}${escaparHTML([r.marca, r.modelo].filter(Boolean).join(' ') || '—')}</small>
+                </td>
+                <td>${escaparHTML(r.setor || '—')}${r.local_id ? `<small class="celula-sub">${escaparHTML(nomeLocal(r.local_id))}</small>` : ''}</td>
+                <td>${r.responsavel_nome
+                        ? `<strong>${escaparHTML(r.responsavel_nome)}</strong>${r.responsavel_telefone ? `<small class="celula-sub">${escaparHTML(formatarTelefone(r.responsavel_telefone))}</small>` : ''}`
+                        : '<span class="texto-suave">Sem responsável</span>'}</td>
+                <td><span class="status-badge ${classeStatusRadio(r.status)}">${escaparHTML(r.status)}</span></td>
+                <td><span class="status-badge ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${situacao.texto}</span>${dataTermo}</td>
+                <td>
+                    <div class="acoes-tabela">
+                        ${acaoTermo}
+                        ${gestao ? `<button type="button" class="btn-icon" title="Editar rádio" onclick="abrirRadio(${Number(r.id)})">
+                            <i class="fa-solid fa-pen"></i></button>` : ''}
+                        ${gestao && r.responsavel_nome ? `<button type="button" class="btn-icon" title="Registrar devolução" onclick="devolverRadio(${Number(r.id)})">
+                            <i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+
+    const todos = document.getElementById('selecionarTodosRadios');
+    if (todos) todos.checked = lista.length > 0 && lista.every(r => radiosSelecionados.has(Number(r.id)));
+}
+
+function classeStatusRadio(status) {
+    return { 'Ativo': 'ativo', 'Reserva': 'neutro', 'Em manutenção': 'manutencao', 'Extraviado': 'extraviado', 'Baixado': 'baixado' }[status] || '';
+}
+
+function formatarTelefone(valor) {
+    const d = String(valor || '').replace(/\D/g, '');
+    if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    return valor || '';
+}
+
+
+/* =========================================================
+   SELEÇÃO (gerar um termo para vários rádios)
+========================================================= */
+
+function alternarSelecaoRadio(id, marcado) {
+    if (marcado) radiosSelecionados.add(Number(id));
+    else radiosSelecionados.delete(Number(id));
+    renderizarRadios();
+}
+
+function alternarTodosRadios(marcado) {
+    radiosFiltrados().forEach(r => marcado ? radiosSelecionados.add(Number(r.id)) : radiosSelecionados.delete(Number(r.id)));
+    renderizarRadios();
+}
+
+function atualizarBarraSelecaoRadios() {
+    const barra = document.getElementById('barraSelecaoRadios');
+    if (!barra) return;
+    const qtd = radiosSelecionados.size;
+    barra.hidden = qtd === 0 || !podeAdministrar();
+    definirTexto('radiosSelecionadosQtd', `${qtd} rádio(s) selecionado(s)`);
+}
+
+function limparSelecaoRadios() {
+    radiosSelecionados.clear();
+    renderizarRadios();
+}
+
+
+/* =========================================================
+   CADASTRO / EDIÇÃO
+========================================================= */
+
+function camposRadio(r = {}) {
+    return [
+        { id: 'numero_serie', rotulo: 'Número de série', valor: r.numero_serie, obrigatorio: true, placeholder: 'Ex.: 872TQA1234' },
+        { id: 'identificacao', rotulo: 'Identificação', valor: r.identificacao, placeholder: 'Ex.: HT-07, Portaria 2',
+          ajuda: 'Como o rádio é chamado no dia a dia (opcional).' },
+        { id: 'marca', rotulo: 'Marca', valor: r.marca, lista: 'dlMarcasRadio', placeholder: 'Ex.: Motorola' },
+        { id: 'modelo', rotulo: 'Modelo', valor: r.modelo, lista: 'dlModelosRadio', placeholder: 'Ex.: DEP450' },
+        { id: 'setor', rotulo: 'Setor', valor: r.setor, lista: 'dlSetoresRadio', placeholder: 'Ex.: Segurança' },
+        { id: 'local_id', rotulo: 'Local (opcional)', tipo: 'select', valor: r.local_id || '',
+          opcoes: [{ valor: '', texto: 'Não informado' }, ...LOCAIS.map(l => ({ valor: l.id, texto: l.nome }))] },
+        { id: 'responsavel_nome', rotulo: 'Responsável (quem assina o termo)', valor: r.responsavel_nome, lista: 'dlResponsaveisRadio',
+          placeholder: 'Nome completo' },
+        { id: 'responsavel_telefone', rotulo: 'Celular do responsável', valor: formatarTelefone(r.responsavel_telefone),
+          placeholder: '(11) 98888-7777', ajuda: 'Usado para enviar o link do termo pelo WhatsApp.' },
+        { id: 'status', rotulo: 'Status', tipo: 'select', valor: r.status || 'Ativo', opcoes: STATUS_RADIO.map(s => ({ valor: s, texto: s })) },
+        { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', valor: r.observacao, largo: true,
+          placeholder: 'Acessórios, estado de conservação, canal programado...' }
+    ];
+}
+
+function dadosRadio(v) {
+    return {
+        numero_serie: v.numero_serie,
+        identificacao: v.identificacao || null,
+        marca: v.marca || null,
+        modelo: v.modelo || null,
+        setor: v.setor || null,
+        local_id: v.local_id ? Number(v.local_id) : null,
+        responsavel_nome: v.responsavel_nome || null,
+        responsavel_telefone: v.responsavel_telefone || null,
+        status: v.status || 'Ativo',
+        observacao: v.observacao || null
+    };
+}
+
+function erroRadio(erro) {
+    if (erro?.code === '23505' || /ux_radios_serie/.test(erro?.message || '')) return 'Já existe um rádio com esse número de série.';
+    return traduzirErro(erro);
+}
+
+function novoRadio() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador cadastra rádios.', 'erro');
+    abrirFormulario({
+        titulo: 'Novo rádio HT',
+        subtitulo: 'Depois de salvar, gere o termo para o responsável assinar.',
+        textoSalvar: 'Cadastrar rádio',
+        campos: camposRadio(),
+        aoSalvar: async valores => {
+            const { error } = await supabaseClient.from('radios').insert([dadosRadio(valores)]);
+            if (error) throw new Error(erroRadio(error));
+            await carregarRadios();
+            avisar(`Rádio ${valores.identificacao || valores.numero_serie} cadastrado.`);
+        }
+    });
+}
+
+function abrirRadio(id) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita rádios.', 'erro');
+    const r = radios.find(x => Number(x.id) === Number(id));
+    if (!r) return;
+
+    abrirFormulario({
+        titulo: `Rádio ${r.identificacao || r.numero_serie}`,
+        subtitulo: r.situacao_termo === 'ASSINADO'
+            ? `Termo assinado por ${r.responsavel_nome}. Se trocar o responsável, gere um novo termo.`
+            : 'Editar dados do rádio.',
+        campos: camposRadio(r),
+        aoSalvar: async valores => {
+            const { error } = await supabaseClient.from('radios').update(dadosRadio(valores)).eq('id', id);
+            if (error) throw new Error(erroRadio(error));
+            const trocou = normalizarTexto(valores.responsavel_nome) !== normalizarTexto(r.responsavel_nome);
+            await carregarRadios();
+            avisar(trocou && valores.responsavel_nome
+                ? 'Responsável alterado. Gere o termo para o novo responsável assinar.'
+                : 'Rádio atualizado.', trocou ? 'info' : 'sucesso');
+        }
+    });
+}
+
+async function devolverRadio(id) {
+    if (!podeAdministrar()) return;
+    const r = radios.find(x => Number(x.id) === Number(id));
+    if (!r) return;
+    if (!confirm(`Registrar a devolução do rádio ${r.identificacao || r.numero_serie} por ${r.responsavel_nome}?\n\n` +
+                 'O rádio fica sem responsável e com status "Reserva". O termo assinado continua guardado no histórico.')) return;
+
+    const { error } = await supabaseClient.from('radios')
+        .update({ responsavel_nome: null, responsavel_telefone: null, status: 'Reserva' }).eq('id', id);
+    if (error) return avisar(traduzirErro(error), 'erro');
+    await carregarRadios();
+    avisar('Devolução registrada.');
+}
+
+
+/* =========================================================
+   TERMO
+========================================================= */
+
+function linkDoTermo(token) {
+    const base = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+    return `${base}termo.html?t=${encodeURIComponent(token)}`;
+}
+
+function abrirLinkTermo(token) {
+    window.open(linkDoTermo(token), '_blank', 'noopener');
+}
+
+function gerarTermoDoResponsavel(id) {
+    const base = radios.find(x => Number(x.id) === Number(id));
+    if (!base?.responsavel_nome) return avisar('Informe o responsável do rádio antes de gerar o termo.', 'erro');
+    const doMesmo = radios.filter(r => normalizarTexto(r.responsavel_nome) === normalizarTexto(base.responsavel_nome));
+    confirmarGerarTermo(doMesmo, doMesmo.filter(r => r.situacao_termo !== 'ASSINADO' || Number(r.id) === Number(id)));
+}
+
+function gerarTermoSelecionados() {
+    const lista = radios.filter(r => radiosSelecionados.has(Number(r.id)));
+    if (!lista.length) return;
+    if (lista.some(r => !r.responsavel_nome)) return avisar('Há rádio selecionado sem responsável.', 'erro');
+    const nomes = new Set(lista.map(r => normalizarTexto(r.responsavel_nome)));
+    if (nomes.size > 1) return avisar('Um termo é por pessoa: selecione rádios do mesmo responsável.', 'erro');
+    confirmarGerarTermo(lista, lista);
+}
+
+function confirmarGerarTermo(opcoes, marcados) {
+    const marcadosIds = new Set(marcados.map(r => Number(r.id)));
+    const responsavel = opcoes[0].responsavel_nome;
+
+    abrirFormulario({
+        titulo: 'Gerar termo de responsabilidade',
+        subtitulo: `Responsável: ${responsavel}. Escolha os rádios que entram neste termo.`,
+        textoSalvar: 'Gerar termo e link',
+        campos: [
+            ...opcoes.map(r => ({
+                id: `radio_${r.id}`, tipo: 'checkbox', largo: true, valor: marcadosIds.has(Number(r.id)),
+                rotulo: `${r.identificacao ? r.identificacao + ' · ' : ''}Série ${r.numero_serie}${r.modelo ? ' · ' + r.modelo : ''}` +
+                        (r.situacao_termo === 'ASSINADO' ? '  (já tem termo assinado)' : '')
+            })),
+            { id: 'validade', rotulo: 'Validade do link (dias)', tipo: 'number', min: 1, step: '1', valor: 30,
+              ajuda: 'Depois disso o link expira e é preciso gerar outro.' }
+        ],
+        aoSalvar: async valores => {
+            const ids = opcoes.filter(r => valores[`radio_${r.id}`]).map(r => Number(r.id));
+            if (!ids.length) throw new Error('Marque pelo menos um rádio.');
+
+            const { data, error } = await supabaseClient.rpc('gerar_termo_radios', {
+                p_radio_ids: ids, p_validade_dias: Math.round(valores.validade || 30)
+            });
+            if (error) throw error;
+
+            radiosSelecionados.clear();
+            await carregarRadios();
+            setTimeout(() => mostrarLinkTermo(data.token, ids[0]), 50);
+        }
+    });
+}
+
+function mostrarLinkTermo(token, radioId) {
+    const r = radios.find(x => Number(x.id) === Number(radioId)) || {};
+    const link = linkDoTermo(token);
+    const primeiroNome = String(r.responsavel_nome || '').split(' ')[0];
+    const mensagem = `Olá${primeiroNome ? ', ' + primeiroNome : ''}! Segue o termo de responsabilidade do(s) rádio(s) HT sob sua guarda. ` +
+                     `Por favor, leia e assine pelo link: ${link}`;
+    const telefone = String(r.responsavel_telefone || '').replace(/\D/g, '');
+    const whatsapp = `https://wa.me/${telefone ? (telefone.length <= 11 ? '55' + telefone : telefone) : ''}?text=${encodeURIComponent(mensagem)}`;
+    const email = `mailto:?subject=${encodeURIComponent('Termo de responsabilidade — Rádio HT')}&body=${encodeURIComponent(mensagem)}`;
+
+    abrirFormulario({
+        titulo: 'Link do termo pronto',
+        subtitulo: `Envie para ${r.responsavel_nome || 'o responsável'}. A pessoa assina pelo celular, sem precisar de login.`,
+        textoSalvar: 'Concluir',
+        semCancelar: true,
+        campos: [{
+            id: 'link', tipo: 'html', html: `
+                <div class="link-termo">
+                    <input type="text" id="campoLinkTermo" readonly value="${escaparHTML(link)}" onclick="this.select()">
+                    <div class="link-termo-acoes">
+                        <button type="button" class="btn-primary" onclick="copiarLinkTermo()"><i class="fa-solid fa-copy"></i> Copiar link</button>
+                        <a class="btn-secondary" href="${escaparHTML(whatsapp)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                        <a class="btn-secondary" href="${escaparHTML(email)}"><i class="fa-solid fa-envelope"></i> E-mail</a>
+                        <a class="btn-secondary" href="${escaparHTML(link)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a>
+                    </div>
+                    ${telefone ? '' : '<small>Sem celular cadastrado: no WhatsApp, escolha o contato manualmente.</small>'}
+                </div>`
+        }],
+        aoSalvar: async () => {}
+    });
+}
+
+async function copiarLinkTermo() {
+    const campo = document.getElementById('campoLinkTermo');
+    if (!campo) return;
+    try {
+        await navigator.clipboard.writeText(campo.value);
+    } catch {
+        campo.select();
+        document.execCommand('copy');
+    }
+    avisar('Link copiado.');
+}
+
+async function editarModeloTermo() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita o modelo.', 'erro');
+
+    const { data, error } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'termo_radio_modelo').maybeSingle();
+    if (error) return avisar(traduzirErro(error), 'erro');
+
+    abrirFormulario({
+        titulo: 'Modelo do termo',
+        subtitulo: 'Vale para os próximos termos gerados. Os já gerados não mudam.',
+        textoSalvar: 'Salvar modelo',
+        campos: [
+            { id: 'ajuda', tipo: 'html', html: `<p class="modelo-ajuda">Campos automáticos:
+                <code>{{nome}}</code> <code>{{cpf}}</code> <code>{{setor}}</code> <code>{{radios}}</code> <code>{{data}}</code>.
+                Recomendamos validar o texto com o RH/Jurídico.</p>` },
+            { id: 'valor', rotulo: 'Texto do termo', tipo: 'textarea', valor: data?.valor || '', obrigatorio: true, largo: true }
+        ],
+        aoSalvar: async ({ valor }) => {
+            const faltando = ['{{nome}}', '{{cpf}}', '{{radios}}', '{{data}}'].filter(m => !valor.includes(m));
+            if (faltando.length) throw new Error(`O texto precisa conter: ${faltando.join(', ')}.`);
+            const { data: salvo, error: erroSalvar } = await supabaseClient.from('configuracoes')
+                .update({ valor }).eq('chave', 'termo_radio_modelo').select('chave');
+            if (erroSalvar) throw erroSalvar;
+            if (!salvo?.length) throw new Error('Seu perfil não tem permissão para esta operação.');
+            avisar('Modelo do termo atualizado.');
+        }
+    });
+
+    const area = document.getElementById('mcCampo_valor');
+    if (area) area.rows = 18;
+}
+
+
+/* =========================================================
+   LIGAÇÕES
+========================================================= */
+
+(function () {
+    const menusOriginal = atualizarMenus;
+    atualizarMenus = function () {
+        menusOriginal();
+        const menu = document.getElementById('menuRadios');
+        if (menu) menu.style.display = usuarioLogado ? 'flex' : 'none';
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('buscaRadio')?.addEventListener('input', renderizarRadios);
+    ['filtroSetorRadio', 'filtroSituacaoRadio', 'filtroStatusRadio'].forEach(id =>
+        document.getElementById(id)?.addEventListener('change', renderizarRadios));
+});
+
+Object.assign(window, {
+    abrirRadios, carregarRadios, novoRadio, abrirRadio, devolverRadio, gerarTermoDoResponsavel, gerarTermoSelecionados,
+    mostrarLinkTermo, abrirLinkTermo, copiarLinkTermo, editarModeloTermo,
+    alternarSelecaoRadio, alternarTodosRadios, limparSelecaoRadios
 });

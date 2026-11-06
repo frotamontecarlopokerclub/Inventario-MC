@@ -232,6 +232,24 @@
             </li>
 
 
+            <!-- RÁDIOS HT -->
+
+            <li
+                id="menuRadios"
+                class="menu-item"
+                style="display:none;"
+                onclick="abrirRadios()"
+            >
+
+                <i class="fa-solid fa-walkie-talkie"></i>
+
+                <span>
+                    Rádios HT
+                </span>
+
+            </li>
+
+
             <!-- HISTÓRICO -->
 
             <li
@@ -2202,6 +2220,103 @@
 
                 </table>
 
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         RÁDIOS HT
+    ================================================== -->
+
+    <section
+        id="radiosTela"
+        class="tela"
+    >
+
+        <div class="page-title">
+            <div>
+                <span>EQUIPAMENTOS</span>
+                <h2>Rádios HT</h2>
+                <p>Cada rádio com setor, responsável e termo de responsabilidade assinado online.</p>
+            </div>
+            <div class="radios-botoes somente-gestao">
+                <button type="button" class="btn-secondary" onclick="editarModeloTermo()">
+                    <i class="fa-solid fa-file-lines"></i> Modelo do termo
+                </button>
+                <button type="button" class="btn-primary" onclick="novoRadio()">
+                    <i class="fa-solid fa-plus"></i> Novo rádio
+                </button>
+            </div>
+        </div>
+
+        <div class="radios-resumo">
+            <div><small>Rádios</small><strong id="radiosTotal">0</strong></div>
+            <div class="ok"><small>Termo assinado</small><strong id="radiosAssinados">0</strong></div>
+            <div class="pendente"><small>Aguardando assinatura</small><strong id="radiosPendentes">0</strong></div>
+            <div class="falta"><small>Sem termo</small><strong id="radiosSemTermo">0</strong></div>
+        </div>
+
+        <div class="card">
+
+            <div class="estoque-toolbar produtos-toolbar">
+                <div class="input-wrapper estoque-busca">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="buscaRadio" placeholder="Buscar série, identificação, responsável ou setor..." autocomplete="off">
+                </div>
+                <select id="filtroSetorRadio" aria-label="Filtrar por setor">
+                    <option value="">Todos os setores</option>
+                </select>
+                <select id="filtroSituacaoRadio" aria-label="Filtrar pela situação do termo">
+                    <option value="">Todas as situações do termo</option>
+                    <option value="ASSINADO">Assinado</option>
+                    <option value="PENDENTE">Aguardando assinatura</option>
+                    <option value="EXPIRADO">Link expirado</option>
+                    <option value="SEM_TERMO">Sem termo</option>
+                    <option value="SEM_RESPONSAVEL">Sem responsável</option>
+                </select>
+                <select id="filtroStatusRadio" aria-label="Filtrar por status">
+                    <option value="">Todos os status</option>
+                    <option>Ativo</option>
+                    <option>Reserva</option>
+                    <option>Em manutenção</option>
+                    <option>Extraviado</option>
+                    <option>Baixado</option>
+                </select>
+                <div class="estoque-info">
+                    <i class="fa-solid fa-walkie-talkie"></i>
+                    <span>Listados:</span>
+                    <strong id="radiosListados">0</strong>
+                </div>
+            </div>
+
+            <div id="barraSelecaoRadios" class="barra-selecao" hidden>
+                <span id="radiosSelecionadosQtd"></span>
+                <button type="button" class="btn-primary btn-small" onclick="gerarTermoSelecionados()">
+                    <i class="fa-solid fa-file-signature"></i> Gerar termo para os selecionados
+                </button>
+                <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoRadios()">Limpar seleção</button>
+            </div>
+
+            <div class="table-area">
+                <table class="inventory-table radios-table">
+                    <thead>
+                        <tr>
+                            <th class="col-check somente-gestao"><input type="checkbox" id="selecionarTodosRadios" aria-label="Selecionar todos"
+                                onchange="alternarTodosRadios(this.checked)"></th>
+                            <th>Rádio</th>
+                            <th>Setor</th>
+                            <th>Responsável</th>
+                            <th>Status</th>
+                            <th>Termo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaRadios"></tbody>
+                </table>
             </div>
 
         </div>

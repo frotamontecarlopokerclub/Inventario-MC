@@ -8005,3 +8005,156 @@ body.modal-aberto{ overflow:hidden; }
 }
 
 #cadastroTela .mc-dica{ margin-bottom:12px; }
+
+/* =========================================================
+   V7 — RÁDIOS HT
+   Mantenha este bloco no FINAL do style.css.
+========================================================= */
+
+.radios-botoes{ display:flex; gap:10px; flex-wrap:wrap; }
+.radios-botoes .btn-secondary i{ color:var(--v4-marsala); }
+
+.radios-resumo{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.radios-resumo > div{
+    padding:14px 18px;
+    border:1px solid var(--v4-line);
+    border-radius:14px;
+    background:#fff;
+}
+
+.radios-resumo small{
+    display:block;
+    color:#8a8186;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+}
+
+.radios-resumo strong{
+    display:block;
+    margin-top:4px;
+    color:var(--v4-ink);
+    font-size:26px;
+    font-weight:800;
+}
+
+.radios-resumo .ok strong{ color:var(--v4-ok); }
+.radios-resumo .pendente strong{ color:var(--v4-warn); }
+.radios-resumo .falta strong{ color:var(--v4-bad); }
+
+.radios-table{ min-width:960px; }
+
+.radios-table .col-check{ width:36px; }
+
+.radios-table input[type="checkbox"],
+.mc-modal .mc-check input[type="checkbox"]{
+    width:17px !important;
+    height:17px !important;
+    min-height:0 !important;
+    padding:0 !important;
+    accent-color:var(--v4-marsala);
+}
+
+.radios-table .serie{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+
+.radios-table .status-badge i{ font-size:10px; }
+.radios-table .status-badge:has(i)::before{ display:none; }
+
+.linha-selecionada td{ background:#fdf7f7; }
+
+.btn-icon.btn-destaque{
+    background:var(--v4-marsala);
+    border-color:var(--v4-marsala);
+    color:#fff;
+}
+
+.btn-icon.btn-destaque:hover{ background:var(--v4-marsala-dark); color:#fff; }
+
+.barra-selecao{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:0 0 14px;
+    padding:10px 14px;
+    border-radius:12px;
+    background:var(--v4-marsala-soft);
+    color:var(--v4-marsala-dark);
+    font-size:12.5px;
+    font-weight:750;
+}
+
+.barra-selecao[hidden]{ display:none; }
+.barra-selecao span{ margin-right:auto; }
+
+/* Janela do link */
+
+.link-termo input{
+    width:100%;
+    height:46px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px !important;
+    background:#faf7f7 !important;
+}
+
+.link-termo-acoes{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+}
+
+.link-termo-acoes a,
+.link-termo-acoes button{
+    text-decoration:none;
+    min-height:42px !important;
+}
+
+.link-termo-acoes .fa-whatsapp{ color:#1f9d55; }
+
+.link-termo small{
+    display:block;
+    margin-top:8px;
+    color:#8a8186;
+    font-size:11.5px;
+}
+
+.mc-modal-rodape [data-fechar][hidden]{ display:none; }
+
+.modelo-ajuda{
+    margin:0;
+    padding:10px 12px;
+    border-radius:10px;
+    background:#faf7f7;
+    color:var(--v4-muted);
+    font-size:12px;
+    line-height:1.6;
+}
+
+.modelo-ajuda code{
+    padding:1px 5px;
+    border-radius:5px;
+    background:#fff;
+    border:1px solid var(--v4-line);
+    color:var(--v4-marsala-dark);
+    font-size:11.5px;
+}
+
+#mcCampo_valor{ font-family:Georgia,"Times New Roman",serif; font-size:13px !important; line-height:1.55; }
+
+@media (max-width:1100px){
+    .radios-resumo{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width:820px){
+    .radios-botoes{ width:100%; }
+    .radios-botoes button{ flex:1; }
+    .produtos-toolbar select{ width:100%; }
+}
