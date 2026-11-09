@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -28,6 +28,7 @@ let nomeUsuarioLogado = '';
 
 /* Dados carregados do banco */
 let itens = [];
+let itensCarregados = false;   // diferencia "carregando" de "não há peças"
 let produtos = [];
 let subsetores = [];
 let movimentacoes = [];
@@ -206,6 +207,57 @@ function avisar(mensagem, tipo = 'sucesso') {
     setTimeout(() => aviso.remove(), tipo === 'erro' ? 6400 : 3900);
 }
 
+
+
+/* =========================================================
+   CONFIRMAÇÃO NA TELA (substitui o confirm do navegador)
+   const sim = await confirmar({ titulo, mensagem, textoConfirmar, perigo })
+========================================================= */
+
+function confirmar({ titulo = 'Confirmar', mensagem = '', textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar', perigo = false } = {}) {
+    let modal = document.getElementById('mcConfirmar');
+    if (!modal) {
+        modal = Object.assign(document.createElement('div'), { id: 'mcConfirmar', className: 'mc-modal mc-confirmar', hidden: true });
+        modal.innerHTML = `
+            <div class="mc-modal-caixa" role="alertdialog" aria-modal="true" aria-labelledby="mcConfirmarTitulo" aria-describedby="mcConfirmarTexto">
+                <header class="mc-modal-topo"><div><h3 id="mcConfirmarTitulo"></h3></div></header>
+                <div class="mc-modal-corpo"><p id="mcConfirmarTexto" class="mc-confirmar-texto"></p></div>
+                <footer class="mc-modal-rodape">
+                    <button type="button" class="btn-secondary" id="mcConfirmarNao"></button>
+                    <button type="button" class="btn-primary" id="mcConfirmarSim"></button>
+                </footer>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    modal.querySelector('#mcConfirmarTitulo').textContent = titulo;
+    modal.querySelector('#mcConfirmarTexto').textContent = mensagem;
+    const sim = modal.querySelector('#mcConfirmarSim');
+    const nao = modal.querySelector('#mcConfirmarNao');
+    sim.textContent = textoConfirmar;
+    nao.textContent = textoCancelar;
+    sim.classList.toggle('btn-perigo', perigo);
+
+    return new Promise(resolve => {
+        const terminar = resposta => {
+            modal.hidden = true;
+            document.body.classList.remove('modal-aberto');
+            sim.onclick = nao.onclick = modal.onclick = null;
+            document.removeEventListener('keydown', teclas, true);
+            resolve(resposta);
+        };
+        const teclas = evento => {
+            if (evento.key === 'Escape') { evento.stopPropagation(); terminar(false); }
+        };
+        sim.onclick = () => terminar(true);
+        nao.onclick = () => terminar(false);
+        modal.onclick = evento => { if (evento.target === modal) terminar(false); };
+        document.addEventListener('keydown', teclas, true);
+        modal.hidden = false;
+        document.body.classList.add('modal-aberto');
+        setTimeout(() => (perigo ? nao : sim).focus(), 30);
+    });
+}
 
 
 /* =========================================================
@@ -459,6 +511,14 @@ function imgMiniatura(url, { classe = 'foto-tabela', alt = '' } = {}) {
                  onclick="abrirModalFoto('${original}')">`;
 }
 
+/* Foto só para mostrar (sem ampliar ao tocar), com marcador quando não há foto. */
+function fotoPequena(url, classe) {
+    if (!url) return `<span class="${classe} foto-vazia"><i class="fa-solid fa-couch"></i></span>`;
+    const original = escaparHTML(url);
+    return `<img src="${escaparHTML(urlMiniatura(url))}" alt="" class="${classe}" loading="lazy"
+                 onerror="this.onerror = null; this.src = '${original}';">`;
+}
+
 const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
 const TAMANHO_MAXIMO_FOTO = 15 * 1024 * 1024;
 
@@ -532,7 +592,7 @@ const AO_ABRIR_TELA = {
 
 function abrirTela(idTela, elemento) {
     if (!usuarioLogado && !TELAS_PUBLICAS.includes(idTela)) {
-        alert('Faça login primeiro.');
+        avisar('Entre com seu e-mail e senha primeiro.', 'info');
         return;
     }
 
@@ -552,6 +612,7 @@ function abrirTela(idTela, elemento) {
     window.scrollTo(0, 0);
 
     AO_ABRIR_TELA[idTela]?.();
+    marcarBarraInferior();
 }
 
 function toggleSidebar() {
@@ -564,6 +625,7 @@ document.addEventListener('click', evento => {
     const sidebar = document.getElementById('sidebar');
     const botao = document.querySelector('.mobile-menu-btn');
     if (!sidebar || !botao || window.innerWidth > 900) return;
+    if (evento.target.closest?.('#barraInferior')) return;   // o botão "Menu" da barra abre o menu
     if (!sidebar.contains(evento.target) && !botao.contains(evento.target)) sidebar.classList.remove('open');
 });
 
@@ -592,8 +654,9 @@ async function login(evento) {
     const botao = document.getElementById('btnLogin');
     const textoOriginal = botao?.innerHTML;
 
+    erroLogin('');
     if (!email || !password) {
-        alert('Informe o e-mail e a senha.');
+        erroLogin('Informe o e-mail e a senha.');
         return false;
     }
 
@@ -607,7 +670,11 @@ async function login(evento) {
 
         if (error) {
             console.error('ERRO LOGIN:', error);
-            alert('Não foi possível entrar.\n\n' + error.message);
+            erroLogin(/invalid login|credentials/i.test(error.message)
+                ? 'E-mail ou senha incorretos. Confira e tente de novo.'
+                : /email not confirmed/i.test(error.message)
+                    ? 'Este e-mail ainda não foi confirmado. Procure o administrador.'
+                    : 'Não foi possível entrar: ' + error.message);
             return false;
         }
 
@@ -615,7 +682,7 @@ async function login(evento) {
         await entrarNoSistema();
     } catch (erro) {
         console.error('ERRO AO REALIZAR LOGIN:', erro);
-        alert('Erro inesperado ao realizar login.');
+        if (erro?.message !== 'ACESSO_NEGADO') erroLogin('Sem conexão com o sistema. Confira a internet e tente de novo.');
     } finally {
         if (botao) {
             botao.disabled = false;
@@ -624,6 +691,13 @@ async function login(evento) {
     }
 
     return false;
+}
+
+function erroLogin(mensagem) {
+    const caixa = document.getElementById('loginErro');
+    if (!caixa) return mensagem && avisar(mensagem, 'erro');
+    caixa.textContent = mensagem;
+    caixa.hidden = !mensagem;
 }
 
 /* Depois do login (ou de uma sessão já salva): perfil, menus, dados. */
@@ -675,16 +749,22 @@ async function verificarPerfil() {
 
     if (!data || data.ativo === false) {
         await supabaseClient.auth.signOut();
-        alert('Usuário inativo ou sem cadastro. Procure o administrador.');
-        window.location.reload();
-        return new Promise(() => {});
+        usuarioLogado = null;
+        perfilUsuario = null;
+        erroLogin('Seu acesso está desativado ou ainda não foi liberado. Procure o administrador.');
+        throw new Error('ACESSO_NEGADO');
     }
 
     nomeUsuarioLogado = String(data.nome || usuarioLogado.email || '').trim();
     perfilUsuario = String(data.perfil || 'consulta').trim().toLowerCase();
 }
 
-/* Quais menus cada perfil vê. */
+/*
+   Quais menus cada perfil vê.
+   · Consulta: procura e consulta (sem mover, cadastrar ou histórico).
+   · Operacional: + mover, cadastrar e histórico.
+   · Gestor/Administrador: + painel geral e administração.
+*/
 function atualizarMenus() {
     const logado = Boolean(usuarioLogado);
     const gestao = logado && podeAdministrar();
@@ -692,14 +772,14 @@ function atualizarMenus() {
 
     const visiveis = {
         menuOndeEsta: logado,
-        menuForaLugar: logado,
-        menuDashboard: logado,
-        menuCadastro: opera,
         menuMovimentacao: opera,
+        menuForaLugar: logado,
+        menuCadastro: opera,
+        menuRadios: logado,
         menuEstoque: logado,
         menuProdutos: logado,
-        menuRadios: logado,
-        menuHistorico: logado,
+        menuHistorico: opera,
+        menuDashboard: gestao,
         menuAdministracao: gestao,
         menuLogout: logado,
         menuLogin: !logado
@@ -710,9 +790,20 @@ function atualizarMenus() {
         if (menu) menu.style.display = mostrar ? 'flex' : 'none';
     });
 
+    // Título de grupo só aparece se o grupo tiver algum item visível.
+    document.querySelectorAll('.sidebar-menu .menu-grupo').forEach(titulo => {
+        let algum = false;
+        for (let irmao = titulo.nextElementSibling; irmao && !irmao.matches('.menu-grupo, .menu-separador'); irmao = irmao.nextElementSibling) {
+            if (irmao.style.display !== 'none') algum = true;
+        }
+        titulo.hidden = !algum;
+    });
+
     document.querySelectorAll('.somente-gestao').forEach(elemento => {
         elemento.style.display = gestao ? '' : 'none';
     });
+
+    atualizarBarraInferior();
 }
 
 function atualizarUsuarioInterface() {
@@ -864,7 +955,7 @@ function popularFiltroSubsetoresEstoque() {
         .filter(s => s.ativo !== false)
         .sort((a, b) => compararTexto(nomeLocal(a.local_id), nomeLocal(b.local_id)) || compararTexto(a.nome, b.nome));
     preencherSelect(document.getElementById('filtroSubsetor'),
-        lista.map(s => ({ valor: s.id, texto: `${nomeLocal(s.local_id)} / ${s.nome}` })), 'Todos os Subsetores');
+        lista.map(s => ({ valor: s.id, texto: `${nomeLocal(s.local_id)} / ${s.nome}` })), 'Todos os setores');
 }
 
 function popularFiltroSubsetoresDashboard() {
@@ -874,7 +965,7 @@ function popularFiltroSubsetoresDashboard() {
     const lista = subsetores
         .filter(s => s.ativo !== false && (!local || String(s.local_id) === local))
         .sort((a, b) => compararTexto(a.nome, b.nome));
-    preencherSelect(select, lista.map(s => ({ valor: s.id, texto: s.nome })), 'Todos os Subsetores');
+    preencherSelect(select, lista.map(s => ({ valor: s.id, texto: s.nome })), 'Todos os setores');
 }
 
 function atualizarSubsetoresDashboardPorLocal() {
@@ -963,6 +1054,7 @@ async function carregarItens() {
         itens = await buscarTodasLinhas(() =>
             supabaseClient.from('itens').select('*').gt('quantidade', 0).order('id', { ascending: false })
         );
+        itensCarregados = true;
     } catch (erro) {
         console.error('ERRO AO CARREGAR ITENS:', erro);
         return;
@@ -986,6 +1078,7 @@ async function carregarDashboard() {
     try {
         await Promise.all([carregarItens(), carregarProdutos()]);
         renderizarTelasDePecas(); // de novo, agora com o catálogo carregado
+        ultimaAtualizacao = Date.now();
         await atualizarResumoDashboard();
         gerarRelatorioLocais();
         carregarFiltroLocaisDashboard();
@@ -1408,8 +1501,10 @@ function renderizarOndeEsta() {
         area.innerHTML = `
             <div class="onde-vazio">
                 <i class="fa-solid fa-magnifying-glass-location"></i>
-                <strong>${itens.length ? 'Nada encontrado' : 'Carregando inventário...'}</strong>
-                <span>${itens.length ? 'Tente outro nome, uma categoria (ex.: "vaso", "quadro") ou o nome de um local.' : ''}</span>
+                <strong>${itens.length ? 'Nada encontrado' : itensCarregados ? 'Nenhuma peça cadastrada ainda' : 'Carregando inventário...'}</strong>
+                <span>${itens.length
+                    ? 'Tente outro nome, uma categoria (ex.: "vaso", "quadro") ou o nome de um local.'
+                    : itensCarregados && podeMovimentar() ? 'Use "Cadastrar peças" para registrar a primeira.' : ''}</span>
             </div>`;
         return;
     }
@@ -1612,10 +1707,8 @@ function devolverPeca(id) {
 function movimentarPeca(id) {
     if (!podeMovimentar()) return avisar('Seu perfil não pode movimentar peças.', 'erro');
     abrirTela('movimentacaoTela', document.getElementById('menuMovimentacao'));
-    const select = document.getElementById('itemMov');
-    if (select) select.value = String(id);
-    preencherOrigemAutomaticamente();
-    document.getElementById('destino')?.focus();
+    limparFormularioMovimentacao();
+    escolherPecaMov(id);
 }
 
 /* =========================================================
@@ -1918,8 +2011,12 @@ async function salvarItem(event) {
 
     const total = linhas.reduce((soma, linha) => soma + linha.quantidade, 0);
     const esperado = parseInt(valor('totalEsperado') || '0', 10);
-    if (esperado && esperado !== total &&
-        !confirm(`O total informado é ${esperado}, mas a distribuição soma ${total}.\n\nSalvar mesmo assim com ${total} peça(s)?`)) {
+    if (esperado && esperado !== total && !(await confirmar({
+        titulo: 'As quantidades não fecham',
+        mensagem: `Você informou ${esperado} peças no total, mas a distribuição pelos locais soma ${total}.\n\nSalvar mesmo assim com ${total} peça(s)?`,
+        textoConfirmar: `Salvar com ${total}`,
+        textoCancelar: 'Corrigir'
+    }))) {
         return false;
     }
 
@@ -2006,43 +2103,187 @@ function atualizarLinhasDistribuicao() {
 }
 
 /* =========================================================
-   09 · MOVIMENTAÇÃO (temporária × definitiva)
+   09 · MOVER PEÇAS — assistente em 3 passos
+   1. Qual peça?  2. Para onde? (vai voltar?)  3. Quantas?
 ========================================================= */
 
+let passoMov = 1;
+const LIMITE_LISTA_MOV = 40;
+
+function pecasMovimentaveis() {
+    return itens
+        .filter(item => item.status !== 'Baixado' && quantidadeItem(item) > 0)
+        .sort((a, b) => compararTexto(a.nome, b.nome) || compararTexto(nomeLocal(a.local_id), nomeLocal(b.local_id)));
+}
+
+function itemEscolhidoMov() {
+    return itens.find(registro => String(registro.id) === String(document.getElementById('itemMov')?.value || ''));
+}
+
+/* Lista escondida (guarda o valor escolhido) + cartões do passo 1. */
 function carregarItensMovimentacao() {
     const select = document.getElementById('itemMov');
     if (!select) return;
-
     const valorAtual = select.value;
-
-    const opcoes = itens
-        .filter(item => item.status !== 'Baixado' && quantidadeItem(item) > 0)
-        .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' }) ||
-                        nomeLocal(a.local_id).localeCompare(nomeLocal(b.local_id), 'pt-BR'))
-        .map(item => {
-            const texto = [
-                item.nome,
-                localCompleto(item.local_id, item.subsetor_id),
-                `${quantidadeItem(item)} peça(s)`,
-                item.status !== 'Ativo' ? item.status : '',
-                estaForaDoLugar(item) ? `fora do lugar (é de ${nomeLocal(item.origem_local_id)})` : ''
-            ].filter(Boolean).join(' — ');
-            return `<option value="${Number(item.id)}">${escaparHTML(texto)}</option>`;
-        });
-
-    select.innerHTML = '<option value="">Selecione a peça</option>' + opcoes.join('');
+    select.innerHTML = '<option value="">Selecione a peça</option>' +
+        pecasMovimentaveis().map(item => `<option value="${Number(item.id)}">${escaparHTML(item.nome)}</option>`).join('');
     if (valorAtual && [...select.options].some(opcao => opcao.value === valorAtual)) select.value = valorAtual;
+    renderizarPecasMov();
+}
+
+function renderizarPecasMov() {
+    const lista = document.getElementById('listaPecasMov');
+    if (!lista) return;
+
+    const termo = normalizarTexto(valorCampo('buscaPecaMov'));
+    const todas = pecasMovimentaveis();
+    const achadas = !termo ? todas : todas.filter(item => normalizarTexto([
+        item.nome, item.tipo, nomeLocal(item.local_id), nomeSubsetor(item.subsetor_id)
+    ].join(' ')).includes(termo));
+
+    if (!todas.length) {
+        lista.innerHTML = `<div class="tela-vazia"><i class="fa-solid fa-box-open"></i>
+            <strong>Nenhuma peça cadastrada ainda</strong><span>Cadastre as peças primeiro em "Cadastrar peças".</span></div>`;
+        return;
+    }
+    if (!achadas.length) {
+        lista.innerHTML = `<div class="tela-vazia"><i class="fa-solid fa-magnifying-glass"></i>
+            <strong>Nenhuma peça encontrada</strong><span>Confira o nome ou procure pelo local.</span></div>`;
+        return;
+    }
+
+    const visiveis = achadas.slice(0, LIMITE_LISTA_MOV);
+    lista.innerHTML = visiveis.map(item => {
+        const avisos = [
+            item.status !== 'Ativo' ? `<em class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status)}</em>` : '',
+            estaForaDoLugar(item) ? seloFora(item) : ''
+        ].join('');
+        return `<button type="button" class="mov-peca" onclick="escolherPecaMov(${Number(item.id)})">
+                ${fotoPequena(fotoDoItem(item), 'mov-peca-foto')}
+                <span class="mov-peca-texto">
+                    <strong>${escaparHTML(item.nome)}</strong>
+                    <small><i class="fa-solid fa-location-dot"></i> ${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</small>
+                    ${avisos ? `<span class="mov-peca-avisos">${avisos}</span>` : ''}
+                </span>
+                <span class="mov-peca-qtd"><b>${numero.format(quantidadeItem(item))}</b><small>peça(s)</small></span>
+            </button>`;
+    }).join('') + (achadas.length > visiveis.length
+        ? `<p class="mov-lista-mais">Mostrando ${visiveis.length} de ${achadas.length}. Digite mais do nome para achar mais rápido.</p>` : '');
+}
+
+function escolherPecaMov(id) {
+    const select = document.getElementById('itemMov');
+    if (!select) return;
+    if (![...select.options].some(opcao => opcao.value === String(id))) carregarItensMovimentacao();
+    select.value = String(id);
+    preencherOrigemAutomaticamente();
+    mostrarPassoMov(2);
+}
+
+function mostrarPassoMov(passo) {
+    passoMov = passo;
+    document.querySelectorAll('#movimentacaoTela .mov-etapa').forEach(etapa => {
+        etapa.hidden = Number(etapa.dataset.etapa) !== passo;
+    });
+    document.querySelectorAll('#movimentacaoTela .mov-passos li').forEach(item => {
+        const n = Number(item.dataset.passo);
+        item.classList.toggle('atual', n === passo);
+        item.classList.toggle('feito', n < passo);
+    });
+
+    const voltar = document.getElementById('btnMovVoltar');
+    const avancar = document.getElementById('btnMovAvancar');
+    if (voltar) voltar.hidden = passo === 1;
+    if (avancar) {
+        avancar.hidden = passo === 1;   // no passo 1 basta tocar na peça
+        avancar.innerHTML = passo === 3
+            ? '<i class="fa-solid fa-check"></i> Confirmar'
+            : 'Continuar <i class="fa-solid fa-arrow-right"></i>';
+    }
+    erroMov('');
+
+    const item = itemEscolhidoMov();
+    const escolhida = document.getElementById('movPecaEscolhida');
+    if (escolhida) {
+        escolhida.innerHTML = item ? `
+            <div><span>Peça escolhida</span>
+                <strong>${escaparHTML(item.nome)}</strong>
+                <small>Está em ${escaparHTML(localCompleto(item.local_id, item.subsetor_id))} · ${numero.format(quantidadeItem(item))} peça(s)</small>
+            </div>
+            <button type="button" class="btn-link" onclick="mostrarPassoMov(1)">Trocar</button>` : '';
+    }
+
+    if (passo === 1) setTimeout(() => document.getElementById('buscaPecaMov')?.focus(), 50);
+    if (passo === 3) atualizarResumoMov();
+    document.querySelector('#movimentacaoTela .mov-assistente')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function erroMov(mensagem) {
+    const erro = document.getElementById('movErro');
+    if (!erro) return;
+    erro.textContent = mensagem;
+    erro.hidden = !mensagem;
+}
+
+function avancarPassoMov() {
+    const item = itemEscolhidoMov();
+    if (passoMov === 1) {
+        if (!item) return erroMov('Toque na peça que vai sair do lugar.');
+        return mostrarPassoMov(2);
+    }
+    if (passoMov === 2) {
+        if (!item) return mostrarPassoMov(1);
+        const destino = valorCampo('destino');
+        if (!destino) return erroMov('Escolha o local para onde a peça vai.');
+        if (String(destino) === String(item.local_id) && valorCampo('destinoSubsetor') === String(item.subsetor_id || '')) {
+            return erroMov('A peça já está neste lugar. Escolha outro local ou setor.');
+        }
+        return mostrarPassoMov(3);
+    }
+    return movimentarItem();
+}
+
+function voltarPassoMov() {
+    if (passoMov > 1) mostrarPassoMov(passoMov - 1);
+}
+
+function ajustarQuantidadeMov(diferenca) {
+    const campo = document.getElementById('quantidadeMov');
+    if (!campo) return;
+    const maximo = Number(campo.max) || Infinity;
+    campo.value = Math.min(maximo, Math.max(1, (parseInt(campo.value, 10) || 0) + diferenca));
+    atualizarResumoMov();
+}
+
+function atualizarResumoMov() {
+    const resumo = document.getElementById('movResumo');
+    const item = itemEscolhidoMov();
+    if (!resumo || !item) return;
+
+    const quantidade = parseInt(valorCampo('quantidadeMov') || '0', 10) || 0;
+    const destino = localCompleto(valorCampo('destino'), valorCampo('destinoSubsetor') || null);
+    const temporaria = document.querySelector('input[name="tipoMovimentacao"]:checked')?.value !== 'definitiva';
+    const retorno = valorCampo('retornoPrevisto');
+
+    resumo.innerHTML = `<i class="fa-solid fa-truck-ramp-box"></i>
+        <p>Vão sair <b>${numero.format(quantidade)}</b> × <b>${escaparHTML(item.nome)}</b>
+        de <b>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</b>
+        para <b>${escaparHTML(destino)}</b>.
+        ${temporaria
+            ? (retorno ? `Devem voltar até <b>${escaparHTML(dataCurta(retorno))}</b>.` : 'Depois devem voltar para o lugar delas.')
+            : 'Vão ficar lá de vez.'}</p>`;
 }
 
 function atualizarAjudaMovimentacao() {
-    const item = itens.find(registro => String(registro.id) === document.getElementById('itemMov')?.value);
+    const item = itemEscolhidoMov();
     const tipo = document.querySelector('input[name="tipoMovimentacao"]:checked')?.value || 'temporaria';
-    const destino = document.getElementById('destino')?.value || '';
-    const destinoSetor = document.getElementById('destinoSubsetor')?.value || '';
+    const destino = valorCampo('destino');
+    const destinoSetor = valorCampo('destinoSubsetor');
     const info = document.getElementById('infoOrigemFixa');
     const grupoRetorno = document.getElementById('grupoRetornoPrevisto');
 
     if (grupoRetorno) grupoRetorno.style.display = tipo === 'temporaria' ? '' : 'none';
+    if (passoMov === 3) atualizarResumoMov();
 
     if (!info) return;
     if (!item || !temOrigem(item)) { info.innerHTML = ''; return; }
@@ -2051,16 +2292,13 @@ function atualizarAjudaMovimentacao() {
     const voltaParaCasa = destino && String(destino) === String(item.origem_local_id) &&
                           String(destinoSetor) === String(item.origem_subsetor_id || '');
 
-    let texto = `<i class="fa-solid fa-house"></i> Local fixo desta peça: <strong>${escaparHTML(casa)}</strong>.`;
-    if (voltaParaCasa) texto += ' <b class="ok">Isto é uma devolução ao local de origem.</b>';
-    else if (destino && tipo === 'temporaria') texto += ' Ela continuará sendo de lá e aparecerá em "Fora do lugar".';
-    else if (destino && tipo === 'definitiva') texto += ' O destino passará a ser o novo local fixo.';
-
+    let texto = `<i class="fa-solid fa-house"></i> Lugar fixo desta peça: <strong>${escaparHTML(casa)}</strong>.`;
+    if (voltaParaCasa) texto += ' <b class="ok">Ela está voltando para o lugar dela.</b>';
     info.innerHTML = texto;
 }
 
 function preencherOrigemAutomaticamente() {
-    const item = itens.find(registro => String(registro.id) === String(document.getElementById('itemMov')?.value));
+    const item = itemEscolhidoMov();
     const origem = document.getElementById('origemNome');
     const quantidade = document.getElementById('quantidadeMov');
 
@@ -2070,26 +2308,28 @@ function preencherOrigemAutomaticamente() {
         const disponivel = quantidadeItem(item);
         quantidade.max = disponivel;
         if (Number(quantidade.value) > disponivel || !quantidade.value) quantidade.value = disponivel;
-        const ajuda = document.getElementById('ajudaQuantidadeMov');
-        if (ajuda) ajuda.textContent = `${disponivel} peça(s) disponível(is) neste local.`;
+        definirTexto('ajudaQuantidadeMov', `Há ${disponivel} peça(s) neste lugar.`);
     }
 
     atualizarAjudaMovimentacao();
 }
 
-
 function limparFormularioMovimentacao() {
-    ['itemMov', 'destino', 'destinoSubsetor', 'observacaoMov', 'statusMov', 'origemNome', 'retornoPrevisto'].forEach(id => {
+    ['itemMov', 'destino', 'destinoSubsetor', 'observacaoMov', 'statusMov', 'origemNome', 'retornoPrevisto', 'buscaPecaMov'].forEach(id => {
         const campo = document.getElementById(id);
         if (campo) campo.value = '';
     });
     const quantidade = document.getElementById('quantidadeMov');
-    if (quantidade) quantidade.value = 1;
+    if (quantidade) { quantidade.value = 1; quantidade.removeAttribute('max'); }
     const temporaria = document.querySelector('input[name="tipoMovimentacao"][value="temporaria"]');
     if (temporaria) temporaria.checked = true;
+    const mais = document.querySelector('#movimentacaoTela .mov-mais');
+    if (mais) mais.open = false;
     definirTexto('ajudaQuantidadeMov', '');
     popularSubsetoresMovimentacao();
     atualizarAjudaMovimentacao();
+    renderizarPecasMov();
+    mostrarPassoMov(1);
 }
 
 /* Uma única chamada ao banco: saldo, travas e validações são feitos lá. */
@@ -2097,24 +2337,24 @@ async function movimentarItem(evento) {
     evento?.preventDefault();
     evento?.stopPropagation();
 
-    if (!usuarioLogado) return alert('Faça login primeiro.'), false;
-    if (!podeMovimentar()) return alert('Usuário sem permissão para movimentar peças.'), false;
+    if (!podeMovimentar()) return avisar('Seu perfil não pode mover peças.', 'erro'), false;
 
-    const itemId = valorCampo('itemMov');
+    const item = itemEscolhidoMov();
     const destinoId = valorCampo('destino');
     const destinoSubsetorId = valorCampo('destinoSubsetor');
     const quantidade = parseInt(valorCampo('quantidadeMov') || '0', 10);
 
-    if (!itemId) return alert('Selecione a peça.'), false;
-    if (!destinoId) return alert('Selecione o destino.'), false;
-    if (!(quantidade >= 1)) return alert('A quantidade deve ser maior que zero.'), false;
+    if (!item) return mostrarPassoMov(1), false;
+    if (!destinoId) return mostrarPassoMov(2), erroMov('Escolha o local para onde a peça vai.'), false;
+    if (!(quantidade >= 1)) return erroMov('Informe quantas peças vão (pelo menos 1).'), false;
+    if (quantidade > quantidadeItem(item)) return erroMov(`Só há ${quantidadeItem(item)} peça(s) neste lugar.`), false;
 
-    const botao = document.querySelector('#movimentacaoTela .form-actions .btn-primary');
+    const botao = document.getElementById('btnMovAvancar');
     if (botao) botao.disabled = true;
 
     try {
         const { data, error } = await supabaseClient.rpc('movimentar_item', {
-            p_item_id: Number(itemId),
+            p_item_id: Number(item.id),
             p_destino_id: Number(destinoId),
             p_quantidade: quantidade,
             p_destino_subsetor_id: destinoSubsetorId ? Number(destinoSubsetorId) : null,
@@ -2126,19 +2366,18 @@ async function movimentarItem(evento) {
 
         if (error) throw error;
 
-        alert(
-            ({ SAIDA_TEMPORARIA: 'Saída temporária registrada! A peça aparece em "Fora do lugar" até voltar.',
-               REMANEJAMENTO: 'Remanejamento registrado! O destino agora é o local fixo da peça.',
-               DEVOLUCAO: 'Devolução registrada! A peça voltou ao local de origem.',
-               STATUS: 'Status alterado com sucesso!' }[data?.tipo] || 'Movimentação realizada com sucesso!') +
-            (data?.saldo_origem > 0 ? `\n\nRestam ${data.saldo_origem} peça(s) no local de saída.` : '')
-        );
+        avisar(({
+            SAIDA_TEMPORARIA: 'Pronto! As peças aparecem em "Fora do lugar" até voltarem.',
+            REMANEJAMENTO: 'Pronto! O novo local agora é o lugar fixo das peças.',
+            DEVOLUCAO: 'Pronto! As peças voltaram para o lugar delas.',
+            STATUS: 'Pronto! Estado da peça alterado.'
+        }[data?.tipo] || 'Movimentação registrada.'));
 
-        limparFormularioMovimentacao();
         await carregarDashboard();
+        limparFormularioMovimentacao();
     } catch (erro) {
         console.error('ERRO AO MOVIMENTAR:', erro);
-        alert('Erro ao movimentar a peça.\n\n' + mensagemErro(erro));
+        erroMov('Não foi possível mover: ' + traduzirErro(erro));
         await carregarItens(); // o saldo pode ter mudado por outro usuário
     } finally {
         if (botao) botao.disabled = false;
@@ -2156,7 +2395,9 @@ function renderizarItens() {
     if (!tbody) return;
 
     if (!itens.length) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhuma peça cadastrada.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${itensCarregados
+            ? 'Nenhuma peça cadastrada ainda. Use "Cadastrar peças" para registrar a primeira.'
+            : 'Carregando inventário...'}</td></tr>`;
         return;
     }
 
@@ -2247,21 +2488,25 @@ function filtrarItens() {
 
 /* Só Gestor/Administrador (validado também no banco). */
 async function excluirItem(id) {
-    if (!podeAdministrar()) return alert('Somente Gestor ou Administrador pode excluir peças.');
+    if (!podeAdministrar()) return avisar('Só Gestor ou Administrador pode excluir peças.', 'erro');
 
     const item = itens.find(registro => Number(registro.id) === Number(id));
-    if (!item) return alert('Peça não encontrada.');
+    if (!item) return avisar('Peça não encontrada. Atualize a tela.', 'erro');
 
-    if (!confirm(`Deseja realmente excluir este registro?\n\n${item.nome || 'Peça'} — ${localCompleto(item.local_id, item.subsetor_id)}`)) return;
+    if (!(await confirmar({
+        titulo: 'Excluir este registro?',
+        mensagem: `${item.nome || 'Peça'} — ${localCompleto(item.local_id, item.subsetor_id)}\n\nEsta ação não pode ser desfeita.`,
+        textoConfirmar: 'Excluir', perigo: true
+    }))) return;
 
     try {
         const { error } = await supabaseClient.rpc('excluir_item', { p_item_id: Number(item.id) });
         if (error) throw error;
-        alert('Registro excluído com sucesso!');
+        avisar('Registro excluído.');
         await carregarDashboard();
     } catch (erro) {
         console.error('ERRO AO EXCLUIR ITEM:', erro);
-        alert('Erro ao excluir.\n\n' + mensagemErro(erro));
+        avisar('Não foi possível excluir: ' + traduzirErro(erro), 'erro');
     }
 }
 
@@ -2286,7 +2531,7 @@ async function carregarHistorico() {
         if (!tabela) return;
 
         if (!movimentacoes.length) {
-            tabela.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhuma movimentação registrada.</td></tr>';
+            tabela.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhuma movimentação ainda. Quando alguém mover uma peça, ela aparece aqui.</td></tr>';
             return;
         }
 
@@ -2324,7 +2569,7 @@ async function carregarHistorico() {
 ========================================================= */
 
 async function abrirAdministracao() {
-    if (!podeAdministrar()) return alert('Usuário sem permissão para acessar a Administração.');
+    if (!podeAdministrar()) return avisar('Só Gestor ou Administrador acessa a Administração.', 'erro');
     abrirTela('administracaoTela', document.getElementById('menuAdministracao'));
     await carregarSubsetores();
     renderizarLocaisAdmin();
@@ -2360,30 +2605,32 @@ async function carregarUsuariosAdmin() {
 }
 
 async function criarUsuario() {
-    if (!podeAdministrar()) return alert('Usuário sem permissão para criar usuários.');
+    if (!podeAdministrar()) return avisar('Só Gestor ou Administrador cria usuários.', 'erro');
     const nome = valorCampo('novoUsuarioNome');
     const email = valorCampo('novoUsuarioEmail');
     const senha = document.getElementById('novoUsuarioSenha')?.value || '';
     const perfil = valorCampo('novoUsuarioPerfil') || 'consulta';
-    if (!nome || !email || senha.length < 6) return alert('Informe nome, e-mail e uma senha com pelo menos 6 caracteres.');
+    if (!nome || !email || senha.length < 10) return avisar('Informe nome, e-mail e uma senha com pelo menos 10 caracteres.', 'erro');
 
     try {
         const { data, error } = await supabaseClient.functions.invoke('criar-usuario', { body: { nome, email, senha, perfil } });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
-        alert('Usuário criado com sucesso.');
+        avisar(`Usuário ${nome} criado. Passe a ele o e-mail e a senha.`);
         ['novoUsuarioNome', 'novoUsuarioEmail', 'novoUsuarioSenha'].forEach(id => { document.getElementById(id).value = ''; });
         await carregarUsuariosAdmin();
     } catch (erro) {
-        alert('Não foi possível criar o usuário.\n\nVerifique se a Edge Function "criar-usuario" foi publicada no Supabase.\n\n' + mensagemErro(erro));
+        avisar('Não foi possível criar o usuário: ' + traduzirErro(erro), 'erro');
     }
 }
 
 async function alternarStatusUsuario(id, ativoAtual) {
-    if (!podeAdministrar()) return alert('Usuário sem permissão.');
-    if (String(id) === String(usuarioLogado?.id)) return alert('Não é permitido inativar o próprio usuário.');
+    if (!podeAdministrar()) return avisar('Sem permissão.', 'erro');
+    if (String(id) === String(usuarioLogado?.id)) return avisar('Você não pode desativar o seu próprio acesso.', 'erro');
+    if (ativoAtual && !(await confirmar({ titulo: 'Desativar este usuário?', mensagem: 'A pessoa não conseguirá mais entrar no sistema. Você pode reativar depois.', textoConfirmar: 'Desativar', perigo: true }))) return;
     const { error } = await supabaseClient.from('usuarios').update({ ativo: !ativoAtual }).eq('id', id);
-    if (error) return alert('Erro ao alterar status.\n\n' + error.message);
+    if (error) return avisar('Não foi possível alterar: ' + traduzirErro(error), 'erro');
+    avisar(ativoAtual ? 'Usuário desativado.' : 'Usuário reativado.');
     await carregarUsuariosAdmin();
 }
 
@@ -2407,27 +2654,29 @@ function renderizarSubsetoresAdmin() {
                 <button type="button" class="btn-secondary btn-small" onclick="editarSubsetor(${Number(s.id)})"><i class="fa-solid fa-pen"></i></button>
                 <button type="button" class="btn-secondary btn-small" onclick="inativarSubsetor(${Number(s.id)})"><i class="fa-solid fa-ban"></i></button>
             </td>
-        </tr>`).join('') || '<tr><td colspan="4" class="empty-state">Nenhum subsetor cadastrado.</td></tr>';
+        </tr>`).join('') || '<tr><td colspan="4" class="empty-state">Nenhum setor cadastrado.</td></tr>';
 }
 
 async function criarSubsetor() {
-    if (!podeAdministrar()) return alert('Usuário sem permissão para administrar subsetores.');
+    if (!podeAdministrar()) return avisar('Só Gestor ou Administrador cria setores.', 'erro');
     const localId = valorCampo('adminSubsetorLocal');
     const nome = valorCampo('adminSubsetorNome');
-    if (!localId || !nome) return alert('Selecione o local e informe o nome do subsetor.');
+    if (!localId || !nome) return avisar('Escolha o local e escreva o nome do setor.', 'erro');
     const { error } = await supabaseClient.from('subsetores')
         .insert([{ local_id: Number(localId), nome, ativo: true, created_by: usuarioLogado.id }]);
-    if (error) return alert('Erro ao criar subsetor.\n\n' + error.message);
+    if (error) return avisar('Não foi possível criar o setor: ' + traduzirErro(error), 'erro');
     document.getElementById('adminSubsetorNome').value = '';
+    avisar(`Setor "${nome}" criado.`);
     await carregarSubsetores();
 }
 
 async function inativarSubsetor(id) {
-    if (!podeAdministrar()) return alert('Usuário sem permissão.');
+    if (!podeAdministrar()) return avisar('Sem permissão.', 'erro');
     const atual = subsetores.find(s => Number(s.id) === Number(id));
-    if (!atual || !confirm(`Inativar o subsetor "${atual.nome}"?`)) return;
+    if (!atual || !(await confirmar({ titulo: `Desativar o setor "${atual.nome}"?`, mensagem: `${nomeLocal(atual.local_id)}\n\nEle deixa de aparecer nas listas. As peças que estão nele continuam registradas.`, textoConfirmar: 'Desativar', perigo: true }))) return;
     const { error } = await supabaseClient.from('subsetores').update({ ativo: false }).eq('id', id);
-    if (error) return alert('Erro ao inativar subsetor.\n\n' + error.message);
+    if (error) return avisar('Não foi possível desativar: ' + traduzirErro(error), 'erro');
+    avisar('Setor desativado.');
     await carregarSubsetores();
 }
 
@@ -2437,14 +2686,14 @@ function editarSubsetor(id) {
     if (!atual) return;
 
     abrirFormulario({
-        titulo: 'Renomear subsetor',
+        titulo: 'Renomear setor',
         subtitulo: nomeLocal(atual.local_id),
-        campos: [{ id: 'nome', rotulo: 'Nome do subsetor', valor: atual.nome, obrigatorio: true, largo: true }],
+        campos: [{ id: 'nome', rotulo: 'Nome do setor', valor: atual.nome, obrigatorio: true, largo: true }],
         aoSalvar: async ({ nome }) => {
             const { error } = await supabaseClient.from('subsetores').update({ nome }).eq('id', id);
             if (error) throw error;
             await carregarSubsetores();
-            avisar('Subsetor renomeado.');
+            avisar('Setor renomeado.');
         }
     });
 }
@@ -2533,7 +2782,7 @@ async function alternarLocal(id) {
           (unidades ? `\n\nEle possui ${numero.format(unidades)} unidade(s). Elas continuam registradas lá, ` +
                       `mas não será possível enviar novos itens para este local.` : '');
 
-    if (!confirm(mensagem)) return;
+    if (!(await confirmar({ titulo: ativar ? 'Reativar local' : 'Desativar local', mensagem, textoConfirmar: ativar ? 'Reativar' : 'Desativar', perigo: !ativar }))) return;
 
     const { error } = await supabaseClient.from('locais').update({ ativo: ativar }).eq('id', id);
     if (error) return avisar(traduzirErro(error), 'erro');
@@ -2586,7 +2835,7 @@ async function gerarMiniaturasAntigas() {
     const urls = [...new Set([...produtos, ...itens].map(r => r.foto_url).filter(u => caminhoNoStorage(u)))];
 
     if (!urls.length) return avisar('Nenhuma foto encontrada para processar.', 'info');
-    if (!confirm(`Gerar miniaturas para ${urls.length} foto(s)? Pode levar alguns minutos; mantenha esta tela aberta.`)) return;
+    if (!(await confirmar({ titulo: 'Gerar miniaturas', mensagem: `Serão processadas ${urls.length} foto(s). Pode levar alguns minutos: mantenha esta tela aberta.`, textoConfirmar: 'Começar' }))) return;
 
     if (botao) botao.disabled = true;
     let feitas = 0, existentes = 0, falhas = 0;
@@ -3191,8 +3440,11 @@ async function devolverRadio(id) {
     if (!podeAdministrar()) return;
     const r = radios.find(x => Number(x.id) === Number(id));
     if (!r) return;
-    if (!confirm(`Registrar a devolução do rádio ${r.identificacao || r.numero_serie} por ${r.responsavel_nome}?\n\n` +
-                 'O rádio fica sem responsável e com status "Reserva". O termo assinado continua guardado no histórico.')) return;
+    if (!(await confirmar({
+        titulo: `Devolução do rádio ${r.identificacao || r.numero_serie}`,
+        mensagem: `${r.responsavel_nome} está devolvendo o rádio?\n\nO rádio fica sem responsável e como "Reserva". O termo assinado continua guardado.`,
+        textoConfirmar: 'Registrar devolução'
+    }))) return;
 
     const { error } = await supabaseClient.from('radios')
         .update({ responsavel_nome: null, responsavel_telefone: null, status: 'Reserva' }).eq('id', id);
@@ -3429,6 +3681,252 @@ async function baixarCopiaSeguranca() {
 }
 
 /* =========================================================
+   16 · NAVEGAÇÃO
+   · Barra de botões no rodapé do celular
+   · Busca geral no topo (peças, locais, setores e rádios)
+   · Atualização automática dos dados
+========================================================= */
+
+
+/* ---------------- Barra inferior (celular) ---------------- */
+
+function botoesBarraInferior() {
+    const opera = podeMovimentar();
+    return [
+        { tela: 'ondeEstaTela', icone: 'fa-magnifying-glass-location', texto: 'Procurar', acao: 'abrirOndeEsta()' },
+        opera
+            ? { tela: 'movimentacaoTela', icone: 'fa-right-left', texto: 'Mover', acao: 'abrirMoverPecas()' }
+            : { tela: 'foraLugarTela', icone: 'fa-arrow-right-arrow-left', texto: 'Fora do lugar', acao: 'abrirForaDoLugar()' },
+        opera
+            ? { tela: 'cadastroTela', icone: 'fa-box-open', texto: 'Cadastrar', acao: "abrirTela('cadastroTela', document.getElementById('menuCadastro'))" }
+            : { tela: 'estoqueTela', icone: 'fa-warehouse', texto: 'Inventário', acao: "abrirTela('estoqueTela', document.getElementById('menuEstoque'))" },
+        { tela: 'radiosTela', icone: 'fa-walkie-talkie', texto: 'Rádios', acao: 'abrirRadios()' },
+        { tela: null, icone: 'fa-bars', texto: 'Menu', acao: 'toggleSidebar()' }
+    ];
+}
+
+function atualizarBarraInferior() {
+    let barra = document.getElementById('barraInferior');
+    if (!usuarioLogado) {
+        barra?.remove();
+        document.body.classList.remove('com-barra-inferior');
+        return;
+    }
+    if (!barra) {
+        barra = Object.assign(document.createElement('nav'), { id: 'barraInferior', className: 'barra-inferior' });
+        barra.setAttribute('aria-label', 'Atalhos');
+        document.body.appendChild(barra);
+    }
+    barra.innerHTML = botoesBarraInferior().map(botao => `
+        <button type="button" data-tela="${botao.tela || ''}" onclick="${botao.acao}">
+            <i class="fa-solid ${botao.icone}"></i><span>${botao.texto}</span>
+        </button>`).join('');
+    document.body.classList.add('com-barra-inferior');
+    marcarBarraInferior();
+}
+
+function marcarBarraInferior() {
+    const atual = document.querySelector('.tela.activeTela')?.id;
+    document.querySelectorAll('#barraInferior button').forEach(botao => {
+        botao.classList.toggle('active', Boolean(botao.dataset.tela) && botao.dataset.tela === atual);
+    });
+}
+
+function abrirMoverPecas() {
+    if (!podeMovimentar()) return avisar('Seu perfil não pode mover peças.', 'erro');
+    abrirTela('movimentacaoTela', document.getElementById('menuMovimentacao'));
+    limparFormularioMovimentacao();
+}
+
+
+/* ---------------- Busca geral ---------------- */
+
+const LIMITE_BUSCA_GERAL = 6;
+let radiosPedidosParaBusca = false;
+
+function resultadosBuscaGeral(texto) {
+    const termo = normalizarTexto(texto);
+    if (termo.length < 2) return [];
+    const bate = (...campos) => normalizarTexto(campos.filter(Boolean).join(' ')).includes(termo);
+    const grupos = [];
+
+    // Peças: agrupadas pelo nome, com o total e em quantos lugares estão.
+    const pecas = new Map();
+    itens.filter(item => quantidadeItem(item) > 0 && bate(item.nome, item.tipo)).forEach(item => {
+        const chave = chaveNome(item.nome);
+        const atual = pecas.get(chave) || { nome: item.nome, total: 0, lugares: new Set(), foto: fotoDoItem(item) };
+        atual.total += quantidadeItem(item);
+        atual.lugares.add(localCompleto(item.local_id, item.subsetor_id));
+        pecas.set(chave, atual);
+    });
+    const listaPecas = [...pecas.values()].sort((a, b) => compararTexto(a.nome, b.nome));
+    if (listaPecas.length) {
+        grupos.push({
+            titulo: 'Peças', total: listaPecas.length,
+            itens: listaPecas.slice(0, LIMITE_BUSCA_GERAL).map(p => ({
+                icone: 'fa-couch', foto: p.foto, titulo: p.nome,
+                detalhe: `${numero.format(p.total)} peça(s) · ${p.lugares.size === 1 ? [...p.lugares][0] : `${p.lugares.size} lugares`}`,
+                acao: () => abrirOndeEsta(p.nome)
+            }))
+        });
+    }
+
+    // Locais e setores: mostram o que há lá no "Onde está?".
+    const locais = LOCAIS.filter(local => bate(local.nome)).map(local => ({
+        icone: 'fa-location-dot', titulo: local.nome,
+        detalhe: `${numero.format(itens.filter(i => Number(i.local_id) === Number(local.id)).reduce((t, i) => t + quantidadeItem(i), 0))} peça(s) neste local`,
+        acao: () => abrirLocalNaBusca(local.id)
+    }));
+    const setores = subsetores.filter(s => s.ativo !== false && bate(s.nome)).map(s => ({
+        icone: 'fa-door-open', titulo: `${nomeLocal(s.local_id)} / ${s.nome}`,
+        detalhe: `${numero.format(itens.filter(i => Number(i.subsetor_id) === Number(s.id)).reduce((t, i) => t + quantidadeItem(i), 0))} peça(s) neste setor`,
+        acao: () => abrirLocalNaBusca(s.local_id, s.nome)
+    }));
+    const lugares = [...locais, ...setores];
+    if (lugares.length) grupos.push({ titulo: 'Locais e setores', total: lugares.length, itens: lugares.slice(0, LIMITE_BUSCA_GERAL) });
+
+    // Rádios: número de série, identificação ou responsável.
+    const listaRadios = radios.filter(r => bate(r.numero_serie, r.identificacao, r.responsavel_nome, r.setor));
+    if (listaRadios.length) {
+        grupos.push({
+            titulo: 'Rádios', total: listaRadios.length,
+            itens: listaRadios.slice(0, LIMITE_BUSCA_GERAL).map(r => ({
+                icone: 'fa-walkie-talkie', titulo: [r.identificacao, r.numero_serie].filter(Boolean).join(' · '),
+                detalhe: r.responsavel_nome ? `Com ${r.responsavel_nome}${r.setor ? ` · ${r.setor}` : ''}` : (r.status || 'Sem responsável'),
+                acao: () => abrirRadioNaBusca(texto)
+            }))
+        });
+    }
+    return grupos;
+}
+
+function abrirLocalNaBusca(localId, textoSetor = '') {
+    abrirOndeEsta(textoSetor);
+    const filtro = document.getElementById('filtroLocalOndeEsta');
+    if (filtro) {
+        filtro.value = String(localId);
+        renderizarOndeEsta();
+    }
+}
+
+function abrirRadioNaBusca(texto) {
+    const campo = document.getElementById('buscaRadio');
+    if (campo) campo.value = texto;
+    abrirRadios();
+}
+
+let acoesBuscaGeral = [];
+
+function renderizarBuscaGeral() {
+    const campo = document.getElementById('buscaGeral');
+    const caixa = document.getElementById('resultadosBuscaGeral');
+    if (!campo || !caixa) return;
+
+    const texto = campo.value.trim();
+    if (texto.length < 2) {
+        caixa.hidden = true;
+        return;
+    }
+
+    const grupos = resultadosBuscaGeral(texto);
+    acoesBuscaGeral = [];
+
+    if (!grupos.length) {
+        caixa.innerHTML = `<div class="busca-geral-vazia"><i class="fa-solid fa-magnifying-glass"></i>
+            Nada encontrado para "<b>${escaparHTML(texto)}</b>". Tente uma parte do nome.</div>`;
+        caixa.hidden = false;
+        return;
+    }
+
+    caixa.innerHTML = grupos.map(grupo => `
+        <div class="busca-geral-grupo">
+            <p>${escaparHTML(grupo.titulo)}${grupo.total > grupo.itens.length ? ` <small>(${grupo.itens.length} de ${grupo.total})</small>` : ''}</p>
+            ${grupo.itens.map(item => {
+                acoesBuscaGeral.push(item.acao);
+                const indice = acoesBuscaGeral.length - 1;
+                return `<button type="button" class="busca-geral-item" data-indice="${indice}" onmousedown="event.preventDefault()" onclick="escolherBuscaGeral(${indice})">
+                    ${item.foto ? fotoPequena(item.foto, 'busca-geral-foto') : `<span class="busca-geral-foto"><i class="fa-solid ${item.icone}"></i></span>`}
+                    <span><strong>${escaparHTML(item.titulo)}</strong><small>${escaparHTML(item.detalhe)}</small></span>
+                </button>`;
+            }).join('')}
+        </div>`).join('');
+    caixa.hidden = false;
+}
+
+function escolherBuscaGeral(indice) {
+    const acao = acoesBuscaGeral[indice];
+    fecharBuscaGeral(true);
+    acao?.();
+}
+
+function fecharBuscaGeral(limpar = false) {
+    const caixa = document.getElementById('resultadosBuscaGeral');
+    if (caixa) caixa.hidden = true;
+    if (limpar) {
+        const campo = document.getElementById('buscaGeral');
+        if (campo) { campo.value = ''; campo.blur(); }
+    }
+}
+
+function ligarBuscaGeral() {
+    const campo = document.getElementById('buscaGeral');
+    if (!campo) return;
+    let espera = null;
+    campo.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(renderizarBuscaGeral, 120); });
+    campo.addEventListener('focus', () => {
+        // Os rádios só são carregados quando alguém abre a tela deles.
+        if (!radios.length && !radiosPedidosParaBusca && usuarioLogado) {
+            radiosPedidosParaBusca = true;
+            carregarRadios().then(renderizarBuscaGeral).catch(() => {});
+        }
+        renderizarBuscaGeral();
+    });
+    campo.addEventListener('blur', () => setTimeout(() => fecharBuscaGeral(), 150));
+    campo.addEventListener('keydown', evento => {
+        if (evento.key === 'Escape') fecharBuscaGeral(true);
+        if (evento.key === 'Enter') {
+            evento.preventDefault();
+            if (acoesBuscaGeral.length && !document.getElementById('resultadosBuscaGeral')?.hidden) escolherBuscaGeral(0);
+        }
+    });
+}
+
+
+/* ---------------- Atualização automática ----------------
+   Os dados são recarregados quando a pessoa volta para a aba e,
+   com a aba aberta, a cada 2 minutos. Assim o que outra pessoa
+   moveu aparece sem precisar recarregar a página.
+---------------------------------------------------------- */
+
+const INTERVALO_ATUALIZACAO = 2 * 60 * 1000;
+let ultimaAtualizacao = Date.now();
+let atualizandoAgora = false;
+
+async function atualizarDadosSeNecessario(forcar = false) {
+    if (!usuarioLogado || atualizandoAgora || document.hidden) return;
+    if (!forcar && Date.now() - ultimaAtualizacao < INTERVALO_ATUALIZACAO) return;
+    // Não atrapalha quem está no meio de um formulário ou do assistente.
+    if (!document.getElementById('mcModalForm')?.hidden && document.getElementById('mcModalForm')) return;
+    if (document.querySelector('#movimentacaoTela.activeTela') && passoMov > 1) return;
+
+    atualizandoAgora = true;
+    try {
+        await carregarDashboard();
+        ultimaAtualizacao = Date.now();
+    } catch (erro) {
+        console.warn('Atualização automática falhou:', erro?.message || erro);
+    } finally {
+        atualizandoAgora = false;
+    }
+}
+
+function ligarAtualizacaoAutomatica() {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizarDadosSeNecessario(); });
+    window.addEventListener('focus', () => atualizarDadosSeNecessario());
+    setInterval(() => atualizarDadosSeNecessario(), 30 * 1000);
+}
+
+/* =========================================================
    99 · INICIALIZAÇÃO
    Todos os eventos e a partida do sistema ficam aqui
    (antes estavam espalhados em 6 pontos diferentes).
@@ -3436,6 +3934,9 @@ async function baixarCopiaSeguranca() {
 
 function ligarEventos() {
     const ligar = (id, evento, funcao) => document.getElementById(id)?.addEventListener(evento, funcao);
+
+    ligarBuscaGeral();
+    ligarAtualizacaoAutomatica();
 
     /* Onde está? / Fora do lugar */
     let espera = null;
@@ -3464,7 +3965,17 @@ function ligarEventos() {
     document.querySelectorAll('input[name="tipoMovimentacao"]').forEach(radio =>
         radio.addEventListener('change', atualizarAjudaMovimentacao));
     const retorno = document.getElementById('retornoPrevisto');
-    if (retorno) retorno.min = hojeISO();
+    if (retorno) {
+        retorno.min = hojeISO();
+        retorno.addEventListener('change', atualizarAjudaMovimentacao);
+    }
+    ligar('buscaPecaMov', 'input', renderizarPecasMov);
+    ligar('quantidadeMov', 'input', atualizarResumoMov);
+    document.getElementById('buscaPecaMov')?.addEventListener('keydown', evento => {
+        if (evento.key !== 'Enter') return;
+        const unica = document.querySelectorAll('#listaPecasMov .mov-peca');
+        if (unica.length === 1) unica[0].click();
+    });
     atualizarAjudaMovimentacao();
 
     /* Catálogo */
@@ -3496,8 +4007,13 @@ async function iniciarSistema() {
 
     if (data?.session?.user) {
         usuarioLogado = data.session.user;
-        await entrarNoSistema();
-        if (VEIO_DO_LINK_DE_NOVA_SENHA) pedirNovaSenha();
+        try {
+            await entrarNoSistema();
+            if (VEIO_DO_LINK_DE_NOVA_SENHA) pedirNovaSenha();
+        } catch (erro) {
+            if (erro?.message !== 'ACESSO_NEGADO') throw erro;
+            abrirTela('loginTela');
+        }
     } else {
         abrirTela('loginTela');
     }
@@ -3521,6 +4037,7 @@ document.addEventListener('DOMContentLoaded', ligarEventos);
 window.addEventListener('load', () => {
     iniciarSistema().catch(erro => {
         console.error('ERRO AO INICIAR SISTEMA:', erro);
-        alert('Erro ao iniciar o sistema.');
+        abrirTela('loginTela');
+        erroLogin('Não foi possível conectar ao sistema. Confira a internet e recarregue a página.');
     });
 });

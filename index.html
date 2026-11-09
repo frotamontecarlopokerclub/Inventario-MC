@@ -50,94 +50,59 @@
 
             <!-- MENU -->
 
-            <nav class="sidebar-menu">
+            <nav class="sidebar-menu" aria-label="Menu principal">
                 <ul>
-                    <!-- ONDE ESTÁ? -->
-
+                    <li class="menu-grupo" aria-hidden="true">Dia a dia</li>
                     <li id="menuOndeEsta" class="menu-item" style="display: none" onclick="abrirOndeEsta()">
                         <i class="fa-solid fa-magnifying-glass-location"></i>
-
-                        <span> Onde está? </span>
+                        <span>Onde está?</span>
                     </li>
-
-                    <!-- FORA DO LUGAR -->
-
+                    <li id="menuMovimentacao" class="menu-item" style="display: none" onclick="abrirMoverPecas()">
+                        <i class="fa-solid fa-right-left"></i>
+                        <span>Mover peças</span>
+                    </li>
                     <li id="menuForaLugar" class="menu-item" style="display: none" onclick="abrirForaDoLugar()">
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
-
-                        <span> Fora do lugar </span>
-
+                        <span>Fora do lugar</span>
                         <b id="badgeForaLugar" class="menu-badge" hidden>0</b>
                     </li>
-
-                    <!-- DASHBOARD -->
-
-                    <li id="menuDashboard" class="menu-item" style="display: none" onclick="abrirTela('dashboardTela', this)">
-                        <i class="fa-solid fa-chart-line"></i>
-
-                        <span> Dashboard </span>
-                    </li>
-
-                    <!-- CADASTRO -->
-
                     <li id="menuCadastro" class="menu-item" style="display: none" onclick="abrirTela('cadastroTela', this)">
                         <i class="fa-solid fa-box-open"></i>
-
-                        <span> Cadastrar peças </span>
+                        <span>Cadastrar peças</span>
                     </li>
-
-                    <!-- MOVIMENTAÇÃO -->
-
-                    <li id="menuMovimentacao" class="menu-item" style="display: none" onclick="abrirTela('movimentacaoTela', this)">
-                        <i class="fa-solid fa-right-left"></i>
-
-                        <span> Movimentações </span>
-                    </li>
-
-                    <!-- ESTOQUE -->
-
-                    <li id="menuEstoque" class="menu-item" style="display: none" onclick="abrirTela('estoqueTela', this)">
-                        <i class="fa-solid fa-warehouse"></i>
-
-                        <span> Inventário </span>
-                    </li>
-
-                    <!-- CATÁLOGO DE PEÇAS -->
-
-                    <li id="menuProdutos" class="menu-item" style="display: none" onclick="abrirTela('produtosTela', this)">
-                        <i class="fa-solid fa-couch"></i>
-
-                        <span> Catálogo </span>
-                    </li>
-
-                    <!-- RÁDIOS HT -->
-
                     <li id="menuRadios" class="menu-item" style="display: none" onclick="abrirRadios()">
                         <i class="fa-solid fa-walkie-talkie"></i>
-
-                        <span> Rádios HT </span>
+                        <span>Rádios HT</span>
                     </li>
 
-                    <!-- HISTÓRICO -->
-
+                    <li class="menu-grupo" aria-hidden="true">Consultas</li>
+                    <li id="menuEstoque" class="menu-item" style="display: none" onclick="abrirTela('estoqueTela', this)">
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Inventário completo</span>
+                    </li>
+                    <li id="menuProdutos" class="menu-item" style="display: none" onclick="abrirTela('produtosTela', this)">
+                        <i class="fa-solid fa-couch"></i>
+                        <span>Catálogo de peças</span>
+                    </li>
                     <li id="menuHistorico" class="menu-item" style="display: none" onclick="abrirTela('historicoTela', this)">
                         <i class="fa-solid fa-clock-rotate-left"></i>
-
-                        <span> Histórico </span>
+                        <span>Histórico</span>
+                    </li>
+                    <li id="menuDashboard" class="menu-item" style="display: none" onclick="abrirTela('dashboardTela', this)">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Painel geral</span>
                     </li>
 
-                    <!-- ADMINISTRAÇÃO -->
+                    <li class="menu-grupo" aria-hidden="true">Gestão</li>
                     <li id="menuAdministracao" class="menu-item" style="display: none" onclick="abrirAdministracao()">
                         <i class="fa-solid fa-gear"></i>
                         <span>Administração</span>
                     </li>
 
-                    <!-- LOGOUT -->
-
+                    <li class="menu-separador" aria-hidden="true"></li>
                     <li id="menuLogout" class="menu-item" style="display: none" onclick="logout()">
                         <i class="fa-solid fa-right-from-bracket"></i>
-
-                        <span> Sair </span>
+                        <span>Sair</span>
                     </li>
                 </ul>
             </nav>
@@ -171,6 +136,18 @@
                     <span class="header-subtitulo"> GRUPO MONTE CARLO </span>
 
                     <h1>Inventário Central</h1>
+                </div>
+
+                <div class="busca-geral" role="search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        id="buscaGeral"
+                        placeholder="Procurar peça, local ou rádio..."
+                        autocomplete="off"
+                        aria-label="Procurar em todo o sistema"
+                    />
+                    <div id="resultadosBuscaGeral" class="busca-geral-resultados" hidden></div>
                 </div>
 
                 <div id="headerUsuario" class="header-usuario" style="display: none">
@@ -211,7 +188,7 @@
 
                         <!-- FORM LOGIN -->
 
-                        <form id="loginForm" onsubmit="login(event); return false;">
+                        <form id="loginForm" novalidate onsubmit="login(event); return false;">
                             <div class="input-group">
                                 <label for="email">
                                     <i class="fa-solid fa-envelope"></i>
@@ -257,6 +234,8 @@
 
                                 Consultar Inventário
                             </button>
+
+                            <p id="loginErro" class="login-erro" role="alert" hidden></p>
 
                             <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
                         </form>
@@ -532,7 +511,7 @@
                     <div>
                         <span> VISÃO GERAL </span>
 
-                        <h2>Dashboard</h2>
+                        <h2>Painel geral</h2>
 
                         <p>Acompanhe o inventário do Grupo Monte Carlo.</p>
                     </div>
@@ -648,7 +627,7 @@
                                 </select>
 
                                 <select id="filtroSubsetorDashboard" onchange="filtrarDashboard()">
-                                    <option value="">Todos os Subsetores</option>
+                                    <option value="">Todos os setores</option>
                                 </select>
                             </div>
                         </div>
@@ -661,7 +640,7 @@
 
                                         <th>Local</th>
 
-                                        <th>Subsetor</th>
+                                        <th>Setor</th>
 
                                         <th>Quantidade</th>
                                     </tr>
@@ -874,160 +853,133 @@
             <section id="movimentacaoTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> TRANSFERÊNCIA </span>
-
-                        <h2>Movimentações</h2>
-
-                        <p>Leve peças de um lugar para outro — temporariamente (deve voltar) ou de forma definitiva.</p>
+                        <span> MOVER PEÇAS </span>
+                        <h2>Mover peças</h2>
+                        <p>Leve peças de um lugar para outro em 3 passos.</p>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="movimentacao-alerta">
-                        <i class="fa-solid fa-circle-info"></i>
+                <div class="card mov-assistente">
+                    <ol class="mov-passos" aria-label="Passos">
+                        <li data-passo="1" class="atual"><b>1</b><span>Qual peça?</span></li>
+                        <li data-passo="2"><b>2</b><span>Para onde?</span></li>
+                        <li data-passo="3"><b>3</b><span>Quantas?</span></li>
+                    </ol>
 
-                        <div>
-                            <strong> Movimente só a quantidade necessária </strong>
-
-                            <p>
-                                Ex.: 10 das 40 cadeiras. O sistema guarda de onde elas são e mostra o que ainda não voltou em "Fora do
-                                lugar".
-                            </p>
+                    <!-- PASSO 1 -->
+                    <div class="mov-etapa" data-etapa="1">
+                        <h3 class="mov-pergunta">Qual peça vai sair do lugar?</h3>
+                        <div class="mov-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search" id="buscaPecaMov" placeholder="Digite o nome da peça ou o local..." autocomplete="off" />
                         </div>
+                        <div id="listaPecasMov" class="mov-lista-pecas"></div>
+                        <select id="itemMov" hidden aria-hidden="true" tabindex="-1">
+                            <option value="">Selecione a peça</option>
+                        </select>
                     </div>
 
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fa-solid fa-box"></i>
+                    <!-- PASSO 2 -->
+                    <div class="mov-etapa" data-etapa="2" hidden>
+                        <div class="mov-escolhida" id="movPecaEscolhida"></div>
+                        <input type="hidden" id="origemNome" />
 
-                            Item
-                        </div>
-
+                        <h3 class="mov-pergunta">Para onde ela vai?</h3>
                         <div class="grid-2">
                             <div class="input-group">
-                                <label for="itemMov"> Peça </label>
-
-                                <select id="itemMov" onchange="preencherOrigemAutomaticamente()">
-                                    <option value="">Selecione o Item</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="origemNome"> Está em </label>
-
-                                <input type="text" id="origemNome" placeholder="Local Atual" readonly />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fa-solid fa-location-arrow"></i>
-
-                            Destino
-                        </div>
-
-                        <div class="grid-2">
-                            <div class="input-group">
-                                <label for="destino"> Novo Local </label>
-
+                                <label for="destino">Local</label>
                                 <select id="destino" required>
-                                    <option value="">Selecione o Destino</option>
+                                    <option value="">Selecione o local</option>
                                 </select>
                             </div>
-
                             <div class="input-group">
-                                <label for="destinoSubsetor">Setor de destino</label>
+                                <label for="destinoSubsetor">Setor (se souber)</label>
                                 <select id="destinoSubsetor">
                                     <option value="">Local inteiro (sem setor definido)</option>
                                 </select>
                             </div>
-
-                            <div class="input-group">
-                                <label for="quantidadeMov"> Quantidade </label>
-
-                                <input type="number" id="quantidadeMov" min="1" value="1" />
-
-                                <small id="ajudaQuantidadeMov"></small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="fa-solid fa-route"></i>
-
-                            Tipo de movimentação
                         </div>
 
-                        <div class="controle-grid">
+                        <h3 class="mov-pergunta">Ela vai voltar para o lugar dela depois?</h3>
+                        <div class="controle-grid mov-tipo">
                             <label class="controle-option">
                                 <input type="radio" name="tipoMovimentacao" value="temporaria" checked />
                                 <div>
                                     <i class="fa-solid fa-clock-rotate-left"></i>
-                                    <strong>Temporária</strong>
-                                    <span>A peça vai e deve voltar (evento, empréstimo, conserto). Continua sendo do local de origem.</span>
+                                    <strong>Sim, vai voltar</strong>
+                                    <span>Evento, empréstimo ou conserto. Ela continua sendo do lugar de origem e aparece em "Fora do lugar".</span>
                                 </div>
                             </label>
-
                             <label class="controle-option">
                                 <input type="radio" name="tipoMovimentacao" value="definitiva" />
                                 <div>
                                     <i class="fa-solid fa-house-circle-check"></i>
-                                    <strong>Definitiva</strong>
-                                    <span>Remanejamento: o destino passa a ser o novo local fixo da peça.</span>
+                                    <strong>Não, vai ficar lá</strong>
+                                    <span>Mudança de lugar. O novo local passa a ser o lugar fixo da peça.</span>
                                 </div>
                             </label>
                         </div>
-
                         <div class="grid-2 mov-retorno">
                             <div class="input-group" id="grupoRetornoPrevisto">
-                                <label for="retornoPrevisto">Retorno previsto (opcional)</label>
+                                <label for="retornoPrevisto">Volta até quando? (opcional)</label>
                                 <input type="date" id="retornoPrevisto" />
                                 <small>Depois desta data, a peça aparece como "retorno atrasado".</small>
                             </div>
                         </div>
-
                         <p id="infoOrigemFixa" class="mov-info-origem"></p>
                     </div>
 
-                    <div class="form-section">
-                        <div class="grid-2">
-                            <div class="input-group">
-                                <label for="statusMov"> Alterar Status </label>
+                    <!-- PASSO 3 -->
+                    <div class="mov-etapa" data-etapa="3" hidden>
+                        <h3 class="mov-pergunta">Quantas peças vão?</h3>
+                        <div class="mov-quantidade">
+                            <button type="button" class="mov-qtd-btn" onclick="ajustarQuantidadeMov(-1)" aria-label="Menos uma">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <input type="number" id="quantidadeMov" min="1" value="1" inputmode="numeric" aria-label="Quantidade" />
+                            <button type="button" class="mov-qtd-btn" onclick="ajustarQuantidadeMov(1)" aria-label="Mais uma">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        <small id="ajudaQuantidadeMov" class="mov-ajuda-qtd"></small>
 
-                                <select id="statusMov">
-                                    <option value="">Manter status atual</option>
+                        <div id="movResumo" class="mov-resumo"></div>
 
-                                    <option value="Ativo">Ativo</option>
-
-                                    <option value="Em manutenção">Em manutenção</option>
-
-                                    <option value="Baixado">Baixado</option>
-
-                                    <option value="Extraviado">Extraviado</option>
-                                </select>
+                        <details class="mov-mais">
+                            <summary><i class="fa-solid fa-sliders"></i> Mais opções (observação, estado da peça)</summary>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="statusMov">Estado da peça</label>
+                                    <select id="statusMov">
+                                        <option value="">Manter como está</option>
+                                        <option value="Ativo">Ativo</option>
+                                        <option value="Em manutenção">Em manutenção</option>
+                                        <option value="Baixado">Baixado</option>
+                                        <option value="Extraviado">Extraviado</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="observacaoMov"> Observação </label>
-
-                            <textarea id="observacaoMov" placeholder="Informe o motivo ou observação da movimentação..."></textarea>
-                        </div>
+                            <div class="input-group">
+                                <label for="observacaoMov">Observação</label>
+                                <textarea id="observacaoMov" placeholder="Ex.: levada para o evento de sábado"></textarea>
+                            </div>
+                        </details>
                     </div>
 
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="limparFormularioMovimentacao()">
-                            <i class="fa-solid fa-rotate-left"></i>
+                    <p id="movErro" class="mov-erro" hidden></p>
 
-                            Limpar
+                    <div class="form-actions mov-acoes">
+                        <button type="button" class="btn-secondary" id="btnMovVoltar" onclick="voltarPassoMov()" hidden>
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Voltar
                         </button>
-
-                        <button type="button" class="btn-primary" onclick="movimentarItem()">
-                            <i class="fa-solid fa-right-left"></i>
-
-                            Movimentar Item
+                        <button type="button" class="btn-secondary" id="btnMovRecomecar" onclick="limparFormularioMovimentacao()">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Recomeçar
+                        </button>
+                        <button type="button" class="btn-primary" id="btnMovAvancar" onclick="avancarPassoMov()">
+                            Continuar
+                            <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
@@ -1042,7 +994,7 @@
                     <div>
                         <span> CONTROLE </span>
 
-                        <h2>Inventário</h2>
+                        <h2>Inventário completo</h2>
 
                         <p>Todas as peças, onde estão e qual é o local fixo de cada grupo.</p>
                     </div>
@@ -1066,7 +1018,7 @@
                             <i class="fa-solid fa-sitemap"></i>
 
                             <select id="filtroSubsetor" onchange="filtrarItens()" aria-label="Filtrar por setor">
-                                <option value="">Todos os Subsetores</option>
+                                <option value="">Todos os setores</option>
                             </select>
                         </div>
 
@@ -1315,7 +1267,7 @@
                     <div>
                         <span>GESTÃO DO SISTEMA</span>
                         <h2>Administração</h2>
-                        <p>Gerencie usuários, subsetores e acompanhe a rastreabilidade das ações.</p>
+                        <p>Gerencie usuários, locais, setores e acompanhe a rastreabilidade das ações.</p>
                     </div>
                 </div>
 
@@ -1333,7 +1285,7 @@
                             </div>
                             <div class="input-group">
                                 <label for="novoUsuarioSenha">Senha inicial</label
-                                ><input id="novoUsuarioSenha" type="password" minlength="6" placeholder="Mínimo 6 caracteres" />
+                                ><input id="novoUsuarioSenha" type="password" minlength="10" placeholder="Mínimo 10 caracteres, com letras e números" />
                             </div>
                             <div class="input-group">
                                 <label for="novoUsuarioPerfil">Perfil</label>
@@ -1371,7 +1323,7 @@
                     </div>
 
                     <div class="card">
-                        <div class="form-section-title"><i class="fa-solid fa-sitemap"></i> Criar subsetor</div>
+                        <div class="form-section-title"><i class="fa-solid fa-sitemap"></i> Criar setor</div>
                         <div class="grid-2 admin-form-grid">
                             <div class="input-group">
                                 <label for="adminSubsetorLocal">Local</label
@@ -1386,19 +1338,19 @@
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn-primary" onclick="criarSubsetor()">
-                                <i class="fa-solid fa-plus"></i> Criar subsetor
+                                <i class="fa-solid fa-plus"></i> Criar setor
                             </button>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="form-section-title"><i class="fa-solid fa-list-check"></i> Subsetores ativos</div>
+                        <div class="form-section-title"><i class="fa-solid fa-list-check"></i> Setores ativos</div>
                         <div class="table-area">
                             <table class="inventory-table admin-table">
                                 <thead>
                                     <tr>
                                         <th>Local</th>
-                                        <th>Subsetor</th>
+                                        <th>Setor</th>
                                         <th>Status</th>
                                         <th>Ações</th>
                                     </tr>
