@@ -629,10 +629,6 @@ async function login(evento) {
 /* Depois do login (ou de uma sessão já salva): perfil, menus, dados. */
 async function entrarNoSistema() {
     await verificarPerfil();
-    if (!(await garantirSegundaEtapa())) {
-        await logout();
-        return;
-    }
     document.body.classList.remove('login-mode');
     atualizarMenus();
     atualizarUsuarioInterface();
@@ -2332,7 +2328,7 @@ async function abrirAdministracao() {
     abrirTela('administracaoTela', document.getElementById('menuAdministracao'));
     await carregarSubsetores();
     renderizarLocaisAdmin();
-    await Promise.all([carregarUsuariosAdmin(), carregarAuditoria(), atualizarStatusSegundaEtapa()]);
+    await Promise.all([carregarUsuariosAdmin(), carregarAuditoria()]);
 }
 
 
@@ -3345,166 +3341,9 @@ async function editarModeloTermo() {
 
 /* =========================================================
    15 · SEGURANÇA
-   · Verificação em 2 etapas (senha + código do celular)
-     para Gestor e Administrador.
    · Conferência de integridade do histórico.
+   · Cópia de segurança de todos os dados.
 ========================================================= */
-
-const MENSAGEM_CODIGO_ERRADO = 'Código incorreto ou vencido. Confira se o relógio do celular está certo e digite o código que aparece agora.';
-
-/*
-   Chamada logo depois do login. Devolve true para seguir, false se a
-   pessoa desistiu (nesse caso o sistema sai da conta).
-*/
-async function garantirSegundaEtapa() {
-    if (!PERFIS_GESTAO.includes(perfilUsuario)) return true;
-
-    const { data: nivel } = await supabaseClient.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (nivel?.currentLevel === 'aal2') return true;
-
-    const fator = await fatorVerificado();
-    if (fator) return pedirCodigoSegundaEtapa(fator.id);
-
-    if (!(await segundaEtapaObrigatoria())) return true;
-    return cadastrarSegundaEtapa({ primeiraVez: true });
-}
-
-async function fatorVerificado() {
-    const { data, error } = await supabaseClient.auth.mfa.listFactors();
-    if (error) throw error;
-    return (data?.totp || []).find(fator => fator.status === 'verified') || null;
-}
-
-/* O banco diz se a regra está ligada (configuração "exigir_2fa_gestao"). */
-async function segundaEtapaObrigatoria() {
-    const { data, error } = await supabaseClient.rpc('minha_seguranca');
-    if (error) return false;     // banco ainda sem a atualização v7
-    return data?.exige_2fa === true;
-}
-
-function campoCodigo() {
-    return {
-        id: 'codigo', rotulo: 'Código de 6 números', tipo: 'text', obrigatorio: true, largo: true,
-        inputmode: 'numeric', maxlength: 6, autocomplete: 'one-time-code', placeholder: '000000'
-    };
-}
-
-function lerCodigo(codigo) {
-    const numeros = String(codigo || '').replace(/\D/g, '');
-    if (numeros.length !== 6) throw new Error('O código tem 6 números.');
-    return numeros;
-}
-
-function pedirCodigoSegundaEtapa(factorId) {
-    return new Promise(resolve => {
-        abrirFormulario({
-            titulo: 'Verificação em 2 etapas',
-            subtitulo: 'Abra o aplicativo autenticador no celular e digite o código do Inventário Monte Carlo.',
-            textoSalvar: 'Confirmar',
-            textoCancelar: 'Sair',
-            travado: true,
-            campos: [campoCodigo()],
-            aoSalvar: async ({ codigo }) => {
-                const { error } = await supabaseClient.auth.mfa.challengeAndVerify({ factorId, code: lerCodigo(codigo) });
-                if (error) throw new Error(MENSAGEM_CODIGO_ERRADO);
-                resolve(true);
-            },
-            aoCancelar: () => resolve(false)
-        });
-    });
-}
-
-/*
-   Cadastro do celular: mostra o QR Code para o aplicativo autenticador
-   (Google Authenticator, Microsoft Authenticator, Authy…) e confirma
-   com o primeiro código.
-*/
-async function cadastrarSegundaEtapa({ primeiraVez = false } = {}) {
-    // Cadastros começados e não concluídos atrapalham um novo.
-    const { data: lista } = await supabaseClient.auth.mfa.listFactors();
-    for (const fator of (lista?.all || []).filter(f => f.status !== 'verified')) {
-        await supabaseClient.auth.mfa.unenroll({ factorId: fator.id });
-    }
-
-    const { data, error } = await supabaseClient.auth.mfa.enroll({
-        factorType: 'totp',
-        issuer: 'Inventário Monte Carlo',
-        friendlyName: `Celular ${new Date().toLocaleString('pt-BR')}`
-    });
-    if (error) throw error;
-
-    // O Supabase manda o SVG cru dentro do endereço; caracteres como "#"
-    // quebrariam a imagem, então o SVG é codificado.
-    const qr = String(data.totp.qr_code || '').replace(/^(data:image\/svg\+xml;utf-8,)(<[\s\S]*)$/,
-        (_, prefixo, svg) => prefixo + encodeURIComponent(svg));
-    const segredo = String(data.totp.secret || '').replace(/(.{4})/g, '$1 ').trim();
-
-    const html = `
-        <div class="dois-fatores">
-            <ol>
-                <li>Instale no celular um aplicativo autenticador
-                    (<b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ou <b>Authy</b>).</li>
-                <li>No aplicativo, toque em <b>+</b> e leia o QR Code abaixo.</li>
-                <li>Digite o código de 6 números que aparecer.</li>
-            </ol>
-            <img class="dois-fatores-qr" src="${escaparHTML(qr)}" alt="QR Code para o aplicativo autenticador">
-            <p class="dois-fatores-chave">Não consegue ler? Digite esta chave no aplicativo:<br>
-                <code>${escaparHTML(segredo)}</code></p>
-        </div>`;
-
-    return new Promise(resolve => {
-        abrirFormulario({
-            titulo: primeiraVez ? 'Ative a verificação em 2 etapas' : 'Configurar em outro celular',
-            subtitulo: primeiraVez
-                ? 'Por segurança, gestores e administradores entram com senha + código do celular.'
-                : 'Depois de confirmar, o celular antigo deixa de valer.',
-            textoSalvar: 'Ativar',
-            textoCancelar: primeiraVez ? 'Sair' : 'Cancelar',
-            travado: primeiraVez,
-            campos: [{ id: 'instrucoes', tipo: 'html', html }, campoCodigo()],
-            aoSalvar: async ({ codigo }) => {
-                const { error: erro } = await supabaseClient.auth.mfa.challengeAndVerify({
-                    factorId: data.id, code: lerCodigo(codigo)
-                });
-                if (erro) throw new Error(MENSAGEM_CODIGO_ERRADO);
-                resolve(data.id);
-            },
-            aoCancelar: async () => {
-                await supabaseClient.auth.mfa.unenroll({ factorId: data.id }).catch(() => {});
-                resolve(false);
-            }
-        });
-    });
-}
-
-async function reconfigurarSegundaEtapa() {
-    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador.', 'erro');
-    try {
-        const antigo = await fatorVerificado();
-        const novo = await cadastrarSegundaEtapa();
-        if (!novo) return;
-        if (antigo && antigo.id !== novo) await supabaseClient.auth.mfa.unenroll({ factorId: antigo.id });
-        avisar('Verificação em 2 etapas configurada no novo celular.');
-        atualizarStatusSegundaEtapa();
-    } catch (erro) {
-        console.error('ERRO 2FA:', erro);
-        avisar('Não foi possível configurar: ' + traduzirErro(erro), 'erro');
-    }
-}
-
-async function atualizarStatusSegundaEtapa() {
-    const status = document.getElementById('status2FA');
-    if (!status) return;
-    try {
-        const fator = await fatorVerificado();
-        status.textContent = fator
-            ? `Ativa na sua conta desde ${dataCurta(fator.created_at)}.`
-            : 'Ainda não ativada na sua conta.';
-    } catch {
-        status.textContent = '';
-    }
-}
-
 
 /* ---------------- Integridade do histórico ---------------- */
 
