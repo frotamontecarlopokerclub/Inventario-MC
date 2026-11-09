@@ -39,10 +39,8 @@ let radios = [];
    ainda não existe. O sistema carrega a lista real do banco ao iniciar.
 */
 let LOCAIS = [
-    'CASA 1', 'CASA 2', 'CASA 3', 'CASA 1 ( FUNCIONARIOS)', 'CASA 2 ( FUNCIONARIOS)', 'CASA 3 ( FUNCIONARIOS)',
-    'CASA 4 ( FUNCIONARIOS)', 'MANUTENCAO', 'CD1', 'CD2', 'PREDIO CARDOSO', 'DORYO', 'ESCRITÓRIO 1', 'ESCRITÓRIO 2',
-    'ESCRITÓRIO 3', 'ESTACIONAMENTO 1', 'ESTACIONAMENTO 2', 'ESTACIONAMENTO 3', 'M.C.', 'M.G.', 'DESCARTE/BAIXA TOTAL',
-    'CASA 4', 'CASA 5', 'CASA 6'
+    'MONTE CARLO POKER CLUBE', 'MIRAGE', 'DORYO', 'ESCRITÓRIO CENTRAL', 'ESCRITÓRIO GUARARAPES',
+    'CASAS DO CHEFE', 'CASAS DE FUNCIONÁRIOS', 'FLATS DO CHEFE', 'DEPÓSITOS'
 ].map((nome, indice) => ({ id: indice + 1, nome }));
 
 let LOCAIS_TODOS = LOCAIS.map(local => ({ ...local, ativo: true }));
@@ -883,7 +881,8 @@ async function carregarLocaisBanco() {
         if (error) throw error;
         if (!data?.length) return;
 
-        LOCAIS_TODOS = data;
+        // Ativos primeiro (na ordem definida); os antigos/inativos no fim.
+        LOCAIS_TODOS = [...data].sort((a, b) => Number(b.ativo !== false) - Number(a.ativo !== false));
         LOCAIS = data.filter(local => local.ativo !== false).map(local => ({ id: local.id, nome: local.nome }));
     } catch (erro) {
         console.warn('Tabela de locais indisponível; usando a lista reserva.', erro?.message || erro);
@@ -907,6 +906,48 @@ function localCompleto(localId, subsetorId) {
 }
 
 const formatarLocalSubsetor = localCompleto;
+
+/* Local / setor + o detalhe escrito à mão ("3º andar", "Casa 3"). */
+function lugarCompleto(localId, subsetorId, ondeFica) {
+    const base = localCompleto(localId, subsetorId);
+    return ondeFica ? `${base} · ${ondeFica}` : base;
+}
+
+/* Onde a peça está agora / qual é o lugar fixo dela. */
+function lugarDoItem(item) {
+    return lugarCompleto(item?.local_id, item?.subsetor_id, item?.onde_fica);
+}
+
+function lugarFixoDoItem(item) {
+    return lugarCompleto(item?.origem_local_id, item?.origem_subsetor_id, item?.origem_onde_fica);
+}
+
+function mesmoTexto(a, b) {
+    return normalizarTexto(a) === normalizarTexto(b);
+}
+
+/* Sugestões para o campo "Onde fica": o que já foi usado no local + andares. */
+const SUGESTOES_ONDE_FICA = ['Térreo', '1º andar', '2º andar', '3º andar', '4º andar', '5º andar', 'Subsolo', 'Mezanino'];
+
+function sugestoesOndeFica(localId) {
+    const usados = new Map();
+    itens.forEach(item => {
+        [[item.local_id, item.onde_fica], [item.origem_local_id, item.origem_onde_fica]].forEach(([local, texto]) => {
+            if (!texto || (localId && String(local) !== String(localId))) return;
+            usados.set(normalizarTexto(texto), texto);
+        });
+    });
+    SUGESTOES_ONDE_FICA.forEach(texto => {
+        if (!usados.has(normalizarTexto(texto))) usados.set(normalizarTexto(texto), texto);
+    });
+    return [...usados.values()];
+}
+
+function preencherSugestoesOndeFica(idLista, localId) {
+    const lista = document.getElementById(idLista);
+    if (!lista) return;
+    lista.innerHTML = sugestoesOndeFica(localId).map(texto => `<option value="${escaparHTML(texto)}"></option>`).join('');
+}
 
 function setoresDoLocal(localId) {
     return subsetores
@@ -947,7 +988,7 @@ function popularSubsetoresMovimentacao() {
     if (!select) return;
     preencherSelect(select,
         destino ? setoresDoLocal(destino).map(s => ({ valor: s.id, texto: s.nome })) : [],
-        'Local inteiro (sem setor definido)');
+        'Sem setor');
 }
 
 function popularFiltroSubsetoresEstoque() {
@@ -1019,7 +1060,8 @@ function estaForaDoLugar(item) {
     if (!temOrigem(item) || quantidadeItem(item) <= 0) return false;
     if (['Baixado', 'Extraviado'].includes(item.status)) return false;
     return String(item.local_id) !== String(item.origem_local_id) ||
-           String(item.subsetor_id || '') !== String(item.origem_subsetor_id || '');
+           String(item.subsetor_id || '') !== String(item.origem_subsetor_id || '') ||
+           !mesmoTexto(item.onde_fica, item.origem_onde_fica);
 }
 
 function retornoAtrasado(item) {
@@ -1039,7 +1081,7 @@ function seloFora(item) {
         : '';
     return `<span class="selo-fora ${atrasado ? 'atrasado' : ''}">
                 <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                Fora do lugar · é de ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}${prazo}
+                Fora do lugar · é de ${escaparHTML(lugarFixoDoItem(item))}${prazo}
             </span>`;
 }
 
@@ -1443,7 +1485,7 @@ function popularFiltroLocalOndeEsta() {
     if (!select) return;
     const atual = select.value;
     select.innerHTML = '<option value="">Todos os locais</option>' +
-        LOCAIS_TODOS.map(local => `<option value="${local.id}">${escaparHTML(nomeLocal(local.id))}</option>`).join('');
+        LOCAIS.map(local => `<option value="${local.id}">${escaparHTML(local.nome)}</option>`).join('');
     if ([...select.options].some(opcao => opcao.value === atual)) select.value = atual;
 }
 
@@ -1483,8 +1525,8 @@ function renderizarOndeEsta() {
         if (!busca) return true;
         const texto = normalizarTexto([
             item.nome, item.tipo, item.descricao,
-            localCompleto(item.local_id, item.subsetor_id),
-            temOrigem(item) ? localCompleto(item.origem_local_id, item.origem_subsetor_id) : ''
+            lugarDoItem(item),
+            temOrigem(item) ? lugarFixoDoItem(item) : ''
         ].join(' '));
         return busca.split(' ').every(parte => texto.includes(parte));
     });
@@ -1524,7 +1566,7 @@ function renderizarOndeEsta() {
                     <div class="onde-local">
                         <i class="fa-solid fa-location-dot"></i>
                         <div>
-                            <strong>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</strong>
+                            <strong>${escaparHTML(lugarDoItem(item))}</strong>
                             ${item.status !== 'Ativo' ? `<span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status)}</span>` : ''}
                             ${seloFora(item)}
                         </div>
@@ -1616,7 +1658,7 @@ function renderizarForaDoLugar() {
         estaForaDoLugar(item) &&
         (!origem || String(item.origem_local_id) === origem) &&
         (!somenteAtrasados || retornoAtrasado(item)) &&
-        (!busca || normalizarTexto(`${item.nome} ${item.tipo} ${localCompleto(item.local_id, item.subsetor_id)} ${localCompleto(item.origem_local_id, item.origem_subsetor_id)}`).includes(busca))
+        (!busca || normalizarTexto(`${item.nome} ${item.tipo} ${lugarDoItem(item)} ${lugarFixoDoItem(item)}`).includes(busca))
     ).sort((a, b) =>
         Number(retornoAtrasado(b)) - Number(retornoAtrasado(a)) ||
         String(a.fora_desde || '').localeCompare(String(b.fora_desde || ''))
@@ -1646,9 +1688,9 @@ function renderizarForaDoLugar() {
                 <td><strong>${escaparHTML(item.nome)}</strong>
                     ${item.status !== 'Ativo' ? `<small class="celula-sub">${escaparHTML(item.status)}</small>` : ''}</td>
                 <td class="num"><strong>${numero.format(quantidadeItem(item))}</strong></td>
-                <td>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</td>
+                <td>${escaparHTML(lugarDoItem(item))}</td>
                 <td><span class="destino-origem"><i class="fa-solid fa-house"></i>
-                    ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}</span></td>
+                    ${escaparHTML(lugarFixoDoItem(item))}</span></td>
                 <td>${item.fora_desde
                     ? `${dataCurta(item.fora_desde)}<small class="celula-sub">${dias === 0 ? 'hoje' : `há ${dias} dia(s)`}</small>`
                     : '—'}</td>
@@ -1682,7 +1724,7 @@ function devolverPeca(id) {
 
     abrirFormulario({
         titulo: `Devolver ${item.nome}`,
-        subtitulo: `De ${localCompleto(item.local_id, item.subsetor_id)} para ${localCompleto(item.origem_local_id, item.origem_subsetor_id)}`,
+        subtitulo: `De ${lugarDoItem(item)} para ${lugarFixoDoItem(item)}`,
         textoSalvar: 'Confirmar devolução',
         campos: [
             { id: 'quantidade', rotulo: 'Quantidade que voltou', tipo: 'number', min: 1, step: '1', valor: quantidade,
@@ -1780,7 +1822,7 @@ function opcoesSetoresDistribuicao(localId, selecionado = '') {
         .filter(setor => String(setor.local_id) === String(localId) && setor.ativo !== false)
         .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR', { sensitivity: 'base' }));
 
-    return '<option value="">Local inteiro (sem setor definido)</option>' +
+    return '<option value="">Sem setor</option>' +
         setores.map(setor =>
             `<option value="${setor.id}" ${String(setor.id) === String(selecionado) ? 'selected' : ''}>${escaparHTML(setor.nome)}</option>`
         ).join('') +
@@ -1798,6 +1840,8 @@ function adicionarLinhaDistribuicao(dados = {}) {
     linha.innerHTML = `
         <select class="dist-local" aria-label="Local">${opcoesLocaisDistribuicao(dados.local_id)}</select>
         <select class="dist-setor" aria-label="Setor">${opcoesSetoresDistribuicao(dados.local_id, dados.subsetor_id)}</select>
+        <input class="dist-onde" type="text" maxlength="80" list="sugestoesOndeFicaCad" autocomplete="off"
+               placeholder="Onde fica (opcional)" aria-label="Onde fica" value="${escaparHTML(dados.onde_fica || '')}">
         <input class="dist-qtd" type="number" min="1" step="1" inputmode="numeric" placeholder="Qtde" aria-label="Quantidade"
                value="${dados.quantidade ? Number(dados.quantidade) : ''}">
         <button type="button" class="btn-icon btn-excluir dist-remover" title="Remover linha" aria-label="Remover linha">
@@ -1817,6 +1861,9 @@ function adicionarLinhaDistribuicao(dados = {}) {
         else recalcularDistribuicao();
     });
     linha.querySelector('.dist-qtd').addEventListener('input', recalcularDistribuicao);
+    const onde = linha.querySelector('.dist-onde');
+    onde.addEventListener('input', recalcularDistribuicao);
+    onde.addEventListener('focus', () => preencherSugestoesOndeFica('sugestoesOndeFicaCad', local.value));
     linha.querySelector('.dist-remover').addEventListener('click', () => {
         linha.remove();
         if (!area.children.length) adicionarLinhaDistribuicao();
@@ -1832,6 +1879,7 @@ function lerDistribuicao() {
         elemento: linha,
         local_id: linha.querySelector('.dist-local').value,
         subsetor_id: linha.querySelector('.dist-setor').value === NOVO_SETOR ? '' : linha.querySelector('.dist-setor').value,
+        onde_fica: (linha.querySelector('.dist-onde')?.value || '').trim().replace(/\s+/g, ' '),
         quantidade: parseInt(linha.querySelector('.dist-qtd').value || '0', 10)
     }));
 }
@@ -1844,12 +1892,12 @@ function recalcularDistribuicao() {
 
     definirTexto('totalDistribuido', numero.format(total));
 
-    // Marca linhas repetidas (mesmo local + setor).
+    // Marca linhas repetidas (mesmo local + setor + onde fica).
     const vistos = new Map();
     linhas.forEach(linha => {
         linha.elemento.classList.remove('repetida');
         if (!linha.local_id) return;
-        const chave = `${linha.local_id}|${linha.subsetor_id}`;
+        const chave = `${linha.local_id}|${linha.subsetor_id}|${normalizarTexto(linha.onde_fica)}`;
         if (vistos.has(chave)) {
             linha.elemento.classList.add('repetida');
             vistos.get(chave).classList.add('repetida');
@@ -1964,7 +2012,7 @@ function mostrarDistribuicaoAtual() {
         </div>
         <ul>${grupos
             .sort((a, b) => quantidadeItem(b) - quantidadeItem(a))
-            .map(item => `<li><span>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}
+            .map(item => `<li><span>${escaparHTML(lugarDoItem(item))}
                 ${estaForaDoLugar(item) ? '<em>fora do lugar</em>' : ''}</span>
                 <strong>${numero.format(quantidadeItem(item))}</strong></li>`).join('')}</ul>`;
 }
@@ -2038,6 +2086,7 @@ async function salvarItem(event) {
             p_distribuicao: linhas.map(linha => ({
                 local_id: Number(linha.local_id),
                 subsetor_id: linha.subsetor_id ? Number(linha.subsetor_id) : null,
+                onde_fica: linha.onde_fica || null,
                 quantidade: linha.quantidade
             })),
             p_categoria: valor('tipoItem') || null,
@@ -2138,7 +2187,7 @@ function renderizarPecasMov() {
     const termo = normalizarTexto(valorCampo('buscaPecaMov'));
     const todas = pecasMovimentaveis();
     const achadas = !termo ? todas : todas.filter(item => normalizarTexto([
-        item.nome, item.tipo, nomeLocal(item.local_id), nomeSubsetor(item.subsetor_id)
+        item.nome, item.tipo, lugarDoItem(item)
     ].join(' ')).includes(termo));
 
     if (!todas.length) {
@@ -2162,7 +2211,7 @@ function renderizarPecasMov() {
                 ${fotoPequena(fotoDoItem(item), 'mov-peca-foto')}
                 <span class="mov-peca-texto">
                     <strong>${escaparHTML(item.nome)}</strong>
-                    <small><i class="fa-solid fa-location-dot"></i> ${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</small>
+                    <small><i class="fa-solid fa-location-dot"></i> ${escaparHTML(lugarDoItem(item))}</small>
                     ${avisos ? `<span class="mov-peca-avisos">${avisos}</span>` : ''}
                 </span>
                 <span class="mov-peca-qtd"><b>${numero.format(quantidadeItem(item))}</b><small>peça(s)</small></span>
@@ -2208,7 +2257,7 @@ function mostrarPassoMov(passo) {
         escolhida.innerHTML = item ? `
             <div><span>Peça escolhida</span>
                 <strong>${escaparHTML(item.nome)}</strong>
-                <small>Está em ${escaparHTML(localCompleto(item.local_id, item.subsetor_id))} · ${numero.format(quantidadeItem(item))} peça(s)</small>
+                <small>Está em ${escaparHTML(lugarDoItem(item))} · ${numero.format(quantidadeItem(item))} peça(s)</small>
             </div>
             <button type="button" class="btn-link" onclick="mostrarPassoMov(1)">Trocar</button>` : '';
     }
@@ -2235,8 +2284,9 @@ function avancarPassoMov() {
         if (!item) return mostrarPassoMov(1);
         const destino = valorCampo('destino');
         if (!destino) return erroMov('Escolha o local para onde a peça vai.');
-        if (String(destino) === String(item.local_id) && valorCampo('destinoSubsetor') === String(item.subsetor_id || '')) {
-            return erroMov('A peça já está neste lugar. Escolha outro local ou setor.');
+        if (String(destino) === String(item.local_id) && valorCampo('destinoSubsetor') === String(item.subsetor_id || '') &&
+            mesmoTexto(valorCampo('destinoOndeFica'), item.onde_fica)) {
+            return erroMov('A peça já está neste lugar. Escolha outro local, setor ou "onde fica".');
         }
         return mostrarPassoMov(3);
     }
@@ -2261,13 +2311,13 @@ function atualizarResumoMov() {
     if (!resumo || !item) return;
 
     const quantidade = parseInt(valorCampo('quantidadeMov') || '0', 10) || 0;
-    const destino = localCompleto(valorCampo('destino'), valorCampo('destinoSubsetor') || null);
+    const destino = lugarCompleto(valorCampo('destino'), valorCampo('destinoSubsetor') || null, valorCampo('destinoOndeFica'));
     const temporaria = document.querySelector('input[name="tipoMovimentacao"]:checked')?.value !== 'definitiva';
     const retorno = valorCampo('retornoPrevisto');
 
     resumo.innerHTML = `<i class="fa-solid fa-truck-ramp-box"></i>
         <p>Vão sair <b>${numero.format(quantidade)}</b> × <b>${escaparHTML(item.nome)}</b>
-        de <b>${escaparHTML(localCompleto(item.local_id, item.subsetor_id))}</b>
+        de <b>${escaparHTML(lugarDoItem(item))}</b>
         para <b>${escaparHTML(destino)}</b>.
         ${temporaria
             ? (retorno ? `Devem voltar até <b>${escaparHTML(dataCurta(retorno))}</b>.` : 'Depois devem voltar para o lugar delas.')
@@ -2283,14 +2333,16 @@ function atualizarAjudaMovimentacao() {
     const grupoRetorno = document.getElementById('grupoRetornoPrevisto');
 
     if (grupoRetorno) grupoRetorno.style.display = tipo === 'temporaria' ? '' : 'none';
+    preencherSugestoesOndeFica('sugestoesOndeFicaMov', destino);
     if (passoMov === 3) atualizarResumoMov();
 
     if (!info) return;
     if (!item || !temOrigem(item)) { info.innerHTML = ''; return; }
 
-    const casa = localCompleto(item.origem_local_id, item.origem_subsetor_id);
+    const casa = lugarFixoDoItem(item);
     const voltaParaCasa = destino && String(destino) === String(item.origem_local_id) &&
-                          String(destinoSetor) === String(item.origem_subsetor_id || '');
+                          String(destinoSetor) === String(item.origem_subsetor_id || '') &&
+                          mesmoTexto(valorCampo('destinoOndeFica'), item.origem_onde_fica);
 
     let texto = `<i class="fa-solid fa-house"></i> Lugar fixo desta peça: <strong>${escaparHTML(casa)}</strong>.`;
     if (voltaParaCasa) texto += ' <b class="ok">Ela está voltando para o lugar dela.</b>';
@@ -2302,7 +2354,7 @@ function preencherOrigemAutomaticamente() {
     const origem = document.getElementById('origemNome');
     const quantidade = document.getElementById('quantidadeMov');
 
-    if (origem) origem.value = item ? localCompleto(item.local_id, item.subsetor_id) : '';
+    if (origem) origem.value = item ? lugarDoItem(item) : '';
 
     if (item && quantidade) {
         const disponivel = quantidadeItem(item);
@@ -2315,7 +2367,7 @@ function preencherOrigemAutomaticamente() {
 }
 
 function limparFormularioMovimentacao() {
-    ['itemMov', 'destino', 'destinoSubsetor', 'observacaoMov', 'statusMov', 'origemNome', 'retornoPrevisto', 'buscaPecaMov'].forEach(id => {
+    ['itemMov', 'destino', 'destinoSubsetor', 'destinoOndeFica', 'observacaoMov', 'statusMov', 'origemNome', 'retornoPrevisto', 'buscaPecaMov'].forEach(id => {
         const campo = document.getElementById(id);
         if (campo) campo.value = '';
     });
@@ -2361,7 +2413,8 @@ async function movimentarItem(evento) {
             p_status: valorCampo('statusMov') || null,
             p_observacao: valorCampo('observacaoMov') || null,
             p_definitivo: document.querySelector('input[name="tipoMovimentacao"]:checked')?.value === 'definitiva',
-            p_retorno_previsto: valorCampo('retornoPrevisto') || null
+            p_retorno_previsto: valorCampo('retornoPrevisto') || null,
+            p_destino_onde_fica: valorCampo('destinoOndeFica') || null
         });
 
         if (error) throw error;
@@ -2416,10 +2469,11 @@ function renderizarItens() {
                 <td>${escaparHTML(item.tipo && item.tipo !== item.nome ? item.tipo : '—')}</td>
                 <td class="num"><strong>${numero.format(quantidadeItem(item))}</strong></td>
                 <td>${escaparHTML(nomeLocal(item.local_id))}</td>
-                <td>${item.subsetor_id ? escaparHTML(nomeSubsetor(item.subsetor_id)) : '<span class="texto-suave">Local inteiro</span>'}</td>
+                <td>${item.subsetor_id ? escaparHTML(nomeSubsetor(item.subsetor_id)) : '<span class="texto-suave">Local inteiro</span>'}
+                    ${item.onde_fica ? `<small class="celula-sub"><i class="fa-solid fa-location-crosshairs"></i> ${escaparHTML(item.onde_fica)}</small>` : ''}</td>
                 <td>${fora
                     ? `<span class="selo-fora ${retornoAtrasado(item) ? 'atrasado' : ''}"><i class="fa-solid fa-house"></i>
-                       ${escaparHTML(localCompleto(item.origem_local_id, item.origem_subsetor_id))}</span>`
+                       ${escaparHTML(lugarFixoDoItem(item))}</span>`
                     : '<span class="texto-suave">No lugar</span>'}</td>
                 <td><span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status || 'Ativo')}</span></td>
                 <td>
@@ -2445,8 +2499,8 @@ function exportarExcel() {
     const lista = itens.filter(item => visiveis.size === 0 || visiveis.has(String(item.id)));
     if (!lista.length) return avisar('Nenhuma peça para exportar.', 'info');
 
-    const colunas = ['PEÇA', 'CATEGORIA', 'DESCRIÇÃO', 'QUANTIDADE', 'LOCAL', 'SETOR',
-                     'LOCAL FIXO', 'SETOR FIXO', 'FORA DO LUGAR', 'RETORNO PREVISTO', 'STATUS'];
+    const colunas = ['PEÇA', 'CATEGORIA', 'DESCRIÇÃO', 'QUANTIDADE', 'LOCAL', 'SETOR', 'ONDE FICA',
+                     'LOCAL FIXO', 'SETOR FIXO', 'ONDE FICA (FIXO)', 'FORA DO LUGAR', 'RETORNO PREVISTO', 'STATUS'];
     const linhas = lista.map(item => [
         item.nome || '',
         item.tipo && item.tipo !== item.nome ? item.tipo : '',
@@ -2454,8 +2508,10 @@ function exportarExcel() {
         quantidadeItem(item),
         nomeLocal(item.local_id),
         item.subsetor_id ? nomeSubsetor(item.subsetor_id) : '',
+        item.onde_fica || '',
         temOrigem(item) ? nomeLocal(item.origem_local_id) : '',
         item.origem_subsetor_id ? nomeSubsetor(item.origem_subsetor_id) : '',
+        item.origem_onde_fica || '',
         estaForaDoLugar(item) ? 'SIM' : 'NÃO',
         dataCurta(item.retorno_previsto),
         item.status || ''
@@ -2495,7 +2551,7 @@ async function excluirItem(id) {
 
     if (!(await confirmar({
         titulo: 'Excluir este registro?',
-        mensagem: `${item.nome || 'Peça'} — ${localCompleto(item.local_id, item.subsetor_id)}\n\nEsta ação não pode ser desfeita.`,
+        mensagem: `${item.nome || 'Peça'} — ${lugarDoItem(item)}\n\nEsta ação não pode ser desfeita.`,
         textoConfirmar: 'Excluir', perigo: true
     }))) return;
 
@@ -2538,8 +2594,8 @@ async function carregarHistorico() {
         tabela.innerHTML = movimentacoes.map(mov => {
             const item = itens.find(registro => Number(registro.id) === Number(mov.item_id));
             const nomeItem = mov.item_nome || item?.nome || '—';
-            const origem = mov.origem_id ? formatarLocalSubsetor(mov.origem_id, mov.origem_subsetor_id) : '—';
-            const destino = formatarLocalSubsetor(mov.destino_id, mov.destino_subsetor_id);
+            const origem = mov.origem_id ? lugarCompleto(mov.origem_id, mov.origem_subsetor_id, mov.origem_onde_fica) : '—';
+            const destino = lugarCompleto(mov.destino_id, mov.destino_subsetor_id, mov.destino_onde_fica);
             const mudouStatus = mov.status_anterior && mov.status_novo && mov.status_anterior !== mov.status_novo;
             const observacao = [
                 mudouStatus ? `${mov.status_anterior} → ${mov.status_novo}` : '',
@@ -3752,11 +3808,11 @@ function resultadosBuscaGeral(texto) {
 
     // Peças: agrupadas pelo nome, com o total e em quantos lugares estão.
     const pecas = new Map();
-    itens.filter(item => quantidadeItem(item) > 0 && bate(item.nome, item.tipo)).forEach(item => {
+    itens.filter(item => quantidadeItem(item) > 0 && bate(item.nome, item.tipo, item.onde_fica)).forEach(item => {
         const chave = chaveNome(item.nome);
         const atual = pecas.get(chave) || { nome: item.nome, total: 0, lugares: new Set(), foto: fotoDoItem(item) };
         atual.total += quantidadeItem(item);
-        atual.lugares.add(localCompleto(item.local_id, item.subsetor_id));
+        atual.lugares.add(lugarDoItem(item));
         pecas.set(chave, atual);
     });
     const listaPecas = [...pecas.values()].sort((a, b) => compararTexto(a.nome, b.nome));
@@ -3970,6 +4026,7 @@ function ligarEventos() {
         retorno.addEventListener('change', atualizarAjudaMovimentacao);
     }
     ligar('buscaPecaMov', 'input', renderizarPecasMov);
+    ligar('destinoOndeFica', 'input', atualizarAjudaMovimentacao);
     ligar('quantidadeMov', 'input', atualizarResumoMov);
     document.getElementById('buscaPecaMov')?.addEventListener('keydown', evento => {
         if (evento.key !== 'Enter') return;

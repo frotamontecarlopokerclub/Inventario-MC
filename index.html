@@ -759,9 +759,11 @@
                             <div class="dist-cabecalho" aria-hidden="true">
                                 <span>Local</span>
                                 <span>Setor</span>
+                                <span>Onde fica</span>
                                 <span>Quantidade</span>
                                 <span></span>
                             </div>
+                            <datalist id="sugestoesOndeFicaCad"></datalist>
 
                             <div id="linhasDistribuicao" class="dist-linhas"></div>
 
@@ -895,9 +897,22 @@
                             <div class="input-group">
                                 <label for="destinoSubsetor">Setor (se souber)</label>
                                 <select id="destinoSubsetor">
-                                    <option value="">Local inteiro (sem setor definido)</option>
+                                    <option value="">Sem setor</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="destinoOndeFica">Onde fica <small>(opcional)</small></label>
+                            <input
+                                type="text"
+                                id="destinoOndeFica"
+                                list="sugestoesOndeFicaMov"
+                                maxlength="80"
+                                autocomplete="off"
+                                placeholder="Ex.: 3º andar, sala do financeiro, Casa 3"
+                            />
+                            <datalist id="sugestoesOndeFicaMov"></datalist>
+                            <small>Um detalhe para achar a peça lá dentro: andar, sala, casa…</small>
                         </div>
 
                         <h3 class="mov-pergunta">Ela vai voltar para o lugar dela depois?</h3>

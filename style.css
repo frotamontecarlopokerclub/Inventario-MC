@@ -4265,7 +4265,6 @@ body.modal-aberto {
 .dist-cabecalho,
 .dist-linha {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) 130px 40px;
     gap: 10px;
     align-items: center;
 }
@@ -4300,7 +4299,6 @@ body.modal-aberto {
     background: snow;
 }
 .dist-linha.repetida::after {
-    content: "Local e setor repetidos — junte numa linha só";
     grid-column: 1/-1;
     color: var(--v4-bad);
     font-size: 11px;
@@ -5537,5 +5535,21 @@ body.public-mode .busca-geral {
     }
     .mov-acoes #btnMovRecomecar {
         display: none;
+    }
+}
+.dist-cabecalho,
+.dist-linha {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) 110px 40px !important;
+}
+.dist-linha.repetida::after {
+    content: "Local, setor e onde fica repetidos — junte numa linha só" !important;
+}
+@media (max-width: 820px) {
+    .dist-linha {
+        grid-template-columns: minmax(0, 1fr) 90px 40px !important;
+        grid-template-areas: "local local remover" "setor setor setor" "onde qtd qtd" !important;
+    }
+    .dist-linha .dist-onde {
+        grid-area: onde;
     }
 }
