@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -243,10 +243,11 @@ function garantirModalFormulario() {
     document.body.appendChild(modal);
 
     modal.addEventListener('click', evento => {
-        if (evento.target === modal || evento.target.closest('[data-fechar]')) fecharFormulario();
+        if (evento.target.closest('[data-fechar]')) cancelarFormulario();
+        else if (evento.target === modal && !formularioAtual?.travado) cancelarFormulario();
     });
     document.addEventListener('keydown', evento => {
-        if (evento.key === 'Escape' && !modal.hidden) fecharFormulario();
+        if (evento.key === 'Escape' && !modal.hidden && !formularioAtual?.travado) cancelarFormulario();
     });
     modal.querySelector('#mcModalCorpo').addEventListener('submit', enviarFormulario);
 
@@ -295,17 +296,26 @@ function campoFormularioHTML(campo) {
                     ${campo.lista ? `list="${campo.lista}"` : ''}
                     ${campo.min !== undefined ? `min="${campo.min}"` : ''}
                     ${campo.step ? `step="${campo.step}"` : ''}
-                    placeholder="${escaparHTML(campo.placeholder || '')}" autocomplete="off">${ajuda}</div>`;
+                    ${campo.maxlength ? `maxlength="${campo.maxlength}"` : ''}
+                    ${campo.inputmode ? `inputmode="${campo.inputmode}"` : ''}
+                    placeholder="${escaparHTML(campo.placeholder || '')}" autocomplete="${campo.autocomplete || 'off'}">${ajuda}</div>`;
 }
 
-function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar', aoSalvar, semCancelar = false }) {
+/*
+   travado: só sai pelo botão de cancelar (sem X, Esc ou clique fora).
+   aoCancelar: chamado quando a pessoa desiste.
+*/
+function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar', aoSalvar, semCancelar = false,
+                           textoCancelar = 'Cancelar', aoCancelar = null, travado = false }) {
     const modal = garantirModalFormulario();
-    formularioAtual = { campos, aoSalvar };
+    formularioAtual = { campos, aoSalvar, aoCancelar, travado };
 
     modal.querySelector('#mcModalTitulo').textContent = titulo;
     modal.querySelector('#mcModalSubtitulo').textContent = subtitulo;
     modal.querySelector('#mcModalSalvar').textContent = textoSalvar;
     modal.querySelector('.mc-modal-rodape [data-fechar]').hidden = semCancelar;
+    modal.querySelector('.mc-modal-rodape [data-fechar]').textContent = textoCancelar;
+    modal.querySelector('.mc-modal-x').hidden = travado;
     modal.querySelector('#mcModalErro').hidden = true;
     modal.querySelector('#mcModalCorpo').innerHTML = campos.map(campoFormularioHTML).join('');
 
@@ -329,6 +339,12 @@ function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar
         if (modal.contains(document.activeElement) && document.activeElement.matches('input, select, textarea')) return;
         modal.querySelector('input:not([type=checkbox]):not([type=file]), select, textarea')?.focus();
     }, 30);
+}
+
+function cancelarFormulario() {
+    const aoCancelar = formularioAtual?.aoCancelar;
+    fecharFormulario();
+    aoCancelar?.();
 }
 
 function fecharFormulario() {
@@ -443,8 +459,15 @@ function imgMiniatura(url, { classe = 'foto-tabela', alt = '' } = {}) {
                  onclick="abrirModalFoto('${original}')">`;
 }
 
+const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+const TAMANHO_MAXIMO_FOTO = 15 * 1024 * 1024;
+
 async function enviarFoto(arquivo, pasta = 'inventario') {
+    if (!TIPOS_FOTO.includes(arquivo?.type)) {
+        throw new Error('Envie uma foto (JPG, PNG, WEBP, GIF ou HEIC).');
+    }
     const final = await comprimirImagem(arquivo);
+    if (final.size > TAMANHO_MAXIMO_FOTO) throw new Error('A foto passa de 15 MB. Escolha uma imagem menor.');
     const extensao = (final.name.split('.').pop() || 'jpg').toLowerCase();
     const id = gerarId();
     const caminho = `${pasta}/${id}.${extensao}`;
@@ -459,7 +482,7 @@ async function enviarFoto(arquivo, pasta = 'inventario') {
     try {
         const mini = await comprimirImagem(arquivo, 360, 0.78, true);
         await supabaseClient.storage.from('inventario')
-            .upload(`${pasta}/${id}_mini.jpg`, mini, { upsert: true, contentType: 'image/jpeg' });
+            .upload(`${pasta}/${id}_mini.jpg`, mini, { upsert: false, contentType: 'image/jpeg' });
     } catch (erro) {
         console.warn('Miniatura não gerada:', erro);
     }
@@ -606,6 +629,10 @@ async function login(evento) {
 /* Depois do login (ou de uma sessão já salva): perfil, menus, dados. */
 async function entrarNoSistema() {
     await verificarPerfil();
+    if (!(await garantirSegundaEtapa())) {
+        await logout();
+        return;
+    }
     document.body.classList.remove('login-mode');
     atualizarMenus();
     atualizarUsuarioInterface();
@@ -2305,7 +2332,7 @@ async function abrirAdministracao() {
     abrirTela('administracaoTela', document.getElementById('menuAdministracao'));
     await carregarSubsetores();
     renderizarLocaisAdmin();
-    await Promise.all([carregarUsuariosAdmin(), carregarAuditoria()]);
+    await Promise.all([carregarUsuariosAdmin(), carregarAuditoria(), atualizarStatusSegundaEtapa()]);
 }
 
 
@@ -3314,6 +3341,252 @@ async function editarModeloTermo() {
 
     const area = document.getElementById('mcCampo_valor');
     if (area) area.rows = 18;
+}
+
+/* =========================================================
+   15 · SEGURANÇA
+   · Verificação em 2 etapas (senha + código do celular)
+     para Gestor e Administrador.
+   · Conferência de integridade do histórico.
+========================================================= */
+
+const MENSAGEM_CODIGO_ERRADO = 'Código incorreto ou vencido. Confira se o relógio do celular está certo e digite o código que aparece agora.';
+
+/*
+   Chamada logo depois do login. Devolve true para seguir, false se a
+   pessoa desistiu (nesse caso o sistema sai da conta).
+*/
+async function garantirSegundaEtapa() {
+    if (!PERFIS_GESTAO.includes(perfilUsuario)) return true;
+
+    const { data: nivel } = await supabaseClient.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (nivel?.currentLevel === 'aal2') return true;
+
+    const fator = await fatorVerificado();
+    if (fator) return pedirCodigoSegundaEtapa(fator.id);
+
+    if (!(await segundaEtapaObrigatoria())) return true;
+    return cadastrarSegundaEtapa({ primeiraVez: true });
+}
+
+async function fatorVerificado() {
+    const { data, error } = await supabaseClient.auth.mfa.listFactors();
+    if (error) throw error;
+    return (data?.totp || []).find(fator => fator.status === 'verified') || null;
+}
+
+/* O banco diz se a regra está ligada (configuração "exigir_2fa_gestao"). */
+async function segundaEtapaObrigatoria() {
+    const { data, error } = await supabaseClient.rpc('minha_seguranca');
+    if (error) return false;     // banco ainda sem a atualização v7
+    return data?.exige_2fa === true;
+}
+
+function campoCodigo() {
+    return {
+        id: 'codigo', rotulo: 'Código de 6 números', tipo: 'text', obrigatorio: true, largo: true,
+        inputmode: 'numeric', maxlength: 6, autocomplete: 'one-time-code', placeholder: '000000'
+    };
+}
+
+function lerCodigo(codigo) {
+    const numeros = String(codigo || '').replace(/\D/g, '');
+    if (numeros.length !== 6) throw new Error('O código tem 6 números.');
+    return numeros;
+}
+
+function pedirCodigoSegundaEtapa(factorId) {
+    return new Promise(resolve => {
+        abrirFormulario({
+            titulo: 'Verificação em 2 etapas',
+            subtitulo: 'Abra o aplicativo autenticador no celular e digite o código do Inventário Monte Carlo.',
+            textoSalvar: 'Confirmar',
+            textoCancelar: 'Sair',
+            travado: true,
+            campos: [campoCodigo()],
+            aoSalvar: async ({ codigo }) => {
+                const { error } = await supabaseClient.auth.mfa.challengeAndVerify({ factorId, code: lerCodigo(codigo) });
+                if (error) throw new Error(MENSAGEM_CODIGO_ERRADO);
+                resolve(true);
+            },
+            aoCancelar: () => resolve(false)
+        });
+    });
+}
+
+/*
+   Cadastro do celular: mostra o QR Code para o aplicativo autenticador
+   (Google Authenticator, Microsoft Authenticator, Authy…) e confirma
+   com o primeiro código.
+*/
+async function cadastrarSegundaEtapa({ primeiraVez = false } = {}) {
+    // Cadastros começados e não concluídos atrapalham um novo.
+    const { data: lista } = await supabaseClient.auth.mfa.listFactors();
+    for (const fator of (lista?.all || []).filter(f => f.status !== 'verified')) {
+        await supabaseClient.auth.mfa.unenroll({ factorId: fator.id });
+    }
+
+    const { data, error } = await supabaseClient.auth.mfa.enroll({
+        factorType: 'totp',
+        issuer: 'Inventário Monte Carlo',
+        friendlyName: `Celular ${new Date().toLocaleString('pt-BR')}`
+    });
+    if (error) throw error;
+
+    // O Supabase manda o SVG cru dentro do endereço; caracteres como "#"
+    // quebrariam a imagem, então o SVG é codificado.
+    const qr = String(data.totp.qr_code || '').replace(/^(data:image\/svg\+xml;utf-8,)(<[\s\S]*)$/,
+        (_, prefixo, svg) => prefixo + encodeURIComponent(svg));
+    const segredo = String(data.totp.secret || '').replace(/(.{4})/g, '$1 ').trim();
+
+    const html = `
+        <div class="dois-fatores">
+            <ol>
+                <li>Instale no celular um aplicativo autenticador
+                    (<b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ou <b>Authy</b>).</li>
+                <li>No aplicativo, toque em <b>+</b> e leia o QR Code abaixo.</li>
+                <li>Digite o código de 6 números que aparecer.</li>
+            </ol>
+            <img class="dois-fatores-qr" src="${escaparHTML(qr)}" alt="QR Code para o aplicativo autenticador">
+            <p class="dois-fatores-chave">Não consegue ler? Digite esta chave no aplicativo:<br>
+                <code>${escaparHTML(segredo)}</code></p>
+        </div>`;
+
+    return new Promise(resolve => {
+        abrirFormulario({
+            titulo: primeiraVez ? 'Ative a verificação em 2 etapas' : 'Configurar em outro celular',
+            subtitulo: primeiraVez
+                ? 'Por segurança, gestores e administradores entram com senha + código do celular.'
+                : 'Depois de confirmar, o celular antigo deixa de valer.',
+            textoSalvar: 'Ativar',
+            textoCancelar: primeiraVez ? 'Sair' : 'Cancelar',
+            travado: primeiraVez,
+            campos: [{ id: 'instrucoes', tipo: 'html', html }, campoCodigo()],
+            aoSalvar: async ({ codigo }) => {
+                const { error: erro } = await supabaseClient.auth.mfa.challengeAndVerify({
+                    factorId: data.id, code: lerCodigo(codigo)
+                });
+                if (erro) throw new Error(MENSAGEM_CODIGO_ERRADO);
+                resolve(data.id);
+            },
+            aoCancelar: async () => {
+                await supabaseClient.auth.mfa.unenroll({ factorId: data.id }).catch(() => {});
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function reconfigurarSegundaEtapa() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador.', 'erro');
+    try {
+        const antigo = await fatorVerificado();
+        const novo = await cadastrarSegundaEtapa();
+        if (!novo) return;
+        if (antigo && antigo.id !== novo) await supabaseClient.auth.mfa.unenroll({ factorId: antigo.id });
+        avisar('Verificação em 2 etapas configurada no novo celular.');
+        atualizarStatusSegundaEtapa();
+    } catch (erro) {
+        console.error('ERRO 2FA:', erro);
+        avisar('Não foi possível configurar: ' + traduzirErro(erro), 'erro');
+    }
+}
+
+async function atualizarStatusSegundaEtapa() {
+    const status = document.getElementById('status2FA');
+    if (!status) return;
+    try {
+        const fator = await fatorVerificado();
+        status.textContent = fator
+            ? `Ativa na sua conta desde ${dataCurta(fator.created_at)}.`
+            : 'Ainda não ativada na sua conta.';
+    } catch {
+        status.textContent = '';
+    }
+}
+
+
+/* ---------------- Integridade do histórico ---------------- */
+
+async function verificarIntegridade() {
+    const botao = document.getElementById('btnVerificarIntegridade');
+    const status = document.getElementById('statusIntegridade');
+    if (!status) return;
+
+    botao && (botao.disabled = true);
+    status.className = 'integridade-status';
+    status.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conferindo cada registro...';
+
+    try {
+        const { data, error } = await supabaseClient.rpc('verificar_integridade');
+        if (error) throw error;
+
+        const quando = new Date(data.verificado_em).toLocaleString('pt-BR');
+        if (data.ok) {
+            status.classList.add('integridade-ok');
+            status.innerHTML = `<i class="fa-solid fa-circle-check"></i>
+                <span><b>Histórico íntegro.</b> ${numero.format(data.registros)} registros conferidos em ${escaparHTML(quando)}.
+                <br>Código atual da corrente: <code>${escaparHTML(String(data.ultimo_codigo).slice(0, 16))}</code></span>`;
+        } else {
+            status.classList.add('integridade-falha');
+            const linhas = (data.problemas || []).map(p =>
+                `<li>${p.termo ? `Termo nº ${escaparHTML(p.termo)}` : `Registro nº ${escaparHTML(p.registro)}`}: ${escaparHTML(p.problema)}</li>`
+            ).join('');
+            status.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>
+                <span><b>Atenção: o histórico foi alterado fora do sistema.</b> Conferido em ${escaparHTML(quando)}.
+                <ul>${linhas}</ul></span>`;
+        }
+    } catch (erro) {
+        console.error('ERRO INTEGRIDADE:', erro);
+        status.classList.add('integridade-falha');
+        status.textContent = traduzirErro(erro);
+    } finally {
+        botao && (botao.disabled = false);
+    }
+}
+
+
+/* ---------------- Cópia de segurança ---------------- */
+
+const TABELAS_COPIA = ['locais', 'subsetores', 'produtos', 'itens', 'movimentacoes', 'auditoria',
+    'usuarios', 'radios', 'termos', 'termo_radios', 'configuracoes'];
+
+/* Tabelas sem coluna "id": ordenadas pela chave delas (paginação estável). */
+const ORDEM_COPIA = { termo_radios: 'termo_id', configuracoes: 'chave' };
+
+async function baixarCopiaSeguranca() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador.', 'erro');
+    const botao = document.getElementById('btnCopiaSeguranca');
+    const status = document.getElementById('statusCopia');
+    botao && (botao.disabled = true);
+
+    try {
+        const copia = { sistema: 'Inventário Central — Grupo Monte Carlo', gerada_em: new Date().toISOString(),
+                        gerada_por: nomeUsuarioLogado || usuarioLogado?.email || '', tabelas: {} };
+        for (const tabela of TABELAS_COPIA) {
+            status && (status.textContent = `Lendo ${tabela}...`);
+            const ordem = ORDEM_COPIA[tabela] || 'id';
+            copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(tabela).select('*').order(ordem));
+        }
+
+        const arquivo = new Blob([JSON.stringify(copia, null, 1)], { type: 'application/json' });
+        const link = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(arquivo),
+            download: `inventario-monte-carlo-copia-${hojeISO()}.json`
+        });
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+
+        const total = Object.values(copia.tabelas).reduce((soma, linhas) => soma + linhas.length, 0);
+        status && (status.textContent = `Cópia baixada: ${numero.format(total)} registros em ${TABELAS_COPIA.length} tabelas.`);
+    } catch (erro) {
+        console.error('ERRO CÓPIA:', erro);
+        status && (status.textContent = 'Não foi possível gerar a cópia: ' + traduzirErro(erro));
+    } finally {
+        botao && (botao.disabled = false);
+    }
 }
 
 /* =========================================================

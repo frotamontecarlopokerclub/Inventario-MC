@@ -1446,6 +1446,45 @@
                     </div>
 
                     <div class="card admin-card-wide">
+                        <div class="form-section-title"><i class="fa-solid fa-lock"></i> Segurança</div>
+                        <div class="admin-ferramenta">
+                            <div>
+                                <strong>Integridade do histórico</strong>
+                                <p>Confere se algum registro da auditoria ou termo assinado foi alterado ou apagado
+                                   direto no banco. Cada registro carrega um código ligado ao anterior: qualquer
+                                   mudança quebra a corrente e aparece aqui.</p>
+                                <div id="statusIntegridade" class="integridade-status"></div>
+                            </div>
+                            <button type="button" id="btnVerificarIntegridade" class="btn-secondary" onclick="verificarIntegridade()">
+                                <i class="fa-solid fa-shield-halved"></i> Verificar agora
+                            </button>
+                        </div>
+                        <div class="admin-ferramenta admin-ferramenta-separada">
+                            <div>
+                                <strong>Cópia de segurança</strong>
+                                <p>Baixa um arquivo com todos os dados do sistema (peças, locais, setores, histórico,
+                                   auditoria, rádios e termos). O plano gratuito do Supabase não guarda cópias:
+                                   baixe uma por semana e guarde fora do computador.</p>
+                                <small id="statusCopia"></small>
+                            </div>
+                            <button type="button" id="btnCopiaSeguranca" class="btn-secondary" onclick="baixarCopiaSeguranca()">
+                                <i class="fa-solid fa-download"></i> Baixar cópia
+                            </button>
+                        </div>
+                        <div class="admin-ferramenta admin-ferramenta-separada">
+                            <div>
+                                <strong>Verificação em 2 etapas</strong>
+                                <p>Gestores e administradores entram com senha + código do aplicativo autenticador
+                                   do celular. Trocou de celular? Configure de novo aqui antes de desinstalar o app antigo.</p>
+                                <small id="status2FA"></small>
+                            </div>
+                            <button type="button" id="btnReconfigurar2FA" class="btn-secondary" onclick="reconfigurarSegundaEtapa()">
+                                <i class="fa-solid fa-mobile-screen"></i> Configurar em outro celular
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card admin-card-wide">
                         <div class="form-section-title"><i class="fa-solid fa-shield-halved"></i> Auditoria de ações</div>
                         <div class="table-area">
                             <table class="inventory-table admin-table">
@@ -1484,7 +1523,7 @@
      SUPABASE
 ===================================================== -->
 
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="supabase.js"></script>
 
         <!-- =====================================================
      APP
