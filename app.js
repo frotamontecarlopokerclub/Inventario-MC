@@ -34,6 +34,9 @@ let subsetores = [];
 let movimentacoes = [];
 let radios = [];
 
+/* Marca e modelo padrão dos rádios (lista real vem de configuracoes.radio_modelos). */
+let modelosRadio = [{ marca: 'Kytera', modelo: 'BP516 U(I)' }];
+
 /*
    Locais: a lista abaixo é só a reserva para quando a tabela "locais"
    ainda não existe. O sistema carrega a lista real do banco ao iniciar.
@@ -3227,7 +3230,26 @@ const SITUACAO_TERMO = {
    CARREGAR E LISTAR
 ========================================================= */
 
+/* Lista de modelos usados nos clubes; o primeiro é o padrão do cadastro. */
+async function carregarModelosRadio() {
+    const { data, error } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'radio_modelos').maybeSingle();
+    if (error || !data?.valor) return;
+    try {
+        const lista = JSON.parse(data.valor).filter(m => m?.marca || m?.modelo);
+        if (lista.length) modelosRadio = lista;
+    } catch { /* mantém o padrão */ }
+}
+
+function textoModelo(m) {
+    return [m?.marca, m?.modelo].filter(Boolean).join(' ');
+}
+
+function chaveModelo(marca, modelo) {
+    return `${marca || ''}|${modelo || ''}`;
+}
+
 async function carregarRadios() {
+    carregarModelosRadio().catch(() => {});
     try {
         radios = await buscarTodasLinhas(() =>
             supabaseClient.from('vw_radios').select('*').order('identificacao', { ascending: true, nullsFirst: false }).order('numero_serie')
@@ -3418,8 +3440,7 @@ function camposRadio(r = {}) {
         { id: 'numero_serie', rotulo: 'Número de série', valor: r.numero_serie, obrigatorio: true, placeholder: 'Ex.: 872TQA1234' },
         { id: 'identificacao', rotulo: 'Identificação', valor: r.identificacao, placeholder: 'Ex.: HT-07, Portaria 2',
           ajuda: 'Como o rádio é chamado no dia a dia (opcional).' },
-        { id: 'marca', rotulo: 'Marca', valor: r.marca, lista: 'dlMarcasRadio', placeholder: 'Ex.: Motorola' },
-        { id: 'modelo', rotulo: 'Modelo', valor: r.modelo, lista: 'dlModelosRadio', placeholder: 'Ex.: DEP450' },
+        campoModeloRadio(r),
         { id: 'setor', rotulo: 'Setor', valor: r.setor, lista: 'dlSetoresRadio', placeholder: 'Ex.: Segurança' },
         { id: 'local_id', rotulo: 'Local (opcional)', tipo: 'select', valor: r.local_id || '',
           opcoes: [{ valor: '', texto: 'Não informado' }, ...LOCAIS.map(l => ({ valor: l.id, texto: l.nome }))] },
@@ -3433,12 +3454,30 @@ function camposRadio(r = {}) {
     ];
 }
 
+/* Marca e modelo numa lista só; o padrão já vem escolhido no cadastro novo. */
+function campoModeloRadio(r = {}) {
+    const opcoes = modelosRadio.map((m, i) => ({
+        valor: chaveModelo(m.marca, m.modelo),
+        texto: textoModelo(m) + (i === 0 && modelosRadio.length > 1 ? ' (padrão)' : '')
+    }));
+    const atual = (r.marca || r.modelo) ? chaveModelo(r.marca, r.modelo) : opcoes[0]?.valor || '';
+    if (atual && !opcoes.some(o => o.valor === atual)) {
+        opcoes.push({ valor: atual, texto: `${textoModelo(r)} (cadastrado antes)` });
+    }
+    return {
+        id: 'modelo_radio', rotulo: 'Marca e modelo', tipo: 'select', valor: atual, largo: true,
+        opcoes: [...opcoes, { valor: '', texto: 'Não informado' }],
+        ajuda: podeAdministrar() ? 'Falta algum modelo? Use o botão "Modelos de rádio".' : ''
+    };
+}
+
 function dadosRadio(v) {
+    const [marca, modelo] = String(v.modelo_radio || '|').split('|');
     return {
         numero_serie: v.numero_serie,
         identificacao: v.identificacao || null,
-        marca: v.marca || null,
-        modelo: v.modelo || null,
+        marca: marca || null,
+        modelo: modelo || null,
         setor: v.setor || null,
         local_id: v.local_id ? Number(v.local_id) : null,
         responsavel_nome: v.responsavel_nome || null,
@@ -3645,6 +3684,79 @@ async function editarModeloTermo() {
 
     const area = document.getElementById('mcCampo_valor');
     if (area) area.rows = 18;
+}
+
+
+/* =========================================================
+   MODELOS DE RÁDIO (lista padrão dos clubes)
+========================================================= */
+
+let modelosEmEdicao = [];
+
+function htmlListaModelos() {
+    if (!modelosEmEdicao.length) return '<p class="modelos-vazio">Nenhum modelo. Adicione pelo menos um abaixo.</p>';
+    return modelosEmEdicao.map((m, i) => `
+        <div class="modelo-radio-linha">
+            <span><strong>${escaparHTML(textoModelo(m))}</strong>
+                ${i === 0 ? '<em class="modelo-padrao">Padrão do cadastro</em>' : ''}</span>
+            <span class="modelo-radio-acoes">
+                ${i > 0 ? `<button type="button" class="btn-link" onclick="tornarModeloPadrao(${i})">Tornar padrão</button>` : ''}
+                <button type="button" class="btn-icon btn-excluir" title="Remover da lista" aria-label="Remover"
+                        onclick="removerModeloRadio(${i})"><i class="fa-solid fa-xmark"></i></button>
+            </span>
+        </div>`).join('');
+}
+
+function redesenharModelos() {
+    const area = document.getElementById('listaModelosRadio');
+    if (area) area.innerHTML = htmlListaModelos();
+}
+
+function tornarModeloPadrao(indice) {
+    const [modelo] = modelosEmEdicao.splice(indice, 1);
+    modelosEmEdicao.unshift(modelo);
+    redesenharModelos();
+}
+
+function removerModeloRadio(indice) {
+    modelosEmEdicao.splice(indice, 1);
+    redesenharModelos();
+}
+
+async function editarModelosRadio() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita os modelos.', 'erro');
+    await carregarModelosRadio();
+    modelosEmEdicao = modelosRadio.map(m => ({ ...m }));
+
+    abrirFormulario({
+        titulo: 'Modelos de rádio',
+        subtitulo: 'Marca e modelo usados nos clubes. O primeiro da lista já vem escolhido no cadastro de rádio.',
+        textoSalvar: 'Salvar lista',
+        campos: [
+            { id: 'lista', tipo: 'html', html: `<div id="listaModelosRadio" class="modelos-radio">${htmlListaModelos()}</div>` },
+            { id: 'nova_marca', rotulo: 'Adicionar: marca', placeholder: 'Ex.: Kytera' },
+            { id: 'novo_modelo', rotulo: 'Adicionar: modelo', placeholder: 'Ex.: BP516 U(I)' }
+        ],
+        aoSalvar: async ({ nova_marca, novo_modelo }) => {
+            const lista = [...modelosEmEdicao];
+            if (nova_marca || novo_modelo) {
+                if (!nova_marca || !novo_modelo) throw new Error('Para adicionar, preencha a marca e o modelo.');
+                if (lista.some(m => normalizarTexto(textoModelo(m)) === normalizarTexto(`${nova_marca} ${novo_modelo}`))) {
+                    throw new Error('Esse modelo já está na lista.');
+                }
+                lista.push({ marca: nova_marca, modelo: novo_modelo });
+            }
+            if (!lista.length) throw new Error('Deixe pelo menos um modelo na lista.');
+
+            const { data, error } = await supabaseClient.from('configuracoes')
+                .update({ valor: JSON.stringify(lista) }).eq('chave', 'radio_modelos').select('chave');
+            if (error) throw new Error(traduzirErro(error));
+            if (!data?.length) throw new Error('Rode a atualização v9 no Supabase para salvar a lista de modelos.');
+
+            modelosRadio = lista;
+            avisar('Lista de modelos salva.');
+        }
+    });
 }
 
 /* =========================================================

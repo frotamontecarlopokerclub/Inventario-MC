@@ -5399,6 +5399,7 @@ body.public-mode .busca-geral {
     color: var(--v4-gold, #c49a5a);
     font-size: 26px;
 }
+.modelo-radio-linha strong,
 .tela-vazia strong {
     color: var(--v4-ink, #24151a);
     font-size: 15px;
@@ -5552,4 +5553,43 @@ body.public-mode .busca-geral {
     .dist-linha .dist-onde {
         grid-area: onde;
     }
+}
+.modelos-radio {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.modelo-radio-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--v4-line, #ece4e6);
+    border-radius: 12px;
+    background: #fff;
+}
+.modelo-radio-linha strong {
+    font-size: 14px;
+}
+.modelo-padrao {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--v4-ok-soft, #ebf8f1);
+    color: var(--v4-ok, #127a45);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+}
+.modelo-radio-acoes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.modelos-vazio {
+    margin: 0;
+    color: var(--v4-bad, #b42318);
+    font-size: 13px;
 }
