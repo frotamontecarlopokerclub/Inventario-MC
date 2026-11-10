@@ -3467,6 +3467,8 @@ function camposRadio(r = {}) {
           opcoes: [{ valor: '', texto: 'Não informado' }, ...LOCAIS.map(l => ({ valor: l.id, texto: l.nome }))] },
         { id: 'responsavel_nome', rotulo: 'Responsável (quem assina o termo)', valor: r.responsavel_nome, lista: 'dlResponsaveisRadio',
           placeholder: 'Nome completo' },
+        { id: 'responsavel_documento', rotulo: 'CPF do responsável', valor: r.responsavel_documento ? formatarCpf(r.responsavel_documento) : '',
+          placeholder: '000.000.000-00', inputmode: 'numeric', ajuda: 'Com CPF cadastrado, só essa pessoa consegue assinar o termo.' },
         { id: 'responsavel_telefone', rotulo: 'Celular do responsável', valor: formatarTelefone(r.responsavel_telefone),
           placeholder: '(11) 98888-7777', ajuda: 'Usado para enviar o link do termo pelo WhatsApp.' },
         { id: 'status', rotulo: 'Status', tipo: 'select', valor: r.status || 'Ativo', opcoes: STATUS_RADIO.map(s => ({ valor: s, texto: s })) },
@@ -3510,6 +3512,7 @@ function dadosRadio(v) {
         local_id: v.local_id ? Number(v.local_id) : null,
         responsavel_nome: v.responsavel_nome || null,
         responsavel_telefone: v.responsavel_telefone || null,
+        ...(v.responsavel_documento !== undefined ? { responsavel_documento: v.responsavel_documento || null } : {}),
         status: v.status || 'Ativo',
         observacao: v.observacao || null,
         ...(v.bateria_codigo !== undefined ? {
@@ -3861,7 +3864,9 @@ async function baixarCopiaSeguranca() {
         for (const tabela of TABELAS_COPIA) {
             status && (status.textContent = `Lendo ${tabela}...`);
             const ordem = ORDEM_COPIA[tabela] || 'id';
-            copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(tabela).select('*').order(ordem));
+            // Rádios: lidos pela lista da tela (o CPF só sai para a gestão).
+            const origem = tabela === 'radios' ? 'vw_radios' : tabela;
+            copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(origem).select('*').order(ordem));
         }
 
         const arquivo = new Blob([JSON.stringify(copia, null, 1)], { type: 'application/json' });
@@ -4153,6 +4158,7 @@ const COLUNAS_PLANILHA_RADIOS = {
     local: ['LOCAL', 'CLUBE', 'UNIDADE'],
     responsavel_nome: ['RESPONSAVEL', 'NOMEDORESPONSAVEL', 'NOME'],
     responsavel_telefone: ['CELULAR', 'TELEFONE', 'WHATSAPP'],
+    responsavel_documento: ['DOCUMENTO', 'CPF', 'DOC', 'CPFDORESPONSAVEL', 'DOCUMENTODORESPONSAVEL'],
     status: ['STATUS', 'SITUACAO'],
     observacao: ['OBSERVACAO', 'OBS', 'OBSERVACOES'],
     marca: ['MARCA'],
@@ -4265,11 +4271,50 @@ function interpretarPlanilhaRadios(tabela, padroes = {}) {
         radiosLidos.push(r);
     });
 
+    completarDocumentos(radiosLidos);
+    unificarSetores(radiosLidos);
+
     return {
         radios: radiosLidos,
         reconhecidas: colunas.filter(c => c.campo).map(c => c.titulo),
         ignoradas: colunas.filter(c => !c.campo && c.titulo).map(c => c.titulo)
     };
+}
+
+/* Quem tem CPF em uma linha recebe o mesmo CPF nas outras linhas sem CPF. */
+function completarDocumentos(lista) {
+    const porNome = new Map();
+    lista.forEach(r => {
+        const nome = normalizarTexto(r.responsavel_nome);
+        if (nome && r.responsavel_documento && !porNome.has(nome)) porNome.set(nome, r.responsavel_documento);
+    });
+    lista.forEach(r => {
+        const nome = normalizarTexto(r.responsavel_nome);
+        if (nome && !r.responsavel_documento && porNome.has(nome)) {
+            r.responsavel_documento = porNome.get(nome);
+            r.documento_completado = true;
+        }
+    });
+}
+
+/* "SALAO" e "SALÃO" viram um setor só (fica a forma com acento / mais usada). */
+function unificarSetores(lista) {
+    const grupos = new Map();
+    lista.forEach(r => {
+        if (!r.setor) return;
+        const chave = normalizarTexto(r.setor);
+        const contagem = grupos.get(chave) || new Map();
+        contagem.set(r.setor, (contagem.get(r.setor) || 0) + 1);
+        grupos.set(chave, contagem);
+    });
+    const escolhido = new Map([...grupos].map(([chave, contagem]) => [chave,
+        [...contagem.entries()].sort((a, b) => (/[^\x00-\x7F]/.test(b[0]) - /[^\x00-\x7F]/.test(a[0])) || b[1] - a[1])[0][0]]));
+    lista.forEach(r => { if (r.setor) r.setor = escolhido.get(normalizarTexto(r.setor)); });
+}
+
+function formatarCpf(valor) {
+    const d = String(valor || '').replace(/\D/g, '');
+    return d.length === 11 ? d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : String(valor || '');
 }
 
 function tituloSetor(texto) {
@@ -4331,8 +4376,11 @@ function abrirImportacaoRadios() {
 
 function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
     const erros = resumo.erros || [];
+    const avisos = resumo.avisos || [];
     const erroPorLinha = new Map();
     erros.forEach(e => erroPorLinha.set(e.linha, [...(erroPorLinha.get(e.linha) || []), e.mensagem]));
+    const linhasComErro = new Set(erros.map(e => e.linha));
+    const linhasSemErro = lido.radios.filter(r => !linhasComErro.has(r.linha));
     const aGravar = (resumo.novos || 0) + (resumo.atualizados || 0);
 
     const caixa = (numero, texto, classe) => `<div class="importar-numero ${classe}"><b>${numero}</b><span>${texto}</span></div>`;
@@ -4347,7 +4395,8 @@ function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
             <td>${escaparHTML([r.carregador_codigo, r.carregador_serie].filter(Boolean).join(' · ') || '—')}</td>
             <td>${escaparHTML(r.setor || '—')}</td>
             <td>${escaparHTML(r.responsavel_nome || '—')}</td>
-        </tr>${problemas ? `<tr class="importar-linha-erro"><td></td><td colspan="7">⚠ ${problemas.map(escaparHTML).join('<br>⚠ ')}</td></tr>` : ''}`;
+            <td>${r.responsavel_documento ? escaparHTML(formatarCpf(r.responsavel_documento)) + (r.documento_completado ? ' <small title="Copiado de outra linha da mesma pessoa">(copiado)</small>' : '') : '—'}</td>
+        </tr>${problemas ? `<tr class="importar-linha-erro"><td></td><td colspan="8">⚠ ${problemas.map(escaparHTML).join('<br>⚠ ')}</td></tr>` : ''}`;
     }).join('');
 
     const html = `
@@ -4361,12 +4410,17 @@ function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
                 ${caixa(erros.length, erros.length === 1 ? 'problema' : 'problemas', erros.length ? 'erro' : 'igual')}
             </div>
             ${erros.length ? `<p class="importar-aviso-erro"><i class="fa-solid fa-triangle-exclamation"></i>
-                Nada será gravado enquanto houver problemas. Corrija a planilha (veja as linhas marcadas) e envie de novo.</p>` : ''}
+                ${linhasSemErro.length
+                    ? `As linhas marcadas em vermelho têm problemas. Você pode gravar só as ${linhasSemErro.length} linhas certas agora e corrigir as outras depois.`
+                    : 'Corrija a planilha (veja as linhas marcadas) e envie de novo.'}</p>` : ''}
+            ${avisos.length ? `<details class="importar-avisos"><summary><i class="fa-solid fa-circle-info"></i>
+                ${avisos.length} aviso(s) — não impedem a gravação</summary>
+                <ul>${avisos.map(a => `<li>Linha ${a.linha}: ${escaparHTML(a.mensagem)}</li>`).join('')}</ul></details>` : ''}
             ${lido.ignoradas.length ? `<p class="importar-ignoradas">Colunas ignoradas: ${lido.ignoradas.map(escaparHTML).join(', ')}</p>` : ''}
             <p class="importar-ignoradas">Marca e modelo: ${escaparHTML(resumo.marca_padrao || '')} (quando a planilha não informa).</p>
             <div class="importar-tabela"><table>
                 <thead><tr><th>Linha</th><th>HT</th><th>Rádio (série)</th><th>Bateria</th><th>Bateria reserva</th>
-                    <th>Base carregadora</th><th>Setor</th><th>Responsável</th></tr></thead>
+                    <th>Base carregadora</th><th>Setor</th><th>Responsável</th><th>CPF</th></tr></thead>
                 <tbody>${tabela}</tbody>
             </table></div>
             ${lido.radios.length > 400 ? `<p class="importar-ignoradas">Mostrando as primeiras 400 linhas.</p>` : ''}
@@ -4377,17 +4431,22 @@ function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
         subtitulo: erros.length
             ? 'Os números foram lidos da planilha. Veja abaixo o que precisa ser corrigido.'
             : aGravar ? `Tudo certo. ${aGravar} rádio(s) serão gravados.` : 'Todos os rádios da planilha já estão cadastrados assim.',
-        textoSalvar: erros.length ? 'Escolher outra planilha' : aGravar ? `Gravar ${aGravar} rádio(s)` : 'Fechar',
+        textoSalvar: erros.length
+            ? (linhasSemErro.length ? `Gravar as ${linhasSemErro.length} linhas certas` : 'Escolher outra planilha')
+            : aGravar ? `Gravar ${aGravar} rádio(s)` : 'Fechar',
+        textoCancelar: erros.length ? 'Corrigir a planilha' : 'Cancelar',
         largo: true,
         campos: [{ id: 'previa', tipo: 'html', html }],
         aoSalvar: async () => {
-            if (erros.length) return setTimeout(abrirImportacaoRadios, 0);
-            if (!aGravar) return;
-            const { data, error } = await supabaseClient.rpc('importar_radios', { p_linhas: lido.radios, p_simular: false });
+            if (erros.length && !linhasSemErro.length) return setTimeout(abrirImportacaoRadios, 0);
+            if (!erros.length && !aGravar) return;
+            const linhas = erros.length ? linhasSemErro : lido.radios;
+            const { data, error } = await supabaseClient.rpc('importar_radios', { p_linhas: linhas, p_simular: false });
             if (error) throw new Error(traduzirErro(error));
-            if (data?.erros?.length) throw new Error('O banco encontrou um problema novo: ' + data.erros[0].mensagem);
+            if (data?.erros?.length) throw new Error(`Linha ${data.erros[0].linha}: ${data.erros[0].mensagem}`);
             await carregarRadios();
-            avisar(`Importação concluída: ${data.novos} novo(s), ${data.atualizados} atualizado(s).`);
+            avisar(`Importação concluída: ${data.novos} novo(s), ${data.atualizados} atualizado(s)` +
+                   (erros.length ? `. Ficaram de fora ${lido.radios.length - linhas.length} linha(s) com problema.` : '.'));
         }
     });
 }

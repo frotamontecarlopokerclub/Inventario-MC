@@ -5325,8 +5325,6 @@ body.public-mode .busca-geral {
     padding: 12px 14px;
     color: #6b6268;
     font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
 }
 .mov-mais summary i {
     margin-right: 6px;
@@ -5625,7 +5623,8 @@ body.public-mode .busca-geral {
     font-size: 12px;
     font-weight: 800;
 }
-.form-subtitulo-kit i {
+.form-subtitulo-kit i,
+.importar-avisos summary i {
     margin-right: 6px;
 }
 .mc-modal-caixa.mc-modal-largo {
@@ -5742,4 +5741,24 @@ body.public-mode .busca-geral {
     .importar-numeros {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+.importar-avisos {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border: 1px solid #f0dfb5;
+    border-radius: 10px;
+    background: #fff8e6;
+    color: #7a5a00;
+    font-size: 12.5px;
+}
+.importar-avisos summary,
+.mov-mais summary {
+    font-weight: 700;
+    cursor: pointer;
+}
+.importar-avisos ul {
+    max-height: 160px;
+    overflow: auto;
+    margin: 8px 0 0;
+    padding-left: 18px;
 }
