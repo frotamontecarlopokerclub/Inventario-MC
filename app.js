@@ -3410,6 +3410,8 @@ function renderizarRadios() {
                             <i class="fa-solid fa-pen"></i></button>` : ''}
                         ${gestao && r.responsavel_nome ? `<button type="button" class="btn-icon" title="Registrar devolução" onclick="devolverRadio(${Number(r.id)})">
                             <i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                        ${gestao ? `<button type="button" class="btn-icon btn-excluir" title="Excluir rádio" onclick="excluirRadios([${Number(r.id)}])">
+                            <i class="fa-solid fa-trash-can"></i></button>` : ''}
                     </div>
                 </td>
             </tr>`;
@@ -3794,6 +3796,111 @@ async function editarModelosRadio() {
 
             modelosRadio = lista;
             avisar('Lista de modelos salva.');
+        }
+    });
+}
+
+
+/* =========================================================
+   EXCLUIR E EDITAR VÁRIOS DE UMA VEZ
+========================================================= */
+
+function nomeDoRadio(r) {
+    return r.identificacao ? `${r.identificacao} (série ${r.numero_serie})` : `série ${r.numero_serie}`;
+}
+
+async function excluirRadios(ids) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador exclui rádios.', 'erro');
+    const lista = radios.filter(r => ids.map(Number).includes(Number(r.id)));
+    if (!lista.length) return;
+
+    const assinados = lista.filter(r => r.situacao_termo === 'ASSINADO').length;
+    const pendentes = lista.filter(r => r.situacao_termo === 'PENDENTE').length;
+    const nomes = lista.slice(0, 8).map(nomeDoRadio).join('\n') + (lista.length > 8 ? `\n… e mais ${lista.length - 8}` : '');
+
+    const ok = await confirmar({
+        titulo: lista.length === 1 ? 'Excluir este rádio?' : `Excluir ${lista.length} rádios?`,
+        mensagem: `${nomes}\n\nO rádio e o kit (baterias e base) saem do sistema. Esta ação não pode ser desfeita.` +
+            (assinados ? `\n\n${assinados} deles têm termo assinado: o termo continua guardado no histórico.` : '') +
+            (pendentes ? `\n\n${pendentes} deles têm link de termo aguardando assinatura: esse link será cancelado.` : ''),
+        textoConfirmar: lista.length === 1 ? 'Excluir rádio' : `Excluir ${lista.length} rádios`,
+        perigo: true
+    });
+    if (!ok) return;
+
+    const { data, error } = await supabaseClient.rpc('excluir_radios', { p_ids: lista.map(r => Number(r.id)) });
+    if (error) {
+        return avisar(/excluir_radios/.test(error.message || '')
+            ? 'Rode a atualização v13 no Supabase para liberar a exclusão.'
+            : 'Não foi possível excluir: ' + traduzirErro(error), 'erro');
+    }
+    lista.forEach(r => radiosSelecionados.delete(Number(r.id)));
+    await carregarRadios();
+    avisar(`${data.excluidos} rádio(s) excluído(s).` + (data.termos_cancelados ? ` ${data.termos_cancelados} link(s) de termo cancelado(s).` : ''));
+}
+
+function excluirRadiosSelecionados() {
+    excluirRadios([...radiosSelecionados]);
+}
+
+/* Só os campos preenchidos mudam; o resto de cada rádio fica como está. */
+function editarRadiosSelecionados() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita rádios.', 'erro');
+    const lista = radios.filter(r => radiosSelecionados.has(Number(r.id)));
+    if (!lista.length) return avisar('Selecione os rádios na lista primeiro.', 'info');
+    if (lista.length === 1) return abrirRadio(lista[0].id);
+
+    const NAO = '__nao_alterar__';
+    const modelo = campoModeloRadio({});
+    abrirFormulario({
+        titulo: `Editar ${lista.length} rádios`,
+        subtitulo: 'Preencha só o que quer mudar. O que ficar em branco ou em "Não alterar" continua como está em cada rádio.',
+        textoSalvar: `Aplicar nos ${lista.length} rádios`,
+        campos: [
+            { id: 'setor', rotulo: 'Setor', lista: 'dlSetoresRadio', placeholder: 'Não alterar' },
+            { id: 'local_id', rotulo: 'Local', tipo: 'select', valor: NAO,
+              opcoes: [{ valor: NAO, texto: '— Não alterar —' }, { valor: '', texto: 'Não informado' },
+                       ...LOCAIS.map(l => ({ valor: l.id, texto: l.nome }))] },
+            { id: 'responsavel_nome', rotulo: 'Responsável (quem assina o termo)', lista: 'dlResponsaveisRadio', placeholder: 'Não alterar' },
+            { id: 'responsavel_documento', rotulo: 'CPF do responsável', placeholder: 'Não alterar', inputmode: 'numeric' },
+            { id: 'responsavel_telefone', rotulo: 'Celular do responsável', placeholder: 'Não alterar' },
+            { id: 'status', rotulo: 'Status', tipo: 'select', valor: NAO,
+              opcoes: [{ valor: NAO, texto: '— Não alterar —' }, ...STATUS_RADIO.map(s => ({ valor: s, texto: s }))] },
+            { ...modelo, valor: NAO, opcoes: [{ valor: NAO, texto: '— Não alterar —' }, ...modelo.opcoes], ajuda: '' },
+            { id: 'devolver', tipo: 'checkbox', largo: true,
+              rotulo: 'Devolução: tirar o responsável de todos (ficam como "Reserva")' }
+        ],
+        aoSalvar: async v => {
+            const mudancas = {};
+            if (v.devolver) {
+                Object.assign(mudancas, { responsavel_nome: null, responsavel_documento: null, responsavel_telefone: null, status: 'Reserva' });
+            } else {
+                if (v.responsavel_nome) {
+                    mudancas.responsavel_nome = v.responsavel_nome;
+                    // CPF é da pessoa: troca de responsável sem CPF limpa o CPF antigo.
+                    mudancas.responsavel_documento = v.responsavel_documento || null;
+                } else if (v.responsavel_documento) {
+                    if (lista.some(r => !r.responsavel_nome)) throw new Error('Há rádios sem responsável: informe também o nome.');
+                    mudancas.responsavel_documento = v.responsavel_documento;
+                }
+                if (v.responsavel_telefone) mudancas.responsavel_telefone = v.responsavel_telefone;
+                if (v.status !== NAO) mudancas.status = v.status;
+            }
+            if (v.setor) mudancas.setor = v.setor;
+            if (v.local_id !== NAO) mudancas.local_id = v.local_id ? Number(v.local_id) : null;
+            if (v.modelo_radio !== NAO) {
+                const [marca, mod] = String(v.modelo_radio || '|').split('|');
+                mudancas.marca = marca || null;
+                mudancas.modelo = mod || null;
+            }
+            if (!Object.keys(mudancas).length) throw new Error('Nada para mudar: preencha pelo menos um campo.');
+
+            const { error } = await supabaseClient.from('radios').update(mudancas).in('id', lista.map(r => Number(r.id)));
+            if (error) throw new Error(erroRadio(error));
+            await carregarRadios();
+            avisar(`${lista.length} rádios atualizados.` +
+                   (mudancas.responsavel_nome ? ' Gere o termo para o novo responsável assinar.' : ''),
+                   mudancas.responsavel_nome ? 'info' : 'sucesso');
         }
     });
 }

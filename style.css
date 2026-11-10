@@ -4527,8 +4527,6 @@ body.modal-aberto {
 .barra-selecao {
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
     margin: 0 0 14px;
     padding: 10px 14px;
     border-radius: 12px;
@@ -5761,4 +5759,15 @@ body.public-mode .busca-geral {
     overflow: auto;
     margin: 8px 0 0;
     padding-left: 18px;
+}
+.btn-excluir-texto {
+    color: var(--v4-bad, #b42318) !important;
+    border-color: #f1c5c5 !important;
+}
+.btn-excluir-texto:hover {
+    background: #fdeeee !important;
+}
+.barra-selecao {
+    flex-wrap: wrap;
+    gap: 8px;
 }
