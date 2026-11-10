@@ -4242,6 +4242,50 @@ function ligarAtualizacaoAutomatica() {
     setInterval(() => atualizarDadosSeNecessario(), 30 * 1000);
 }
 
+
+/* ---------------- Tabelas no celular ----------------
+   No celular, cada linha de tabela vira um cartão compacto.
+   Para isso cada célula recebe o nome da coluna (data-label)
+   e as células especiais (nome, foto, seleção, ações) uma classe.
+---------------------------------------------------------- */
+
+const COLUNAS_PRINCIPAIS = ['peça', 'rádio', 'item', 'nome', 'local', 'data'];
+
+function rotularTabela(tabela) {
+    const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    if (!titulos.length) return;
+    const normal = titulos.map(t => t.toLowerCase());
+    const principal = COLUNAS_PRINCIPAIS.map(n => normal.indexOf(n)).find(i => i >= 0) ?? 0;
+
+    tabela.querySelectorAll('tbody tr').forEach(tr => {
+        const celulas = [...tr.children];
+        const unica = celulas.length === 1 || celulas.some(td => td.colSpan > 1);
+        tr.classList.toggle('cel-linha-unica', unica);
+        if (unica) return;
+        celulas.forEach((td, i) => {
+            const titulo = titulos[i] || '';
+            const nome = normal[i] || '';
+            if (td.dataset.label !== titulo) td.dataset.label = titulo;
+            td.classList.toggle('cel-principal', i === principal);
+            td.classList.toggle('cel-foto', nome === 'foto');
+            td.classList.toggle('cel-check', !!td.querySelector('input[type="checkbox"]') && !titulo);
+            td.classList.toggle('cel-acoes', nome === 'ações');
+            td.classList.toggle('cel-detalhes', nome === 'detalhes');
+        });
+    });
+}
+
+function ligarTabelasCelular() {
+    const tabelas = () => document.querySelectorAll('table.inventory-table');
+    tabelas().forEach(rotularTabela);
+    const observador = new MutationObserver(mudancas => {
+        const afetadas = new Set();
+        mudancas.forEach(m => { const t = m.target.closest?.('table.inventory-table'); if (t) afetadas.add(t); });
+        afetadas.forEach(rotularTabela);
+    });
+    tabelas().forEach(t => observador.observe(t, { childList: true, subtree: true }));
+}
+
 /* =========================================================
    17 · IMPORTAR RÁDIOS DA PLANILHA
    1. A pessoa escolhe a planilha (.xlsx ou .csv).
@@ -4569,6 +4613,7 @@ function ligarEventos() {
 
     ligarBuscaGeral();
     ligarAtualizacaoAutomatica();
+    ligarTabelasCelular();
 
     /* Onde está? / Fora do lugar */
     let espera = null;

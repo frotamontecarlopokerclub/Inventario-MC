@@ -5771,3 +5771,497 @@ body.public-mode .busca-geral {
     flex-wrap: wrap;
     gap: 8px;
 }
+@media (max-width: 640px) {
+    body,
+    html {
+        overflow-x: hidden;
+    }
+    .tela {
+        padding: 12px 8px 24px !important;
+    }
+    .card {
+        padding: 12px !important;
+        border-radius: 14px !important;
+    }
+    .page-title {
+        margin-bottom: 12px !important;
+        gap: 8px !important;
+    }
+    .page-title span {
+        font-size: 9.5px !important;
+        letter-spacing: 1.4px !important;
+    }
+    .page-title h2 {
+        font-size: 20px !important;
+        line-height: 1.2 !important;
+    }
+    .page-title p {
+        margin-top: 2px !important;
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+    }
+    .page-title .btn-primary,
+    .page-title .btn-secondary {
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        font-size: 12.5px !important;
+    }
+    .main-header {
+        row-gap: 8px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+    body.com-barra-inferior:not(.login-mode) .main-header {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    .header-titulo h1 {
+        font-size: 18px !important;
+        line-height: 1.15 !important;
+    }
+    .header-subtitulo {
+        font-size: 7.5px !important;
+    }
+    .busca-geral input,
+    .tela input[type="date"],
+    .tela input[type="email"],
+    .tela input[type="number"],
+    .tela input[type="password"],
+    .tela input[type="search"],
+    .tela input[type="text"],
+    .tela select {
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+    .tela .mc-check {
+        min-height: 38px !important;
+        height: auto !important;
+    }
+    .estoque-toolbar {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+    }
+    .estoque-toolbar > * {
+        width: auto !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+    .estoque-toolbar .estoque-busca {
+        grid-column: 1/-1 !important;
+        flex: none !important;
+        height: auto !important;
+    }
+    .estoque-toolbar select {
+        width: 100% !important;
+        padding-left: 10px !important;
+        padding-right: 26px !important;
+        text-overflow: ellipsis;
+    }
+    .estoque-toolbar .input-wrapper select {
+        padding-left: 34px !important;
+    }
+    .estoque-toolbar .estoque-info {
+        justify-self: start;
+        min-height: 0 !important;
+        padding: 6px 10px !important;
+    }
+    .dashboard-table .table-area,
+    .table-area {
+        overflow: visible !important;
+        margin: 0 !important;
+        border: 0 !important;
+    }
+    .admin-table,
+    .dashboard-table .inventory-table,
+    .fora-table,
+    .inventory-table,
+    .produtos-table,
+    .radios-table {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        border: 0 !important;
+    }
+    .inventory-table tbody td.cel-acoes::before,
+    .inventory-table tbody td.cel-check::before,
+    .inventory-table tbody td.cel-foto::before,
+    .inventory-table tbody td.cel-principal::before,
+    .inventory-table thead {
+        display: none !important;
+    }
+    .inventory-table tbody {
+        display: block !important;
+    }
+    .inventory-table tbody tr {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px 10px;
+        padding: 10px 2px !important;
+        border-bottom: 1px solid #f1eaeb !important;
+        background: 0 0 !important;
+    }
+    .inventory-table tbody tr:last-child {
+        border-bottom: 0 !important;
+    }
+    .dashboard-table .inventory-table tbody td,
+    .inventory-table tbody td {
+        display: block !important;
+        flex: 1 1 28%;
+        min-width: 0;
+        width: auto !important;
+        max-width: none !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: 0 0 !important;
+        font-size: 12.5px !important;
+        line-height: 1.35 !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+    .inventory-table tbody td[data-label]:not([data-label=""])::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 1px;
+        color: #9a8f94;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+    }
+    .inventory-table tbody td.cel-check {
+        order: -3;
+        flex: 0 0 auto;
+        align-self: center;
+    }
+    .inventory-table tbody td.cel-foto {
+        order: -2;
+        flex: 0 0 auto;
+    }
+    .inventory-table tbody td.cel-principal {
+        order: -1;
+        flex: 1 1 40%;
+        align-self: center;
+        font-size: 13.5px !important;
+        font-weight: 700;
+    }
+    .inventory-table tbody td.cel-acoes {
+        order: 0;
+        flex: 0 0 auto;
+        align-self: center;
+    }
+    .inventory-table tbody td:not(.cel-check):not(.cel-foto):not(.cel-principal):not(.cel-acoes) {
+        order: 1;
+    }
+    .inventory-table tbody tr::after {
+        content: "";
+        order: 0;
+        flex: 0 0 100%;
+        height: 0;
+    }
+    .inventory-table tbody td.cel-foto .foto-vazia,
+    .inventory-table tbody td.cel-foto img,
+    .inventory-table tbody td.cel-foto > button,
+    .inventory-table tbody td.cel-foto > div {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+        border-radius: 8px !important;
+        font-size: 13px !important;
+    }
+    .inventory-table tbody td.cel-acoes,
+    .inventory-table tbody td.cel-acoes > div {
+        display: flex !important;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px !important;
+    }
+    .inventory-table tbody td.cel-acoes .btn-icon,
+    .inventory-table tbody td.cel-acoes button {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+        padding: 0 !important;
+    }
+    .inventory-table tbody td.cel-acoes .btn-primary:not(.btn-icon),
+    .inventory-table tbody td.cel-acoes .btn-secondary:not(.btn-icon),
+    .inventory-table tbody td.cel-acoes .btn-small {
+        width: auto !important;
+        padding: 0 10px !important;
+        font-size: 11.5px !important;
+    }
+    .inventory-table tbody td .mov-badge,
+    .inventory-table tbody td .status-badge,
+    .inventory-table tbody td [class*="badge"] {
+        padding: 2px 7px !important;
+        font-size: 10.5px !important;
+    }
+    .inventory-table tbody td small,
+    .onde-corpo header p {
+        font-size: 11px !important;
+    }
+    .inventory-table tbody td.cel-detalhes {
+        order: 2;
+        flex: 1 1 100%;
+    }
+    .inventory-table tbody td.cel-detalhes pre {
+        max-height: 140px;
+        overflow: auto;
+        margin: 0;
+        font-size: 10.5px !important;
+    }
+    .inventory-table tbody tr.cel-linha-unica {
+        display: block !important;
+    }
+    .inventory-table tbody tr.cel-linha-unica::after {
+        display: none;
+    }
+    .inventory-table tbody tr.cel-linha-unica td {
+        display: block !important;
+        text-align: center !important;
+    }
+    .inventory-table tbody td.empty-state {
+        padding: 26px 10px !important;
+    }
+    .onde-hero {
+        padding: 14px 12px 12px !important;
+        margin-bottom: 12px !important;
+    }
+    .onde-hero h2 {
+        font-size: 20px !important;
+    }
+    .onde-hero p {
+        margin: 4px 0 10px !important;
+        font-size: 12px !important;
+    }
+    .onde-busca input {
+        height: 44px !important;
+        min-height: 44px !important;
+    }
+    .onde-filtros {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px !important;
+    }
+    .onde-filtros select {
+        width: 100% !important;
+        min-width: 0;
+    }
+    .onde-filtros .mc-check {
+        width: auto !important;
+        padding: 0 10px !important;
+    }
+    .onde-contador {
+        grid-column: 1/-1;
+    }
+    .onde-resultados {
+        gap: 10px !important;
+    }
+    .onde-card {
+        display: grid !important;
+        grid-template-columns: 56px minmax(0, 1fr) !important;
+        gap: 0 !important;
+        align-items: start;
+    }
+    .onde-foto,
+    .onde-foto img,
+    .onde-sem-foto {
+        width: 56px !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        max-height: 56px !important;
+        margin: 10px 0 0 10px;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 18px !important;
+    }
+    .onde-foto img {
+        margin: 0;
+        object-fit: cover;
+    }
+    .onde-card:has(.onde-sem-foto) {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .onde-card:has(.onde-sem-foto) .onde-foto {
+        display: none !important;
+    }
+    .onde-corpo {
+        padding: 10px 12px 6px !important;
+    }
+    .onde-corpo header {
+        gap: 8px !important;
+        margin-bottom: 6px !important;
+    }
+    .onde-corpo h3 {
+        font-size: 14.5px !important;
+    }
+    .onde-total strong {
+        font-size: 19px !important;
+    }
+    .onde-total span {
+        font-size: 10px !important;
+    }
+    .onde-lista li {
+        grid-template-columns: minmax(0, 1fr) auto auto !important;
+        gap: 8px !important;
+        padding: 7px 0 !important;
+    }
+    .onde-acoes {
+        grid-column: auto !important;
+        gap: 4px !important;
+    }
+    .onde-acoes .btn-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+    }
+    .onde-local {
+        gap: 7px !important;
+    }
+    .onde-local strong {
+        font-size: 12.5px !important;
+    }
+    .onde-qtd {
+        font-size: 14px !important;
+        min-width: 18px;
+    }
+    .selo-fora {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+    }
+    .dashboard {
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+    }
+    .dash-card {
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 9px 10px !important;
+    }
+    .dash-card h3,
+    .dash-card strong {
+        font-size: 19px !important;
+    }
+    .dash-card .dash-icon {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+    }
+    .dash-extra {
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+    .dash-extra-item {
+        min-height: 0 !important;
+        padding: 9px 12px !important;
+    }
+    .dashboard-topo {
+        padding: 4px 2px 10px !important;
+    }
+    .dashboard-filtros {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+    .dashboard-filtros > :first-child {
+        grid-column: 1/-1;
+    }
+    .dashboard-filtros > * {
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .dashboard-status-grid {
+        gap: 8px !important;
+    }
+    .dashboard-status-grid .status-card {
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 10px 12px !important;
+    }
+    .dashboard-status-grid .status-icon {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        margin-bottom: 4px !important;
+    }
+    .dashboard-status-grid .status-card h3 {
+        font-size: 19px !important;
+        margin-bottom: 1px !important;
+    }
+    .radios-botoes,
+    .radios-resumo {
+        gap: 6px !important;
+    }
+    .barra-selecao .btn-small,
+    .radios-botoes button {
+        padding: 6px 8px !important;
+        font-size: 11.5px !important;
+    }
+    .radios-botoes button {
+        min-height: 38px !important;
+        line-height: 1.2 !important;
+    }
+    .radios-resumo {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        margin-bottom: 10px !important;
+    }
+    .radios-resumo > div {
+        min-height: 0 !important;
+        padding: 8px 6px !important;
+        text-align: center;
+    }
+    .radios-resumo small {
+        display: block;
+        min-height: 2.4em;
+        font-size: 8.5px !important;
+        letter-spacing: 0.3px !important;
+        line-height: 1.2 !important;
+    }
+    .radios-resumo strong {
+        font-size: 19px !important;
+        margin-top: 2px !important;
+    }
+    .barra-selecao {
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+    .barra-selecao > span {
+        flex: 1 1 100%;
+    }
+    .barra-selecao .btn-small {
+        flex: 1 1 45%;
+        min-height: 36px !important;
+    }
+    .admin-grid {
+        gap: 10px !important;
+    }
+    .admin-card-titulo,
+    .form-section-title {
+        margin-bottom: 10px !important;
+    }
+    .tela .admin-form-grid,
+    .tela .grid-2 {
+        gap: 0 !important;
+    }
+    .tela .input-group {
+        margin-bottom: 8px !important;
+    }
+    .tela .form-actions {
+        padding-top: 8px !important;
+    }
+    .tela label {
+        margin-bottom: 4px !important;
+    }
+    .mc-modal-caixa {
+        max-height: 94vh !important;
+    }
+    .mc-modal-corpo {
+        padding: 12px 14px !important;
+    }
+}
