@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -334,6 +334,10 @@ function campoFormularioHTML(campo) {
         ).join('');
         return `<div class="${classe}">${rotulo}<select id="${id}" ${obrigatorio}>${opcoes}</select>${ajuda}</div>`;
     }
+    if (campo.tipo === 'arquivo') {
+        return `<div class="${classe} mc-campo-arquivo">${rotulo}
+                    <input type="file" id="${id}" accept="${escaparHTML(campo.accept || '')}" ${obrigatorio}>${ajuda}</div>`;
+    }
     if (campo.tipo === 'file') {
         const previa = campo.valor
             ? `<img src="${escaparHTML(campo.valor)}" alt="Foto atual" class="mc-previa-foto" id="${id}_previa">`
@@ -359,8 +363,9 @@ function campoFormularioHTML(campo) {
    aoCancelar: chamado quando a pessoa desiste.
 */
 function abrirFormulario({ titulo, subtitulo = '', campos, textoSalvar = 'Salvar', aoSalvar, semCancelar = false,
-                           textoCancelar = 'Cancelar', aoCancelar = null, travado = false }) {
+                           textoCancelar = 'Cancelar', aoCancelar = null, travado = false, largo = false }) {
     const modal = garantirModalFormulario();
+    modal.querySelector('.mc-modal-caixa')?.classList.toggle('mc-modal-largo', Boolean(largo));
     formularioAtual = { campos, aoSalvar, aoCancelar, travado };
 
     modal.querySelector('#mcModalTitulo').textContent = titulo;
@@ -413,7 +418,7 @@ function lerFormulario() {
         const elemento = document.getElementById(`mcCampo_${campo.id}`);
         if (!elemento) return;
         if (campo.tipo === 'checkbox') valores[campo.id] = elemento.checked;
-        else if (campo.tipo === 'file') valores[campo.id] = elemento.files?.[0] || null;
+        else if (campo.tipo === 'file' || campo.tipo === 'arquivo') valores[campo.id] = elemento.files?.[0] || null;
         else if (campo.tipo === 'number') valores[campo.id] = elemento.value === '' ? null : Number(elemento.value);
         else valores[campo.id] = elemento.value.trim();
     });
@@ -3248,6 +3253,21 @@ function chaveModelo(marca, modelo) {
     return `${marca || ''}|${modelo || ''}`;
 }
 
+/* Números e séries do kit (para a busca). */
+function camposKit(r) {
+    return [r.bateria_codigo, r.bateria_serie, r.bateria_reserva_codigo, r.bateria_reserva_serie, r.carregador_codigo, r.carregador_serie]
+        .filter(Boolean);
+}
+
+function resumoKit(r) {
+    const partes = [
+        r.bateria_codigo || r.bateria_serie ? `<span title="Bateria${r.bateria_serie ? ' · série ' + escaparHTML(r.bateria_serie) : ''}"><i class="fa-solid fa-battery-full"></i> ${escaparHTML(r.bateria_codigo || r.bateria_serie)}</span>` : '',
+        r.bateria_reserva_codigo || r.bateria_reserva_serie ? `<span title="Bateria reserva${r.bateria_reserva_serie ? ' · série ' + escaparHTML(r.bateria_reserva_serie) : ''}"><i class="fa-solid fa-battery-half"></i> ${escaparHTML(r.bateria_reserva_codigo || r.bateria_reserva_serie)}</span>` : '',
+        r.carregador_codigo || r.carregador_serie ? `<span title="Base carregadora${r.carregador_serie ? ' · série ' + escaparHTML(r.carregador_serie) : ''}"><i class="fa-solid fa-plug"></i> ${escaparHTML(r.carregador_codigo || r.carregador_serie)}</span>` : ''
+    ].filter(Boolean);
+    return partes.length ? `<small class="celula-sub kit-radio">${partes.join('')}</small>` : '';
+}
+
 async function carregarRadios() {
     carregarModelosRadio().catch(() => {});
     try {
@@ -3320,7 +3340,7 @@ function radiosFiltrados() {
         (!situacao || r.situacao_termo === situacao) &&
         (!status || r.status === status) &&
         (!busca || busca.split(' ').every(parte => normalizarTexto(
-            [r.numero_serie, r.identificacao, r.marca, r.modelo, r.setor, r.responsavel_nome, nomeLocal(r.local_id)].join(' ')
+            [r.numero_serie, r.identificacao, r.marca, r.modelo, r.setor, r.responsavel_nome, nomeLocal(r.local_id), ...camposKit(r)].join(' ')
         ).includes(parte)))
     );
 }
@@ -3375,6 +3395,7 @@ function renderizarRadios() {
                 <td>
                     <strong>${escaparHTML(r.identificacao || r.numero_serie)}</strong>
                     <small class="celula-sub serie">${r.identificacao ? `Série ${escaparHTML(r.numero_serie)} · ` : ''}${escaparHTML([r.marca, r.modelo].filter(Boolean).join(' ') || '—')}</small>
+                    ${resumoKit(r)}
                 </td>
                 <td>${escaparHTML(r.setor || '—')}${r.local_id ? `<small class="celula-sub">${escaparHTML(nomeLocal(r.local_id))}</small>` : ''}</td>
                 <td>${r.responsavel_nome
@@ -3449,6 +3470,13 @@ function camposRadio(r = {}) {
         { id: 'responsavel_telefone', rotulo: 'Celular do responsável', valor: formatarTelefone(r.responsavel_telefone),
           placeholder: '(11) 98888-7777', ajuda: 'Usado para enviar o link do termo pelo WhatsApp.' },
         { id: 'status', rotulo: 'Status', tipo: 'select', valor: r.status || 'Ativo', opcoes: STATUS_RADIO.map(s => ({ valor: s, texto: s })) },
+        { id: 'titulo_kit', tipo: 'html', html: '<p class="form-subtitulo-kit"><i class="fa-solid fa-battery-full"></i> Acessórios que acompanham o rádio</p>' },
+        { id: 'bateria_codigo', rotulo: 'Bateria · número', valor: r.bateria_codigo, placeholder: 'Ex.: 00201' },
+        { id: 'bateria_serie', rotulo: 'Bateria · nº de série', valor: r.bateria_serie, placeholder: 'Ex.: 24N2802466' },
+        { id: 'bateria_reserva_codigo', rotulo: 'Bateria reserva · número', valor: r.bateria_reserva_codigo, placeholder: 'Ex.: 00301' },
+        { id: 'bateria_reserva_serie', rotulo: 'Bateria reserva · nº de série', valor: r.bateria_reserva_serie, placeholder: 'Ex.: 2430901996' },
+        { id: 'carregador_codigo', rotulo: 'Base carregadora · número', valor: r.carregador_codigo, placeholder: 'Ex.: 00101' },
+        { id: 'carregador_serie', rotulo: 'Base carregadora · nº de série', valor: r.carregador_serie, placeholder: 'Ex.: 24N28G2551' },
         { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', valor: r.observacao, largo: true,
           placeholder: 'Acessórios, estado de conservação, canal programado...' }
     ];
@@ -3483,7 +3511,15 @@ function dadosRadio(v) {
         responsavel_nome: v.responsavel_nome || null,
         responsavel_telefone: v.responsavel_telefone || null,
         status: v.status || 'Ativo',
-        observacao: v.observacao || null
+        observacao: v.observacao || null,
+        ...(v.bateria_codigo !== undefined ? {
+            bateria_codigo: v.bateria_codigo || null,
+            bateria_serie: v.bateria_serie || null,
+            bateria_reserva_codigo: v.bateria_reserva_codigo || null,
+            bateria_reserva_serie: v.bateria_reserva_serie || null,
+            carregador_codigo: v.carregador_codigo || null,
+            carregador_serie: v.carregador_serie || null
+        } : {})
     };
 }
 
@@ -3954,7 +3990,7 @@ function resultadosBuscaGeral(texto) {
     if (lugares.length) grupos.push({ titulo: 'Locais e setores', total: lugares.length, itens: lugares.slice(0, LIMITE_BUSCA_GERAL) });
 
     // Rádios: número de série, identificação ou responsável.
-    const listaRadios = radios.filter(r => bate(r.numero_serie, r.identificacao, r.responsavel_nome, r.setor));
+    const listaRadios = radios.filter(r => bate(r.numero_serie, r.identificacao, r.responsavel_nome, r.setor, ...camposKit(r)));
     if (listaRadios.length) {
         grupos.push({
             titulo: 'Rádios', total: listaRadios.length,
@@ -4092,6 +4128,268 @@ function ligarAtualizacaoAutomatica() {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizarDadosSeNecessario(); });
     window.addEventListener('focus', () => atualizarDadosSeNecessario());
     setInterval(() => atualizarDadosSeNecessario(), 30 * 1000);
+}
+
+/* =========================================================
+   17 · IMPORTAR RÁDIOS DA PLANILHA
+   1. A pessoa escolhe a planilha (.xlsx ou .csv).
+   2. O navegador lê as colunas pelo nome (HT, SERIE, BATERIA…).
+   3. O banco confere tudo (simulação) e mostra o que vai acontecer.
+   4. Só depois de confirmar é que grava.
+   Os números são copiados exatamente como estão na planilha.
+========================================================= */
+
+/* Nome da coluna (sem acento/espaço) → campo do rádio. */
+const COLUNAS_PLANILHA_RADIOS = {
+    identificacao: ['HT', 'IDENTIFICACAO', 'NUMEROHT', 'HTNUMERO'],
+    numero_serie: ['SERIE', 'SERIERADIO', 'NUMERODESERIE', 'NSERIE', 'SERIEDORADIO'],
+    bateria_codigo: ['BATERIA', 'BATERIAPRINCIPAL'],
+    bateria_serie: ['SERIE2', 'SERIEBATERIA'],
+    bateria_reserva_codigo: ['BATERIARESERVA', 'BATERIARESERVAS', 'RESERVA'],
+    bateria_reserva_serie: ['SERIE3', 'SERIEBATERIARESERVA', 'SERIERESERVA'],
+    carregador_codigo: ['BASECARREGADORA', 'CARREGADOR', 'BASE'],
+    carregador_serie: ['SERIE4', 'SERIEBASE', 'SERIECARREGADOR'],
+    setor: ['SETOR'],
+    local: ['LOCAL', 'CLUBE', 'UNIDADE'],
+    responsavel_nome: ['RESPONSAVEL', 'NOMEDORESPONSAVEL', 'NOME'],
+    responsavel_telefone: ['CELULAR', 'TELEFONE', 'WHATSAPP'],
+    status: ['STATUS', 'SITUACAO'],
+    observacao: ['OBSERVACAO', 'OBS', 'OBSERVACOES'],
+    marca: ['MARCA'],
+    modelo: ['MODELO']
+};
+
+/* Colunas de "número" (HT, bateria…): o Excel às vezes tira os zeros da frente. */
+const COLUNAS_CODIGO = ['identificacao', 'bateria_codigo', 'bateria_reserva_codigo', 'carregador_codigo'];
+
+function chaveColuna(texto) {
+    return normalizarTexto(texto).toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function carregarLeitorPlanilha() {
+    if (window.readXlsxFile) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+        const script = Object.assign(document.createElement('script'), { src: 'leitor-planilha.js' });
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Não foi possível carregar o leitor de planilhas (arquivo leitor-planilha.js).'));
+        document.head.appendChild(script);
+    });
+}
+
+function lerCsv(texto) {
+    const separador = (texto.split('\n')[0].match(/;/g) || []).length >= (texto.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+    const linhas = [];
+    let linha = [], valor = '', aspas = false;
+    for (let i = 0; i < texto.length; i++) {
+        const c = texto[i];
+        if (aspas) {
+            if (c === '"' && texto[i + 1] === '"') { valor += '"'; i++; }
+            else if (c === '"') aspas = false;
+            else valor += c;
+        } else if (c === '"') aspas = true;
+        else if (c === separador) { linha.push(valor); valor = ''; }
+        else if (c === '\n' || c === '\r') {
+            if (c === '\r' && texto[i + 1] === '\n') i++;
+            linha.push(valor); linhas.push(linha); linha = []; valor = '';
+        } else valor += c;
+    }
+    if (valor || linha.length) { linha.push(valor); linhas.push(linha); }
+    return linhas;
+}
+
+/* Devolve a tabela crua: [[cabeçalho...], [linha...], ...] da aba que tem a coluna SERIE. */
+async function lerTabelaPlanilha(arquivo) {
+    if (/\.(csv|txt)$/i.test(arquivo.name)) {
+        return { aba: null, linhas: lerCsv((await arquivo.text()).replace(/^﻿/, '')) };
+    }
+    if (!/\.xlsx$/i.test(arquivo.name)) {
+        throw new Error('Use uma planilha .xlsx (Excel) ou .csv. Arquivos .xls antigos: abra no Excel e salve como .xlsx.');
+    }
+    await carregarLeitorPlanilha();
+    const abas = await window.readXlsxFile(arquivo);
+    const lista = Array.isArray(abas) && abas[0]?.data ? abas : [{ sheet: '', data: abas }];
+    const comSerie = lista.find(aba => (aba.data || []).slice(0, 10)
+        .some(linha => (linha || []).some(celula => chaveColuna(celula) === 'SERIE')));
+    if (!comSerie) throw new Error('Não achei a coluna "SERIE" (número de série do rádio) em nenhuma aba da planilha.');
+    return { aba: comSerie.sheet, linhas: comSerie.data };
+}
+
+/* Transforma a tabela em rádios, reconhecendo as colunas pelo nome. */
+function interpretarPlanilhaRadios(tabela, padroes = {}) {
+    const linhas = tabela.linhas || [];
+    const indiceCabecalho = linhas.slice(0, 10).findIndex(l => (l || []).some(c => chaveColuna(c) === 'SERIE'));
+    if (indiceCabecalho < 0) throw new Error('Não achei a coluna "SERIE" (número de série do rádio).');
+
+    // A planilha dos clubes usa SERIE (rádio), SERIE2 (bateria), SERIE3 (reserva) e SÉRIE (base).
+    let series = 0;
+    const colunas = (linhas[indiceCabecalho] || []).map(celula => {
+        let chave = chaveColuna(celula);
+        if (chave === 'SERIE') chave = ['SERIE', 'SERIE4'][series++] || `SERIE${series + 2}`;
+        const campo = Object.keys(COLUNAS_PLANILHA_RADIOS).find(c => COLUNAS_PLANILHA_RADIOS[c].includes(chave));
+        return { titulo: String(celula ?? '').trim(), campo };
+    });
+
+    const usados = new Set();
+    colunas.forEach(c => { if (c.campo && usados.has(c.campo)) c.campo = null; else if (c.campo) usados.add(c.campo); });
+
+    const corpo = linhas.slice(indiceCabecalho + 1);
+    const tamanhoCodigo = {};
+    colunas.forEach((c, i) => {
+        if (!COLUNAS_CODIGO.includes(c.campo)) return;
+        const textos = corpo.map(l => l?.[i]).filter(v => typeof v === 'string' && /^0\d+$/.test(v.trim()));
+        if (textos.length) tamanhoCodigo[i] = Math.max(...textos.map(v => v.trim().length));
+    });
+
+    const texto = (valor, i) => {
+        if (valor === null || valor === undefined) return '';
+        if (typeof valor === 'number') {
+            const s = Number.isInteger(valor) ? String(valor) : String(valor);
+            return tamanhoCodigo[i] ? s.padStart(tamanhoCodigo[i], '0') : s;
+        }
+        if (valor instanceof Date) return valor.toLocaleDateString('pt-BR');
+        return String(valor).trim();
+    };
+
+    const radiosLidos = [];
+    corpo.forEach((linha, n) => {
+        const r = { linha: indiceCabecalho + n + 2 };
+        colunas.forEach((c, i) => { if (c.campo) r[c.campo] = texto(linha?.[i], i); });
+        if (!Object.keys(COLUNAS_PLANILHA_RADIOS).some(k => r[k])) return;   // linha vazia
+
+        if (r.identificacao && /^\d+$/.test(r.identificacao)) r.identificacao = `HT ${r.identificacao}`;
+        if (r.setor) r.setor = tituloSetor(r.setor);
+        r.setor = r.setor || padroes.setor || '';
+        r.local = r.local || padroes.local || '';
+        r.responsavel_nome = r.responsavel_nome || padroes.responsavel || '';
+        r.status = statusDaPlanilha(r.status, r.responsavel_nome);
+        radiosLidos.push(r);
+    });
+
+    return {
+        radios: radiosLidos,
+        reconhecidas: colunas.filter(c => c.campo).map(c => c.titulo),
+        ignoradas: colunas.filter(c => !c.campo && c.titulo).map(c => c.titulo)
+    };
+}
+
+function tituloSetor(texto) {
+    const pequenas = ['de', 'da', 'do', 'das', 'dos', 'e'];
+    return String(texto).toLowerCase().split(/\s+/).filter(Boolean)
+        .map((p, i) => (i && pequenas.includes(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))).join(' ');
+}
+
+function statusDaPlanilha(valor, responsavel) {
+    const chave = chaveColuna(valor);
+    const mapa = { ATIVO: 'Ativo', RESERVA: 'Reserva', MANUTENCAO: 'Em manutenção', EMMANUTENCAO: 'Em manutenção',
+                   EXTRAVIADO: 'Extraviado', BAIXADO: 'Baixado' };
+    if (mapa[chave]) return mapa[chave];
+    if (valor) return valor;   // o banco avisa que não reconheceu
+    return responsavel ? 'Ativo' : 'Reserva';
+}
+
+
+/* ---------------- Telas ---------------- */
+
+function abrirImportacaoRadios() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador importa rádios.', 'erro');
+
+    abrirFormulario({
+        titulo: 'Importar rádios da planilha',
+        subtitulo: 'O sistema lê as colunas pelo nome, confere tudo e mostra o resultado antes de gravar.',
+        textoSalvar: 'Ler planilha',
+        campos: [
+            { id: 'arquivo', tipo: 'arquivo', rotulo: 'Planilha (.xlsx ou .csv)', obrigatorio: true, largo: true,
+              accept: '.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv' },
+            { id: 'ajuda', tipo: 'html', html: `<div class="importar-ajuda">
+                <strong>Colunas reconhecidas</strong>
+                <span>HT · SERIE (rádio) · BATERIA · SERIE2 · BATERIA RESERVA · SERIE3 · BASE CARREGADORA · SÉRIE (base)
+                · SETOR · RESPONSÁVEL · LOCAL · CELULAR · STATUS · OBSERVAÇÃO</span>
+                <small>Só "SERIE" é obrigatória. Outras colunas são ignoradas. Marca e modelo entram como o padrão
+                (${escaparHTML(textoModelo(modelosRadio[0]))}) se a planilha não tiver.</small></div>` },
+            { id: 'setor', rotulo: 'Setor (se a planilha não tiver)', lista: 'dlSetoresRadio', placeholder: 'Ex.: Segurança Externa' },
+            { id: 'local', rotulo: 'Local (se a planilha não tiver)', tipo: 'select', valor: '',
+              opcoes: [{ valor: '', texto: 'Não informado' }, ...LOCAIS.map(l => ({ valor: l.nome, texto: l.nome }))] },
+            { id: 'responsavel', rotulo: 'Responsável (se a planilha não tiver)', lista: 'dlResponsaveisRadio', largo: true,
+              placeholder: 'Nome completo de quem assina o termo' }
+        ],
+        aoSalvar: async valores => {
+            if (!valores.arquivo) throw new Error('Escolha a planilha.');
+            const tabela = await lerTabelaPlanilha(valores.arquivo);
+            const lido = interpretarPlanilhaRadios(tabela, valores);
+            if (!lido.radios.length) throw new Error('A planilha não tem nenhuma linha com rádio.');
+
+            const { data, error } = await supabaseClient.rpc('importar_radios', { p_linhas: lido.radios, p_simular: true });
+            if (error) {
+                throw new Error(/importar_radios/.test(error.message || '')
+                    ? 'Rode a atualização v11 no Supabase para liberar a importação.'
+                    : traduzirErro(error));
+            }
+            setTimeout(() => mostrarPreviaImportacao(lido, data, valores.arquivo.name, tabela.aba), 0);
+        }
+    });
+}
+
+function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
+    const erros = resumo.erros || [];
+    const erroPorLinha = new Map();
+    erros.forEach(e => erroPorLinha.set(e.linha, [...(erroPorLinha.get(e.linha) || []), e.mensagem]));
+    const aGravar = (resumo.novos || 0) + (resumo.atualizados || 0);
+
+    const caixa = (numero, texto, classe) => `<div class="importar-numero ${classe}"><b>${numero}</b><span>${texto}</span></div>`;
+    const tabela = lido.radios.slice(0, 400).map(r => {
+        const problemas = erroPorLinha.get(r.linha);
+        return `<tr class="${problemas ? 'importar-linha-erro' : ''}">
+            <td>${r.linha}</td>
+            <td>${escaparHTML(r.identificacao || '—')}</td>
+            <td><b>${escaparHTML(r.numero_serie || '—')}</b></td>
+            <td>${escaparHTML([r.bateria_codigo, r.bateria_serie].filter(Boolean).join(' · ') || '—')}</td>
+            <td>${escaparHTML([r.bateria_reserva_codigo, r.bateria_reserva_serie].filter(Boolean).join(' · ') || '—')}</td>
+            <td>${escaparHTML([r.carregador_codigo, r.carregador_serie].filter(Boolean).join(' · ') || '—')}</td>
+            <td>${escaparHTML(r.setor || '—')}</td>
+            <td>${escaparHTML(r.responsavel_nome || '—')}</td>
+        </tr>${problemas ? `<tr class="importar-linha-erro"><td></td><td colspan="7">⚠ ${problemas.map(escaparHTML).join('<br>⚠ ')}</td></tr>` : ''}`;
+    }).join('');
+
+    const html = `
+        <div class="importar-previa">
+            <p class="importar-origem"><i class="fa-solid fa-file-excel"></i> ${escaparHTML(nomeArquivo)}${aba ? ` · aba "${escaparHTML(aba)}"` : ''}
+               · ${lido.radios.length} linha(s)</p>
+            <div class="importar-numeros">
+                ${caixa(resumo.novos || 0, 'novos', 'novo')}
+                ${caixa(resumo.atualizados || 0, 'atualizados', 'atualizado')}
+                ${caixa(resumo.iguais || 0, 'já estavam iguais', 'igual')}
+                ${caixa(erros.length, erros.length === 1 ? 'problema' : 'problemas', erros.length ? 'erro' : 'igual')}
+            </div>
+            ${erros.length ? `<p class="importar-aviso-erro"><i class="fa-solid fa-triangle-exclamation"></i>
+                Nada será gravado enquanto houver problemas. Corrija a planilha (veja as linhas marcadas) e envie de novo.</p>` : ''}
+            ${lido.ignoradas.length ? `<p class="importar-ignoradas">Colunas ignoradas: ${lido.ignoradas.map(escaparHTML).join(', ')}</p>` : ''}
+            <p class="importar-ignoradas">Marca e modelo: ${escaparHTML(resumo.marca_padrao || '')} (quando a planilha não informa).</p>
+            <div class="importar-tabela"><table>
+                <thead><tr><th>Linha</th><th>HT</th><th>Rádio (série)</th><th>Bateria</th><th>Bateria reserva</th>
+                    <th>Base carregadora</th><th>Setor</th><th>Responsável</th></tr></thead>
+                <tbody>${tabela}</tbody>
+            </table></div>
+            ${lido.radios.length > 400 ? `<p class="importar-ignoradas">Mostrando as primeiras 400 linhas.</p>` : ''}
+        </div>`;
+
+    abrirFormulario({
+        titulo: erros.length ? 'A planilha tem problemas' : 'Confira antes de gravar',
+        subtitulo: erros.length
+            ? 'Os números foram lidos da planilha. Veja abaixo o que precisa ser corrigido.'
+            : aGravar ? `Tudo certo. ${aGravar} rádio(s) serão gravados.` : 'Todos os rádios da planilha já estão cadastrados assim.',
+        textoSalvar: erros.length ? 'Escolher outra planilha' : aGravar ? `Gravar ${aGravar} rádio(s)` : 'Fechar',
+        largo: true,
+        campos: [{ id: 'previa', tipo: 'html', html }],
+        aoSalvar: async () => {
+            if (erros.length) return setTimeout(abrirImportacaoRadios, 0);
+            if (!aGravar) return;
+            const { data, error } = await supabaseClient.rpc('importar_radios', { p_linhas: lido.radios, p_simular: false });
+            if (error) throw new Error(traduzirErro(error));
+            if (data?.erros?.length) throw new Error('O banco encontrou um problema novo: ' + data.erros[0].mensagem);
+            await carregarRadios();
+            avisar(`Importação concluída: ${data.novos} novo(s), ${data.atualizados} atualizado(s).`);
+        }
+    });
 }
 
 /* =========================================================
