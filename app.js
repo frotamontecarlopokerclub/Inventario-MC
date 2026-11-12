@@ -687,8 +687,9 @@ async function login(evento) {
         usuarioLogado = data.user;
         await entrarNoSistema();
     } catch (erro) {
+        if (erro?.message === 'ACESSO_NEGADO') return false;
         console.error('ERRO AO REALIZAR LOGIN:', erro);
-        if (erro?.message !== 'ACESSO_NEGADO') erroLogin('Sem conexão com o sistema. Confira a internet e tente de novo.');
+        erroLogin('Sem conexão com o sistema. Confira a internet e tente de novo.');
     } finally {
         if (botao) {
             botao.disabled = false;
@@ -714,6 +715,8 @@ async function entrarNoSistema() {
     atualizarUsuarioInterface();
     abrirTela('ondeEstaTela', document.getElementById('menuOndeEsta'));
     await Promise.all([carregarDashboard(), carregarSubsetores()]);
+    if (podeAdministrar()) atualizarPedidosAcesso();
+    if (precisaTrocarSenha) pedirNovaSenha({ obrigatoria: true });
 }
 
 async function logout() {
@@ -733,36 +736,52 @@ async function logout() {
     abrirTela('loginTela');
 }
 
-/* Usuário inativo ou sem cadastro é desconectado na hora. */
+/* Usuário inativo, aguardando liberação ou sem cadastro é desconectado na hora. */
+let precisaTrocarSenha = false;
+
+async function lerMeuCadastro() {
+    const { data, error } = await supabaseClient.rpc('meu_cadastro');
+    if (!error) return data;
+    // Sistema ainda sem a migração v14: lê direto da tabela, como antes.
+    console.warn('meu_cadastro indisponível:', error.message);
+    const antigo = await supabaseClient.from('usuarios')
+        .select('perfil, nome, ativo').ilike('email', usuarioLogado.email).maybeSingle();
+    if (antigo.error) throw antigo.error;
+    return antigo.data;
+}
+
 async function verificarPerfil() {
+    precisaTrocarSenha = false;
     if (!usuarioLogado) {
         perfilUsuario = null;
         return;
     }
 
-    const { data, error } = await supabaseClient
-        .from('usuarios')
-        .select('perfil, nome, ativo')
-        .ilike('email', usuarioLogado.email)
-        .maybeSingle();
-
-    if (error) {
-        console.error('ERRO PERFIL:', error);
+    let cadastro;
+    try {
+        cadastro = await lerMeuCadastro();
+    } catch (erro) {
+        console.error('ERRO PERFIL:', erro);
         perfilUsuario = 'consulta';
         nomeUsuarioLogado = usuarioLogado.email || '';
         return;
     }
 
-    if (!data || data.ativo === false) {
+    if (!cadastro || cadastro.ativo === false) {
         await supabaseClient.auth.signOut();
         usuarioLogado = null;
         perfilUsuario = null;
-        erroLogin('Seu acesso está desativado ou ainda não foi liberado. Procure o administrador.');
+        erroLogin(cadastro?.pendente
+            ? 'Seu cadastro foi recebido e está aguardando liberação de um gestor. Assim que for liberado, é só entrar com seu e-mail e senha.'
+            : cadastro?.recusado
+                ? 'Seu pedido de acesso não foi aprovado. Fale com o seu gestor.'
+                : 'Seu acesso está desativado ou ainda não foi liberado. Procure o administrador.');
         throw new Error('ACESSO_NEGADO');
     }
 
-    nomeUsuarioLogado = String(data.nome || usuarioLogado.email || '').trim();
-    perfilUsuario = String(data.perfil || 'consulta').trim().toLowerCase();
+    nomeUsuarioLogado = String(cadastro.nome || usuarioLogado.email || '').trim();
+    perfilUsuario = String(cadastro.perfil || 'consulta').trim().toLowerCase();
+    precisaTrocarSenha = cadastro.trocar_senha === true;
 }
 
 /*
@@ -787,6 +806,7 @@ function atualizarMenus() {
         menuHistorico: opera,
         menuDashboard: gestao,
         menuAdministracao: gestao,
+        menuMinhaSenha: logado,
         menuLogout: logado,
         menuLogin: !logado
     };
@@ -853,23 +873,144 @@ function esqueciSenha() {
     });
 }
 
-function pedirNovaSenha() {
+/* Regras da senha (as mesmas em todo o sistema). */
+function problemaNaSenha(senha, confirmacao) {
+    if (senha.length < 8) return 'A senha precisa ter pelo menos 8 caracteres.';
+    if (!/[a-zA-Z]/.test(senha) || !/[0-9]/.test(senha)) return 'Use letras e números na senha.';
+    if (confirmacao !== undefined && senha !== confirmacao) return 'As duas senhas não são iguais.';
+    return '';
+}
+
+function traduzirErroSenha(erro) {
+    const texto = String(erro?.message || erro || '');
+    if (/different from the old|same.?password/i.test(texto)) return 'A nova senha precisa ser diferente da atual.';
+    if (/weak|pwned|leaked|characters/i.test(texto)) return 'Senha muito fraca. Use uma senha mais longa, com letras e números.';
+    if (/reauthenticat|nonce/i.test(texto)) return 'Por segurança, saia e entre de novo antes de trocar a senha.';
+    if (/rate|limit/i.test(texto)) return 'Muitas tentativas seguidas. Aguarde alguns minutos.';
+    return texto || 'Erro desconhecido.';
+}
+
+async function gravarNovaSenha(senha) {
+    const { error } = await supabaseClient.auth.updateUser({ password: senha });
+    if (error) throw new Error(traduzirErroSenha(error));
+    const aviso = await supabaseClient.rpc('senha_trocada');
+    if (aviso.error) console.warn('senha_trocada:', aviso.error.message);
+    precisaTrocarSenha = false;
+}
+
+/*
+   Escolher nova senha:
+   · depois do link "Esqueci minha senha";
+   · obrigatoria: no 1º acesso com senha inicial ou provisória (sem fechar; dá para sair).
+*/
+function pedirNovaSenha({ obrigatoria = false } = {}) {
     abrirFormulario({
-        titulo: 'Escolha sua nova senha',
-        subtitulo: 'Mínimo de 8 caracteres.',
+        titulo: obrigatoria ? 'Crie a sua senha' : 'Escolha sua nova senha',
+        subtitulo: obrigatoria
+            ? 'Você entrou com uma senha provisória. Escolha agora uma senha só sua: mínimo de 8 caracteres, com letras e números.'
+            : 'Mínimo de 8 caracteres, com letras e números.',
         textoSalvar: 'Salvar nova senha',
-        semCancelar: true,
+        semCancelar: !obrigatoria,
+        travado: obrigatoria,
+        textoCancelar: 'Sair do sistema',
+        aoCancelar: obrigatoria ? () => logout() : null,
         campos: [
-            { id: 'senha', rotulo: 'Nova senha', tipo: 'password', obrigatorio: true, largo: true },
-            { id: 'confirmacao', rotulo: 'Repita a nova senha', tipo: 'password', obrigatorio: true, largo: true }
+            { id: 'senha', rotulo: 'Nova senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password' },
+            { id: 'confirmacao', rotulo: 'Repita a nova senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password' }
         ],
         aoSalvar: async ({ senha, confirmacao }) => {
-            if (senha.length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.');
-            if (senha !== confirmacao) throw new Error('As duas senhas não são iguais.');
-            const { error } = await supabaseClient.auth.updateUser({ password: senha });
-            if (error) throw error;
+            const problema = problemaNaSenha(senha, confirmacao);
+            if (problema) throw new Error(problema);
+            await gravarNovaSenha(senha);
             history.replaceState(null, '', window.location.pathname);
             avisar('Senha alterada com sucesso.');
+        }
+    });
+}
+
+/* Menu → "Minha senha": a pessoa logada troca a própria senha. */
+function trocarMinhaSenha() {
+    if (!usuarioLogado) return;
+    document.getElementById('sidebar')?.classList.remove('open');
+    abrirFormulario({
+        titulo: 'Trocar minha senha',
+        subtitulo: 'Mínimo de 8 caracteres, com letras e números.',
+        textoSalvar: 'Trocar senha',
+        campos: [
+            { id: 'atual', rotulo: 'Senha atual', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'current-password' },
+            { id: 'senha', rotulo: 'Nova senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password' },
+            { id: 'confirmacao', rotulo: 'Repita a nova senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password' }
+        ],
+        aoSalvar: async ({ atual, senha, confirmacao }) => {
+            const problema = problemaNaSenha(senha, confirmacao);
+            if (problema) throw new Error(problema);
+            if (senha === atual) throw new Error('A nova senha precisa ser diferente da atual.');
+            const conferencia = await supabaseClient.auth.signInWithPassword({ email: usuarioLogado.email, password: atual });
+            if (conferencia.error) throw new Error('A senha atual está incorreta.');
+            await gravarNovaSenha(senha);
+            avisar('Senha trocada. Use a nova senha no próximo acesso.');
+        }
+    });
+}
+
+
+/* =========================================================
+   CRIAR MINHA CONTA
+   A pessoa se cadastra na tela de login. A conta fica
+   aguardando liberação de um Gestor/Administrador.
+========================================================= */
+
+function criarMinhaConta() {
+    abrirFormulario({
+        titulo: 'Criar minha conta',
+        subtitulo: 'Depois de enviar, um gestor libera o seu acesso. Use o seu e-mail de verdade: é por ele que você recupera a senha.',
+        textoSalvar: 'Enviar pedido',
+        campos: [
+            { id: 'nome', rotulo: 'Nome completo', obrigatorio: true, largo: true, autocomplete: 'name', maxlength: 120 },
+            { id: 'email', rotulo: 'E-mail', tipo: 'email', obrigatorio: true, largo: true, autocomplete: 'email', valor: valorCampo('email') },
+            { id: 'senha', rotulo: 'Crie uma senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password',
+              ajuda: 'Mínimo de 8 caracteres, com letras e números.' },
+            { id: 'confirmacao', rotulo: 'Repita a senha', tipo: 'password', obrigatorio: true, largo: true, autocomplete: 'new-password' }
+        ],
+        aoSalvar: async ({ nome, email, senha, confirmacao }) => {
+            nome = nome.replace(/\s+/g, ' ').trim();
+            email = email.trim().toLowerCase();
+            if (nome.length < 3 || !nome.includes(' ')) throw new Error('Escreva o nome e o sobrenome.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Confira o e-mail.');
+            const problema = problemaNaSenha(senha, confirmacao);
+            if (problema) throw new Error(problema);
+
+            const destino = window.location.href.split('#')[0].split('?')[0];
+            const { data, error } = await supabaseClient.auth.signUp({
+                email, password: senha,
+                options: { data: { nome, autocadastro: 'true' }, emailRedirectTo: destino }
+            });
+
+            if (error) {
+                const texto = String(error.message || '');
+                if (/already registered|already exists/i.test(texto)) throw new Error('Este e-mail já tem cadastro. Use "Entrar" ou "Esqueci minha senha".');
+                if (/signups? not allowed|signup is disabled/i.test(texto)) throw new Error('O cadastro pela tela de login está desligado. Peça ao administrador para ligar (ou para criar o seu usuário).');
+                throw new Error(traduzirErroSenha(error));
+            }
+
+            const precisaConfirmar = !data?.session;
+            if (data?.session) await supabaseClient.auth.signOut();
+            const campoEmail = document.getElementById('email');
+            if (campoEmail) campoEmail.value = email;
+
+            setTimeout(() => abrirFormulario({
+                titulo: 'Pedido enviado!',
+                textoSalvar: 'Entendi',
+                semCancelar: true,
+                campos: [{ tipo: 'html', id: 'info', html: `
+                    <div class="pedido-enviado">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <p><strong>${escaparHTML(nome)}</strong>, seu pedido de acesso foi registrado.</p>
+                        ${precisaConfirmar ? '<p>1. Abra o e-mail que enviamos para <strong>' + escaparHTML(email) + '</strong> e clique no link de confirmação (confira também o spam).</p><p>2. Aguarde um gestor liberar o seu acesso.</p>'
+                                           : '<p>Agora é só aguardar um gestor liberar o seu acesso. Depois, entre com o seu e-mail e a senha que você criou.</p>'}
+                    </div>` }],
+                aoSalvar: async () => {}
+            }), 50);
         }
     });
 }
@@ -2643,29 +2784,184 @@ async function abrirAdministracao() {
 
 /* ---------------- Usuários ---------------- */
 
+const PERFIS_TEXTO = { consulta: 'Consulta', operacional: 'Operacional', gestor: 'Gestor', administrador: 'Administrador' };
+
+function opcoesPerfil(atual = 'consulta') {
+    const perfis = ['consulta', 'operacional', 'gestor'].concat(perfilUsuario === 'administrador' ? ['administrador'] : []);
+    return perfis.map(p => `<option value="${p}" ${p === atual ? 'selected' : ''}>${PERFIS_TEXTO[p]}</option>`).join('');
+}
+
 async function carregarUsuariosAdmin() {
     const tbody = document.getElementById('listaUsuariosAdmin');
     if (!tbody) return;
     try {
-        const { data, error } = await supabaseClient.from('usuarios')
-            .select('id,email,nome,perfil,ativo,created_at').order('nome', { ascending: true });
+        let { data, error } = await supabaseClient.from('usuarios')
+            .select('id,email,nome,perfil,ativo,created_at,pendente,trocar_senha,solicitado_em,recusado_em').order('nome', { ascending: true });
+        if (error && /pendente|trocar_senha|column/i.test(error.message)) {
+            // Sistema ainda sem a migração v14.
+            ({ data, error } = await supabaseClient.from('usuarios')
+                .select('id,email,nome,perfil,ativo,created_at').order('nome', { ascending: true }));
+        }
         if (error) throw error;
 
-        tbody.innerHTML = (data || []).map(u => `
+        const lista = data || [];
+        renderizarPedidosAcesso(lista.filter(u => u.pendente));
+        const usuarios = lista.filter(u => !u.pendente && !(u.recusado_em && u.ativo === false));
+        const euMesmo = String(usuarioLogado?.id || '');
+        const souAdmin = perfilUsuario === 'administrador';
+
+        tbody.innerHTML = usuarios.map(u => {
+            const ativo = u.ativo !== false;
+            const id = escaparHTML(u.id);
+            const podeSenha = ativo && String(u.id) !== euMesmo
+                && (souAdmin || String(u.perfil || '').toLowerCase() !== 'administrador');
+            return `
             <tr>
                 <td>${escaparHTML(u.nome || '—')}</td>
                 <td>${escaparHTML(u.email || '—')}</td>
                 <td>${escaparHTML(u.perfil || 'consulta')}</td>
-                <td><span class="status-badge ${u.ativo === false ? 'inativo' : 'ativo'}">${u.ativo === false ? 'Inativo' : 'Ativo'}</span></td>
+                <td><span class="status-badge ${ativo ? 'ativo' : 'inativo'}">${ativo ? 'Ativo' : 'Inativo'}</span>
+                    ${ativo && u.trocar_senha ? '<small class="aviso-troca-senha">Troca a senha no próximo acesso</small>' : ''}</td>
                 <td class="admin-actions">
-                    <button type="button" class="btn-secondary btn-small" onclick="alternarStatusUsuario('${escaparHTML(u.id)}', ${u.ativo !== false})">
+                    ${podeSenha ? `<button type="button" class="btn-secondary btn-small" title="Gerar senha provisória"
+                        onclick="gerarSenhaProvisoria('${id}')"><i class="fa-solid fa-key"></i></button>` : ''}
+                    <button type="button" class="btn-secondary btn-small" title="${ativo ? 'Desativar' : 'Reativar'}" onclick="alternarStatusUsuario('${id}', ${ativo})">
                         <i class="fa-solid fa-power-off"></i>
                     </button>
                 </td>
-            </tr>`).join('') || '<tr><td colspan="5" class="empty-state">Nenhum usuário encontrado.</td></tr>';
+            </tr>`;
+        }).join('') || '<tr><td colspan="5" class="empty-state">Nenhum usuário encontrado.</td></tr>';
+        USUARIOS_ADMIN = lista;
     } catch (erro) {
         console.error('ERRO USUÁRIOS:', erro);
     }
+}
+
+let USUARIOS_ADMIN = [];
+
+
+/* ---------------- Pedidos de acesso ---------------- */
+
+function mostrarContadorPedidos(total) {
+    const selo = document.getElementById('badgePedidosAcesso');
+    if (selo) {
+        selo.textContent = total > 99 ? '99+' : String(total);
+        selo.hidden = !total;
+    }
+    definirTexto('contadorPedidosAcesso', String(total));
+}
+
+/* Quantos pedidos esperam liberação (para o aviso no menu). */
+async function atualizarPedidosAcesso() {
+    if (!podeAdministrar()) return mostrarContadorPedidos(0);
+    const { data, error } = await supabaseClient.from('usuarios').select('id').eq('pendente', true);
+    if (!error) mostrarContadorPedidos((data || []).length);
+}
+
+function renderizarPedidosAcesso(pedidos) {
+    const card = document.getElementById('cardPedidosAcesso');
+    const tbody = document.getElementById('listaPedidosAcesso');
+    mostrarContadorPedidos(pedidos.length);
+    if (!card || !tbody) return;
+    card.hidden = pedidos.length === 0;
+    tbody.innerHTML = pedidos
+        .sort((a, b) => String(a.solicitado_em || '').localeCompare(String(b.solicitado_em || '')))
+        .map(u => {
+            const id = escaparHTML(u.id);
+            const quando = u.solicitado_em ? new Date(u.solicitado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+            return `
+            <tr data-pedido="${id}">
+                <td><strong>${escaparHTML(u.nome || '—')}</strong></td>
+                <td>${escaparHTML(u.email || '—')}</td>
+                <td>${escaparHTML(quando)}</td>
+                <td><select class="select-perfil-pedido" aria-label="Perfil de ${escaparHTML(u.nome || '')}">${opcoesPerfil('consulta')}</select></td>
+                <td class="admin-actions">
+                    <button type="button" class="btn-primary btn-small" onclick="liberarPedido('${id}')"><i class="fa-solid fa-check"></i> Liberar</button>
+                    <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="recusarPedido('${id}')"><i class="fa-solid fa-xmark"></i> Recusar</button>
+                </td>
+            </tr>`;
+        }).join('');
+}
+
+async function liberarPedido(id) {
+    if (!podeAdministrar()) return avisar('Sem permissão.', 'erro');
+    const pessoa = USUARIOS_ADMIN.find(u => String(u.id) === String(id));
+    const perfil = document.querySelector(`tr[data-pedido="${CSS.escape(id)}"] .select-perfil-pedido`)?.value || 'consulta';
+    if (!(await confirmar({
+        titulo: `Liberar o acesso de ${pessoa?.nome || 'esta pessoa'}?`,
+        mensagem: `${pessoa?.email || ''}\nPerfil: ${PERFIS_TEXTO[perfil]}\n\nA pessoa já poderá entrar com o e-mail e a senha que criou.`,
+        textoConfirmar: 'Liberar acesso'
+    }))) return;
+    const { error } = await supabaseClient.rpc('liberar_usuario', { p_id: id, p_perfil: perfil });
+    if (error) return avisar('Não foi possível liberar: ' + traduzirErro(error), 'erro');
+    avisar(`Acesso liberado para ${pessoa?.nome || 'o usuário'} (${PERFIS_TEXTO[perfil]}).`);
+    await carregarUsuariosAdmin();
+}
+
+async function recusarPedido(id) {
+    if (!podeAdministrar()) return avisar('Sem permissão.', 'erro');
+    const pessoa = USUARIOS_ADMIN.find(u => String(u.id) === String(id));
+    if (!(await confirmar({
+        titulo: `Recusar o pedido de ${pessoa?.nome || 'esta pessoa'}?`,
+        mensagem: `${pessoa?.email || ''}\n\nA conta é apagada e a pessoa não entra no sistema. Se foi engano, ela pode pedir de novo.`,
+        textoConfirmar: 'Recusar', perigo: true
+    }))) return;
+    const { error } = await supabaseClient.rpc('recusar_usuario', { p_id: id });
+    if (error) return avisar('Não foi possível recusar: ' + traduzirErro(error), 'erro');
+    avisar('Pedido recusado.');
+    await carregarUsuariosAdmin();
+}
+
+
+/* ---------------- Senha provisória ---------------- */
+
+async function copiarTexto(texto) {
+    try {
+        await navigator.clipboard.writeText(texto);
+        return true;
+    } catch {
+        const area = Object.assign(document.createElement('textarea'), { value: texto });
+        area.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+        document.body.appendChild(area);
+        area.select();
+        let copiou = false;
+        try { copiou = document.execCommand('copy'); } catch { copiou = false; }
+        area.remove();
+        return copiou;
+    }
+}
+
+async function gerarSenhaProvisoria(id) {
+    if (!podeAdministrar()) return avisar('Sem permissão.', 'erro');
+    const pessoa = USUARIOS_ADMIN.find(u => String(u.id) === String(id));
+    if (!(await confirmar({
+        titulo: `Gerar senha provisória para ${pessoa?.nome || 'este usuário'}?`,
+        mensagem: 'Use quando a pessoa esqueceu a senha e não recebe o e-mail de redefinição.\n\nA senha atual deixa de funcionar e a pessoa sai de todos os aparelhos. No próximo acesso ela escolhe uma senha nova.',
+        textoConfirmar: 'Gerar senha'
+    }))) return;
+
+    const { data: senha, error } = await supabaseClient.rpc('gerar_senha_provisoria', { p_id: id });
+    if (error) return avisar('Não foi possível gerar a senha: ' + traduzirErro(error), 'erro');
+
+    abrirFormulario({
+        titulo: 'Senha provisória',
+        subtitulo: `${pessoa?.nome || ''} · ${pessoa?.email || ''}`,
+        textoSalvar: 'Copiar e fechar',
+        textoCancelar: 'Fechar',
+        travado: true,
+        campos: [{ tipo: 'html', id: 'senha', html: `
+            <div class="senha-provisoria">
+                <code id="senhaProvisoriaTexto">${escaparHTML(senha)}</code>
+                <p>Passe esta senha para a pessoa <strong>pessoalmente ou por mensagem</strong>.
+                   No primeiro acesso o sistema pede para ela criar uma senha nova.</p>
+                <p class="senha-provisoria-alerta"><i class="fa-solid fa-eye-slash"></i> Ela não aparece de novo depois que você fechar.</p>
+            </div>` }],
+        aoSalvar: async () => {
+            if (!(await copiarTexto(senha))) throw new Error('Não deu para copiar automaticamente. Anote a senha antes de fechar.');
+            avisar('Senha copiada.');
+        }
+    });
+    await carregarUsuariosAdmin();
 }
 
 async function criarUsuario() {
@@ -2680,7 +2976,7 @@ async function criarUsuario() {
         const { data, error } = await supabaseClient.functions.invoke('criar-usuario', { body: { nome, email, senha, perfil } });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
-        avisar(`Usuário ${nome} criado. Passe a ele o e-mail e a senha.`);
+        avisar(`Usuário ${nome} criado. Passe a ele o e-mail e a senha; no primeiro acesso ele escolhe uma senha nova.`);
         ['novoUsuarioNome', 'novoUsuarioEmail', 'novoUsuarioSenha'].forEach(id => { document.getElementById(id).value = ''; });
         await carregarUsuariosAdmin();
     } catch (erro) {
@@ -4228,6 +4524,7 @@ async function atualizarDadosSeNecessario(forcar = false) {
     atualizandoAgora = true;
     try {
         await carregarDashboard();
+        if (podeAdministrar()) await atualizarPedidosAcesso();
         ultimaAtualizacao = Date.now();
     } catch (erro) {
         console.warn('Atualização automática falhou:', erro?.message || erro);

@@ -4766,6 +4766,7 @@ body.public-mode .main {
     color: #a59ca0;
     font-size: 12px;
 }
+#btnCriarConta i,
 #consultaPublicaTela .consulta-publica-footer i {
     margin-right: 4px;
 }
@@ -5767,9 +5768,151 @@ body.public-mode .busca-geral {
 .btn-excluir-texto:hover {
     background: #fdeeee !important;
 }
-.barra-selecao {
+.barra-selecao,
+.login-links {
     flex-wrap: wrap;
     gap: 8px;
+}
+.login-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px 14px;
+    margin-top: 4px;
+}
+.login-links .link-esqueci-senha {
+    width: auto !important;
+    margin: 0 !important;
+}
+#btnCriarConta {
+    font-weight: 700;
+}
+.menu-item .menu-badge {
+    margin-left: auto;
+}
+.card-pedidos-acesso {
+    margin-bottom: 18px;
+    border: 1px solid #f0c9a0 !important;
+    background: #fffaf3 !important;
+}
+.card-pedidos-acesso .form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.card-pedidos-acesso .form-section-title .menu-badge {
+    position: static;
+    margin-left: 2px;
+    background: #c0562b !important;
+    color: #fff !important;
+    opacity: 1 !important;
+}
+.pedidos-ajuda {
+    margin: -4px 0 12px;
+    color: #7b6f74;
+    font-size: 13px;
+    line-height: 1.45;
+}
+.select-perfil-pedido {
+    min-width: 140px;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
+}
+.card-pedidos-acesso .admin-actions {
+    white-space: nowrap;
+}
+.card-pedidos-acesso .admin-actions .btn-small {
+    width: auto !important;
+    padding: 0 12px !important;
+    gap: 6px;
+}
+.aviso-troca-senha {
+    display: block;
+    margin-top: 4px;
+    color: #a05a12;
+    font-size: 11px;
+}
+.senha-provisoria {
+    text-align: center;
+}
+.senha-provisoria code {
+    display: block;
+    margin: 4px 0 14px;
+    padding: 14px 10px;
+    border: 2px dashed #c9a2a6;
+    border-radius: 12px;
+    background: #fbf6f6;
+    color: #5e1f27;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    user-select: all;
+}
+.pedido-enviado p,
+.senha-provisoria p {
+    margin: 0 0 8px;
+    color: #4b4247;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.senha-provisoria-alerta {
+    color: #a05a12 !important;
+    font-size: 12.5px !important;
+}
+.pedido-enviado {
+    text-align: center;
+}
+.pedido-enviado > i {
+    margin-bottom: 10px;
+    color: #1f8a4c;
+    font-size: 40px;
+}
+.pedido-enviado p {
+    text-align: left;
+}
+@media (max-width: 640px) {
+    .card-pedidos-acesso {
+        margin-bottom: 12px;
+    }
+    .select-perfil-pedido {
+        width: 100% !important;
+        min-width: 0;
+    }
+    .card-pedidos-acesso tbody td.cel-acoes {
+        flex: 1 1 100% !important;
+        order: 2 !important;
+    }
+    .card-pedidos-acesso tbody td.cel-acoes .btn-small {
+        flex: 1 1 45%;
+        min-height: 38px !important;
+    }
+    .senha-provisoria code {
+        font-size: 22px;
+    }
+}
+@media (min-width: 641px) {
+    .tabela-usuarios {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+    .tabela-usuarios td,
+    .tabela-usuarios th {
+        padding: 10px 8px !important;
+        font-size: 12.5px !important;
+    }
+    .tabela-usuarios td:nth-child(2) {
+        overflow-wrap: anywhere;
+    }
+    .tabela-usuarios .admin-actions {
+        white-space: nowrap;
+    }
+    .tabela-usuarios .admin-actions .btn-small {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+    }
 }
 @media (max-width: 640px) {
     body,

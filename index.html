@@ -97,9 +97,14 @@
                     <li id="menuAdministracao" class="menu-item" style="display: none" onclick="abrirAdministracao()">
                         <i class="fa-solid fa-gear"></i>
                         <span>Administração</span>
+                        <b id="badgePedidosAcesso" class="menu-badge" hidden title="Pedidos de acesso aguardando">0</b>
                     </li>
 
                     <li class="menu-separador" aria-hidden="true"></li>
+                    <li id="menuMinhaSenha" class="menu-item" style="display: none" onclick="trocarMinhaSenha()">
+                        <i class="fa-solid fa-key"></i>
+                        <span>Minha senha</span>
+                    </li>
                     <li id="menuLogout" class="menu-item" style="display: none" onclick="logout()">
                         <i class="fa-solid fa-right-from-bracket"></i>
                         <span>Sair</span>
@@ -237,7 +242,12 @@
 
                             <p id="loginErro" class="login-erro" role="alert" hidden></p>
 
-                            <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
+                            <div class="login-links">
+                                <button type="button" class="link-esqueci-senha" id="btnCriarConta" onclick="criarMinhaConta()">
+                                    <i class="fa-solid fa-user-plus"></i> Criar minha conta
+                                </button>
+                                <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
+                            </div>
                         </form>
 
                         <div class="login-footer">
@@ -1298,6 +1308,28 @@
                     </div>
                 </div>
 
+                <div id="cardPedidosAcesso" class="card card-pedidos-acesso" hidden>
+                    <div class="form-section-title">
+                        <i class="fa-solid fa-user-clock"></i> Pedidos de acesso
+                        <b id="contadorPedidosAcesso" class="menu-badge">0</b>
+                    </div>
+                    <p class="pedidos-ajuda">Pessoas que criaram a conta na tela de login. Confira se conhece a pessoa, escolha o perfil e libere.</p>
+                    <div class="table-area">
+                        <table class="inventory-table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Pedido em</th>
+                                    <th>Perfil</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaPedidosAcesso"></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="admin-grid">
                     <div class="card">
                         <div class="form-section-title"><i class="fa-solid fa-user-plus"></i> Criar usuário</div>
@@ -1334,7 +1366,7 @@
                     <div class="card">
                         <div class="form-section-title"><i class="fa-solid fa-users"></i> Usuários cadastrados</div>
                         <div class="table-area">
-                            <table class="inventory-table admin-table">
+                            <table class="inventory-table admin-table tabela-usuarios">
                                 <thead>
                                     <tr>
                                         <th>Nome</th>
