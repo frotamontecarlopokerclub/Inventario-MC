@@ -8,23 +8,29 @@
     <link rel="icon" type="image/png" href="favicon-monte-carlo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
+        @font-face{ font-family:"Montserrat"; font-weight:400; font-display:swap; src:url("montserrat-400.woff2") format("woff2"); }
+        @font-face{ font-family:"Montserrat"; font-weight:500; font-display:swap; src:url("montserrat-500.woff2") format("woff2"); }
+        @font-face{ font-family:"Montserrat"; font-weight:600; font-display:swap; src:url("montserrat-600.woff2") format("woff2"); }
+        @font-face{ font-family:"Montserrat"; font-weight:700; font-display:swap; src:url("montserrat-700.woff2") format("woff2"); }
+        @font-face{ font-family:"Montserrat"; font-weight:800; font-display:swap; src:url("montserrat-800.woff2") format("woff2"); }
         :root{
-            --marsala:#955251; --marsala-dark:#6f3038; --marsala-soft:#f7eeee;
-            --gold:#c49a5a; --ink:#24151a; --muted:#6b6268; --line:#ece4e6;
-            --ok:#127a45; --ok-soft:#ebf8f1; --bad:#b42318; --bad-soft:#fdeeee; --bg:#f6f2f2;
+            --marsala:#420804; --marsala-dark:#5C0F08; --marsala-soft:#F6EEEC;
+            --gold:#C7932D; --ink:#141010; --muted:#525252; --line:#E7E2DC;
+            --ok:#17603D; --ok-soft:#EDF8F0; --bad:#A1222B; --bad-soft:#FFF0F0; --bg:#F7F7F7;
         }
         *{ box-sizing:border-box; }
         body{
             margin:0; background:var(--bg); color:var(--ink);
-            font-family:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased;
+            font-family:"Montserrat",system-ui,"Segoe UI",Roboto,Arial,sans-serif; -webkit-font-smoothing:antialiased;
         }
         .topo{
-            background:linear-gradient(135deg,#2a1218,#4a2229); color:#fff; padding:18px 16px;
+            background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='430' height='335' viewBox='0 0 430 335'%3E%3Cg stroke='%23C7932D' stroke-opacity='.16' stroke-width='1.2' fill='none'%3E%3Cpath d='M0 0 L430 335'/%3E%3Cpath d='M130 0 L430 234'/%3E%3C/g%3E%3C/svg%3E") no-repeat right top / 320px auto,
+                       radial-gradient(circle at 100% 0%, #50150D 0%, #50150D 10%, #250504 52%, #250504 70%, #0F0706 100%);
+            color:#fff; padding:20px 16px;
         }
         .topo-conteudo{ max-width:760px; margin:0 auto; display:flex; align-items:center; gap:12px; }
-        .topo img{ width:42px; height:42px; object-fit:contain; border-radius:10px; background:rgba(255,255,255,.08); padding:4px; }
-        .topo small{ display:block; color:var(--gold); font-size:10px; font-weight:800; letter-spacing:1.4px; }
-        .topo strong{ font-size:16px; }
+        .topo img{ width:40px; height:auto; }
+        .topo strong{ font-size:17px; font-weight:800; }
         main{ max-width:760px; margin:0 auto; padding:18px 16px 60px; }
         .cartao{
             background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px;
@@ -36,16 +42,16 @@
         .sub{ color:var(--muted); font-size:13px; margin:0; }
         .texto-termo{
             white-space:pre-wrap; font-size:14px; line-height:1.65; margin:0;
-            font-family:Georgia,"Times New Roman",serif; color:#2b2125;
+            color:#2b2125;
         }
-        .marcador{ background:#fff4d6; border-radius:4px; padding:0 3px; font-family:Inter,sans-serif; font-size:13px; }
+        .marcador{ background:#fff4d6; border-radius:4px; padding:0 3px; font-family:inherit; font-size:13px; }
         label{ display:block; font-size:12px; font-weight:700; margin:0 0 6px; color:#3d3035; }
         .campo{ margin-bottom:14px; }
         input[type=text]{
             width:100%; height:50px; padding:0 14px; border:1.5px solid #e3d4d6; border-radius:12px;
             font-size:16px; color:var(--ink); background:#fff; outline:none;
         }
-        input[type=text]:focus{ border-color:var(--marsala); box-shadow:0 0 0 4px rgba(149,82,81,.12); }
+        input[type=text]:focus{ border-color:var(--marsala); box-shadow:0 0 0 4px rgba(66,8,4,.10); }
         input.invalido{ border-color:var(--bad); }
         .ajuda{ display:block; margin-top:5px; font-size:11.5px; color:var(--muted); }
         .ajuda.erro{ color:var(--bad); font-weight:700; }
@@ -75,7 +81,7 @@
         .btn-principal:disabled{ opacity:.6; cursor:not-allowed; }
         .btn-secundario{ border:1px solid #e3d4d6; background:#fff; color:var(--marsala-dark); min-height:38px; font-size:13px; }
         .radios{ width:100%; border-collapse:collapse; font-size:13.5px; }
-        .radios th{ text-align:left; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.5px; padding:8px 6px; border-bottom:1px solid var(--line); }
+        .radios th{ text-align:left; color:var(--muted); font-size:11px; padding:8px 6px; border-bottom:1px solid var(--line); }
         .radios td{ padding:10px 6px; border-bottom:1px solid #f4eeef; }
         .radios td:first-child{ font-weight:800; font-family:ui-monospace,Menlo,Consolas,monospace; }
         .aviso{ display:flex; gap:12px; align-items:flex-start; padding:16px; border-radius:14px; font-size:14px; line-height:1.5; }
@@ -108,9 +114,8 @@
 
 <header class="topo">
     <div class="topo-conteudo">
-        <img src="logo.png" alt="" onerror="this.style.display='none'">
+        <img src="marca-mc-dourado.svg" alt="Monte Carlo" width="40" height="40">
         <div>
-            <small>GRUPO MONTE CARLO</small>
             <strong>Termo de Responsabilidade</strong>
         </div>
     </div>

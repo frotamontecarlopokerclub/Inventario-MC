@@ -9,6 +9,8 @@
 
         <link rel="icon" type="image/png" href="favicon-monte-carlo.png" />
 
+        <link rel="preload" href="montserrat-600.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="montserrat-800.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="stylesheet" href="style.css" />
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
@@ -38,13 +40,11 @@
 
             <div class="sidebar-logo">
                 <div class="logo-imagem">
-                    <img src="./logo.png" alt="Grupo Monte Carlo" />
+                    <img src="marca-mc-dourado.svg" alt="Monte Carlo" width="40" height="40" />
                 </div>
 
                 <div class="logo-texto">
-                    <strong> INVENTÁRIO CENTRAL </strong>
-
-                    <span> GRUPO MONTE CARLO </span>
+                    <strong>Inventário Central</strong>
                 </div>
             </div>
 
@@ -138,8 +138,6 @@
 
             <header class="main-header">
                 <div class="header-titulo">
-                    <span class="header-subtitulo"> GRUPO MONTE CARLO </span>
-
                     <h1>Inventário Central</h1>
                 </div>
 
@@ -178,17 +176,13 @@
                         <!-- LOGO -->
 
                         <div class="login-logo">
-                            <div class="login-logo-imagem">
-                                <img src="./logo.png" alt="Grupo Monte Carlo" />
-                            </div>
-
-                            <span>GRUPO MONTE CARLO</span>
+                            <img src="marca-assinatura-dourada.svg" alt="Monte Carlo Poker Club" class="login-assinatura" width="206" height="100" />
                         </div>
 
                         <div class="login-titulo">
                             <h2>Inventário Central</h2>
 
-                            <p>Acesso ao sistema de controle patrimonial</p>
+                            <p>Mobiliário, decoração e rádios do Grupo em um só lugar.</p>
                         </div>
 
                         <!-- FORM LOGIN -->
@@ -249,12 +243,6 @@
                                 <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
                             </div>
                         </form>
-
-                        <div class="login-footer">
-                            <i class="fa-solid fa-shield-halved"></i>
-
-                            Sistema protegido por autenticação
-                        </div>
                     </div>
                 </div>
             </section>
@@ -272,12 +260,10 @@
                     <div class="consulta-publica-header">
                         <div class="consulta-publica-marca">
                             <div class="consulta-publica-logo">
-                                <img src="monte-carlo-logo-transparente.png" alt="Grupo Monte Carlo" onerror="this.style.display='none'" />
+                                <img src="marca-mc-dourado.svg" alt="Monte Carlo" width="44" height="44" />
                             </div>
 
                             <div>
-                                <span> GRUPO MONTE CARLO </span>
-
                                 <h1>Consulta de Inventário</h1>
 
                                 <p>Consulte os itens ativos, suas quantidades e localizações.</p>
@@ -393,7 +379,7 @@
 
                     <div class="consulta-publica-resumo">
                         <div class="consulta-resumo-titulo">
-                            <span> ITENS DISPONÍVEIS </span>
+                            <span>Itens disponíveis</span>
 
                             <strong id="contadorConsultaPublica"> 0 </strong>
                         </div>
@@ -410,16 +396,6 @@
         ================================================== -->
 
                     <div id="listaConsultaPublica" class="consulta-publica-grid"></div>
-
-                    <!-- =================================================
-             RODAPÉ
-        ================================================== -->
-
-                    <div class="consulta-publica-footer">
-                        <i class="fa-solid fa-shield-halved"></i>
-
-                        Consulta somente para visualização
-                    </div>
                 </div>
             </section>
 
@@ -429,7 +405,6 @@
 
             <section id="ondeEstaTela" class="tela">
                 <div class="onde-hero">
-                    <span>LOCALIZAR</span>
                     <h2>Onde está?</h2>
                     <p>Digite o nome da peça, a categoria ou um local. Ex.: "vaso azul", "quadro", "CASA 2".</p>
 
@@ -466,7 +441,6 @@
             <section id="foraLugarTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span>CONTROLE</span>
                         <h2>Fora do lugar</h2>
                         <p>Peças que saíram do seu local fixo e ainda não voltaram. Devolva com um clique quando retornarem.</p>
                     </div>
@@ -519,8 +493,6 @@
             <section id="dashboardTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> VISÃO GERAL </span>
-
                         <h2>Painel geral</h2>
 
                         <p>Acompanhe o inventário do Grupo Monte Carlo.</p>
@@ -585,8 +557,8 @@
                     <button type="button" id="dashForaItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar()">
                         <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         <div>
-                            <small>Fora do lugar</small>
                             <strong id="dashForaLugar">—</strong>
+                            <small>Fora do lugar</small>
                         </div>
                         <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
                     </button>
@@ -594,8 +566,8 @@
                     <button type="button" id="dashAtrasoItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar(true)">
                         <i class="fa-solid fa-clock"></i>
                         <div>
-                            <small>Retorno atrasado</small>
                             <strong id="dashAtrasados">—</strong>
+                            <small>Retorno atrasado</small>
                         </div>
                         <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
                     </button>
@@ -603,8 +575,8 @@
                     <div class="dash-extra-item">
                         <i class="fa-solid fa-sack-dollar"></i>
                         <div>
-                            <small>Valor de referência do acervo</small>
                             <strong id="dashValorPatrimonio">—</strong>
+                            <small>Valor de referência do acervo</small>
                         </div>
                     </div>
                 </div>
@@ -615,8 +587,6 @@
                     <div class="card dashboard-table">
                         <div class="dashboard-topo">
                             <div>
-                                <span> DISTRIBUIÇÃO </span>
-
                                 <h2>Quantidade por Item e Local</h2>
                             </div>
 
@@ -714,8 +684,6 @@
             <section id="cadastroTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> NOVO REGISTRO </span>
-
                         <h2>Cadastrar peças</h2>
 
                         <p>Informe a peça e distribua a quantidade pelos locais e setores. Esse será o local fixo de cada grupo.</p>
@@ -790,8 +758,8 @@
                                 </div>
 
                                 <div class="dist-total">
-                                    <small>Total distribuído</small>
                                     <strong id="totalDistribuido">0</strong>
+                                    <small>Total distribuído</small>
                                     <span id="statusDistribuicao" class="dist-status"></span>
                                 </div>
                             </div>
@@ -865,7 +833,6 @@
             <section id="movimentacaoTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> MOVER PEÇAS </span>
                         <h2>Mover peças</h2>
                         <p>Leve peças de um lugar para outro em 3 passos.</p>
                     </div>
@@ -1017,8 +984,6 @@
             <section id="estoqueTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> CONTROLE </span>
-
                         <h2>Inventário completo</h2>
 
                         <p>Todas as peças, onde estão e qual é o local fixo de cada grupo.</p>
@@ -1085,7 +1050,6 @@
             <section id="produtosTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span>CATÁLOGO</span>
                         <h2>Catálogo de peças</h2>
                         <p>
                             Cada peça cadastrada uma única vez: nome, categoria, descrição e foto. A quantidade e os locais vêm do
@@ -1150,7 +1114,6 @@
             <section id="radiosTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span>EQUIPAMENTOS</span>
                         <h2>Rádios HT</h2>
                         <p>Cada rádio com setor, responsável e termo de responsabilidade assinado online.</p>
                     </div>
@@ -1169,10 +1132,10 @@
                 </div>
 
                 <div class="radios-resumo">
-                    <div><small>Rádios</small><strong id="radiosTotal">0</strong></div>
-                    <div class="ok"><small>Termo assinado</small><strong id="radiosAssinados">0</strong></div>
-                    <div class="pendente"><small>Aguardando assinatura</small><strong id="radiosPendentes">0</strong></div>
-                    <div class="falta"><small>Sem termo</small><strong id="radiosSemTermo">0</strong></div>
+                    <div><strong id="radiosTotal">0</strong><small>Rádios</small></div>
+                    <div class="ok"><strong id="radiosAssinados">0</strong><small>Termo assinado</small></div>
+                    <div class="pendente"><strong id="radiosPendentes">0</strong><small>Aguardando assinatura</small></div>
+                    <div class="falta"><strong id="radiosSemTermo">0</strong><small>Sem termo</small></div>
                 </div>
 
                 <div class="card">
@@ -1259,8 +1222,6 @@
             <section id="historicoTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span> AUDITORIA </span>
-
                         <h2>Histórico</h2>
 
                         <p>Consulte as movimentações realizadas no inventário.</p>
@@ -1302,7 +1263,6 @@
             <section id="administracaoTela" class="tela">
                 <div class="page-title">
                     <div>
-                        <span>GESTÃO DO SISTEMA</span>
                         <h2>Administração</h2>
                         <p>Gerencie usuários, locais, setores e acompanhe a rastreabilidade das ações.</p>
                     </div>
