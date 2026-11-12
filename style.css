@@ -7263,3 +7263,27 @@ html body.public-mode .main {
 .consulta-publica-resumo-info {
     color: var(--mc-texto-2) !important;
 }
+html body .tela select.select-perfil-usuario {
+    width: 100% !important;
+    min-width: 118px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 22px 0 8px !important;
+    background-position: right 6px center !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+}
+@media (min-width: 641px) {
+    .tabela-usuarios td:nth-child(2) {
+        overflow-wrap: normal !important;
+        word-break: break-word;
+    }
+}
+.perfil-fixo {
+    font-weight: 600;
+    color: var(--mc-tinta);
+}
+.perfil-fixo small {
+    color: var(--mc-texto-3);
+    font-weight: 500;
+}

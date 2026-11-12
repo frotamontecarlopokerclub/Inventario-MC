@@ -163,6 +163,8 @@ function traduzirErro(erro) {
     if (codigo === '23505' && /locais/.test(texto)) return 'Já existe um local com esse nome.';
     if (codigo === '23505' && /radios/.test(texto)) return 'Já existe um rádio com esse número de série.';
     if (codigo === '42501' || /row-level security|permission denied/i.test(texto)) {
+        // Mensagens escritas pelo próprio sistema (em português) são mostradas como vieram.
+        if (/[ãõçéêáíóú]/i.test(texto) && !/row-level|permission/i.test(texto)) return texto;
         return 'Seu perfil não tem permissão para esta operação.';
     }
     if (/relation .* does not exist|Could not find the (table|function)/i.test(texto)) {
@@ -2952,7 +2954,10 @@ async function carregarUsuariosAdmin() {
             <tr>
                 <td>${escaparHTML(u.nome || '—')}</td>
                 <td>${escaparHTML(u.email || '—')}</td>
-                <td>${escaparHTML(u.perfil || 'consulta')}</td>
+                <td>${podeMudarPerfil(u)
+                    ? `<select class="select-perfil-usuario" aria-label="Perfil de ${escaparHTML(u.nome || u.email || '')}"
+                               onchange="mudarPerfilUsuario('${id}', this)">${opcoesPerfil(perfilDe(u))}</select>`
+                    : `<span class="perfil-fixo">${escaparHTML(PERFIS_TEXTO[perfilDe(u)] || perfilDe(u))}${String(u.id) === euMesmo ? ' <small>(você)</small>' : ''}</span>`}</td>
                 <td><span class="status-badge ${ativo ? 'ativo' : 'inativo'}">${ativo ? 'Ativo' : 'Inativo'}</span>
                     ${ativo && u.trocar_senha ? '<small class="aviso-troca-senha">Troca a senha no próximo acesso</small>' : ''}</td>
                 <td class="admin-actions">
@@ -2971,6 +2976,38 @@ async function carregarUsuariosAdmin() {
 }
 
 let USUARIOS_ADMIN = [];
+
+const perfilDe = u => String(u?.perfil || 'consulta').trim().toLowerCase();
+
+/* Pode trocar o perfil: não é você mesmo; administrador só é alterado por administrador. */
+function podeMudarPerfil(u) {
+    if (!podeAdministrar() || String(u.id) === String(usuarioLogado?.id || '')) return false;
+    return perfilUsuario === 'administrador' || perfilDe(u) !== 'administrador';
+}
+
+async function mudarPerfilUsuario(id, campo) {
+    const pessoa = USUARIOS_ADMIN.find(u => String(u.id) === String(id));
+    const antes = perfilDe(pessoa);
+    const novo = campo.value;
+    if (!pessoa || novo === antes) return;
+
+    const ok = await confirmar({
+        titulo: `Mudar o perfil de ${pessoa.nome || pessoa.email}?`,
+        mensagem: `${PERFIS_TEXTO[antes] || antes} → ${PERFIS_TEXTO[novo]}\n\nA mudança vale no próximo acesso da pessoa (ou ao atualizar a página).`,
+        textoConfirmar: 'Mudar perfil'
+    });
+    if (!ok) { campo.value = antes; return; }
+
+    campo.disabled = true;
+    const { error } = await supabaseClient.from('usuarios').update({ perfil: novo }).eq('id', id);
+    campo.disabled = false;
+    if (error) {
+        campo.value = antes;
+        return avisar('Não foi possível mudar o perfil: ' + traduzirErro(error), 'erro');
+    }
+    avisar(`${pessoa.nome || 'Usuário'} agora é ${PERFIS_TEXTO[novo]}.`);
+    await carregarUsuariosAdmin();
+}
 
 
 /* ---------------- Pedidos de acesso ---------------- */
