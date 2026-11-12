@@ -2964,23 +2964,68 @@ async function gerarSenhaProvisoria(id) {
     await carregarUsuariosAdmin();
 }
 
+/*
+   Criar usuário (Gestor/Administrador).
+   A conta é criada pelo mesmo caminho do "Criar minha conta", num cliente
+   separado (a sessão de quem está criando não muda), e já é liberada
+   com o perfil escolhido. A pessoa troca a senha inicial no 1º acesso.
+*/
 async function criarUsuario() {
     if (!podeAdministrar()) return avisar('Só Gestor ou Administrador cria usuários.', 'erro');
-    const nome = valorCampo('novoUsuarioNome');
-    const email = valorCampo('novoUsuarioEmail');
+    const nome = valorCampo('novoUsuarioNome').replace(/\s+/g, ' ').trim();
+    const email = valorCampo('novoUsuarioEmail').trim().toLowerCase();
     const senha = document.getElementById('novoUsuarioSenha')?.value || '';
     const perfil = valorCampo('novoUsuarioPerfil') || 'consulta';
-    if (!nome || !email || senha.length < 10) return avisar('Informe nome, e-mail e uma senha com pelo menos 10 caracteres.', 'erro');
+
+    if (!nome || !email) return avisar('Informe o nome e o e-mail.', 'erro');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return avisar('Confira o e-mail.', 'erro');
+    if (senha.length < 10 || !/[a-zA-Z]/.test(senha) || !/[0-9]/.test(senha)) {
+        return avisar('A senha inicial precisa ter pelo menos 10 caracteres, com letras e números.', 'erro');
+    }
+    if (perfil === 'administrador' && perfilUsuario !== 'administrador') {
+        return avisar('Só um administrador pode criar outro administrador.', 'erro');
+    }
+
+    const botao = document.querySelector('button[onclick="criarUsuario()"]');
+    const textoBotao = botao?.innerHTML;
+    if (botao) { botao.disabled = true; botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando...'; }
 
     try {
-        const { data, error } = await supabaseClient.functions.invoke('criar-usuario', { body: { nome, email, senha, perfil } });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        avisar(`Usuário ${nome} criado. Passe a ele o e-mail e a senha; no primeiro acesso ele escolhe uma senha nova.`);
+        const avulso = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'mc-criar-usuario' }
+        });
+        const { data, error } = await avulso.auth.signUp({
+            email, password: senha,
+            options: { data: { nome, autocadastro: 'true' } }
+        });
+        if (error) {
+            const texto = String(error.message || '');
+            if (/already registered|already exists/i.test(texto)) throw new Error('este e-mail já tem cadastro.');
+            if (/signups? not allowed|signup is disabled/i.test(texto)) throw new Error('ligue "Allow new users to sign up" no Supabase (Authentication → Sign In / Providers).');
+            throw new Error(traduzirErroSenha(error));
+        }
+        if (!data?.user || (Array.isArray(data.user.identities) && data.user.identities.length === 0)) {
+            throw new Error('este e-mail já tem cadastro.');
+        }
+
+        const { error: erroLiberar } = await supabaseClient.rpc('concluir_cadastro_usuario', { p_id: data.user.id, p_perfil: perfil });
+        if (erroLiberar) {
+            if (/concluir_cadastro_usuario|function|PGRST202/i.test(erroLiberar.message || '')) {
+                throw new Error('rode a migração v15 no Supabase. A conta foi criada e está em "Pedidos de acesso".');
+            }
+            throw erroLiberar;
+        }
+
+        avisar(data.session
+            ? `Usuário ${nome} criado. Passe a ele o e-mail e a senha inicial; no primeiro acesso ele escolhe uma senha nova.`
+            : `Usuário ${nome} criado, mas o Supabase está pedindo confirmação por e-mail. Desligue "Confirm email" para ele conseguir entrar.`,
+            data.session ? 'sucesso' : 'info');
         ['novoUsuarioNome', 'novoUsuarioEmail', 'novoUsuarioSenha'].forEach(id => { document.getElementById(id).value = ''; });
-        await carregarUsuariosAdmin();
     } catch (erro) {
-        avisar('Não foi possível criar o usuário: ' + traduzirErro(erro), 'erro');
+        avisar('Não foi possível criar o usuário: ' + (erro?.message || traduzirErro(erro)), 'erro');
+    } finally {
+        if (botao) { botao.disabled = false; botao.innerHTML = textoBotao; }
+        await carregarUsuariosAdmin();
     }
 }
 
