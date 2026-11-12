@@ -7287,3 +7287,190 @@ html body .tela select.select-perfil-usuario {
     color: var(--mc-texto-3);
     font-weight: 500;
 }
+body:not(.ve-custos) .col-custo {
+    display: none !important;
+}
+.dash-extra-link {
+    cursor: pointer;
+}
+.dash-extra-link:hover {
+    border-color: var(--mc-marsala) !important;
+}
+.custos-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.custo-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    background: var(--mc-cartao);
+    border: 1px solid var(--mc-linha);
+    border-radius: var(--mc-raio);
+    box-shadow: var(--mc-sombra);
+}
+.custo-kpi strong {
+    color: var(--mc-tinta);
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.3px;
+    overflow-wrap: anywhere;
+}
+.custo-kpi span {
+    color: var(--mc-texto-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+.custo-kpi.destaque {
+    background:
+        var(--mc-diagonais) no-repeat right top/70%auto,
+        var(--mc-degrade);
+    border-color: transparent;
+}
+.custo-kpi.destaque strong {
+    color: #fff;
+    font-size: 28px;
+}
+.custo-kpi.destaque span {
+    color: var(--mc-bege);
+}
+.custo-kpi.alerta strong,
+.custos-radios-pendentes > i {
+    color: var(--mc-aviso);
+}
+.custos-card {
+    margin-bottom: 18px;
+}
+.custos-duas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+.custos-radios-pendentes[hidden] {
+    display: none !important;
+}
+.custos-tabela td.num,
+.custos-tabela th.num {
+    text-align: right;
+    white-space: nowrap;
+}
+.custo-barra {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+}
+.custo-barra-trilho {
+    flex: 1 1 auto;
+    height: 8px;
+    border-radius: 4px;
+    background: #f0ece7;
+    overflow: hidden;
+}
+.custo-barra-valor {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--mc-marsala);
+}
+.custo-barra-pct {
+    flex: 0 0 46px;
+    color: var(--mc-texto-2);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+.custos-ajuda {
+    margin: -4px 0 12px;
+    color: var(--mc-texto-2);
+    font-size: 13px;
+}
+.custos-radios-pendentes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid #f0d9a6;
+    border-radius: var(--mc-raio-p);
+    background: var(--mc-aviso-fundo);
+    color: var(--mc-tinta);
+    font-size: 13.5px;
+}
+.custos-radios-pendentes .btn-small {
+    margin-left: auto;
+    width: auto !important;
+    padding: 0 14px !important;
+}
+.custo-lancar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    max-width: 300px;
+}
+html body .tela .custo-lancar input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 38px !important;
+    min-height: 38px !important;
+    text-align: right;
+}
+.custo-lancar .btn-small {
+    flex: 0 0 auto;
+    width: auto !important;
+    height: 38px !important;
+    padding: 0 12px !important;
+    gap: 6px;
+}
+@media (max-width: 1100px) {
+    .custos-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .custos-duas {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .custos-kpis {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .custo-kpi {
+        padding: 12px;
+    }
+    .custo-kpi strong {
+        font-size: 18px;
+    }
+    .custo-kpi.destaque {
+        grid-column: 1/-1;
+    }
+    .custo-kpi.destaque strong {
+        font-size: 24px;
+    }
+    .custo-kpi span {
+        font-size: 11.5px;
+    }
+    .custos-card {
+        margin-bottom: 12px;
+    }
+    .custos-duas {
+        gap: 0;
+    }
+    .custo-barra {
+        min-width: 0;
+    }
+    .custos-tabela td:last-child {
+        flex: 1 1 100% !important;
+    }
+    .custo-lancar {
+        max-width: none;
+    }
+    .custos-radios-pendentes {
+        flex-wrap: wrap;
+    }
+}

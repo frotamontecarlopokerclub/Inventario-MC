@@ -92,6 +92,10 @@
                         <i class="fa-solid fa-chart-line"></i>
                         <span>Painel geral</span>
                     </li>
+                    <li id="menuCustos" class="menu-item" style="display: none" onclick="abrirCustos()">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                        <span>Custos</span>
+                    </li>
 
                     <li class="menu-grupo" aria-hidden="true">Gestão</li>
                     <li id="menuAdministracao" class="menu-item" style="display: none" onclick="abrirAdministracao()">
@@ -572,7 +576,7 @@
                         <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
                     </button>
 
-                    <div class="dash-extra-item">
+                    <div class="dash-extra-item dash-extra-link" role="button" tabindex="0" onclick="abrirCustos()" title="Ver custos por categoria e local">
                         <i class="fa-solid fa-sack-dollar"></i>
                         <div>
                             <strong id="dashValorPatrimonio">—</strong>
@@ -1095,7 +1099,7 @@
                                     <th>Categoria</th>
                                     <th class="num">Quantidade</th>
                                     <th class="num">Locais</th>
-                                    <th class="num">Valor ref.</th>
+                                    <th class="num col-custo">Valor ref.</th>
                                     <th>Situação</th>
                                     <th>Ações</th>
                                 </tr>
@@ -1252,6 +1256,93 @@
                             </thead>
 
                             <tbody id="historico"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =================================================
+                 CUSTOS (Gestor/Administrador)
+            ================================================== -->
+            <section id="custosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Custos</h2>
+                        <p>Valor de referência do que está no acervo: peças e rádios. Itens baixados ou extraviados não entram.</p>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="carregarCustos()">
+                        <i class="fa-solid fa-rotate"></i> Atualizar
+                    </button>
+                </div>
+
+                <div class="custos-kpis">
+                    <div class="custo-kpi destaque">
+                        <strong id="custoTotal">—</strong>
+                        <span>Valor total do acervo</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoPecas">—</strong>
+                        <span id="custoPecasInfo">Peças</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoRadios">—</strong>
+                        <span id="custoRadiosInfo">Rádios</span>
+                    </div>
+                    <div class="custo-kpi" id="custoPendenteKpi">
+                        <strong id="custoPendente">—</strong>
+                        <span id="custoPendenteInfo">Sem valor informado</span>
+                    </div>
+                </div>
+
+                <div class="card custos-card">
+                    <div class="form-section-title"><i class="fa-solid fa-layer-group"></i> Por categoria</div>
+                    <div class="table-area">
+                        <table class="inventory-table custos-tabela">
+                            <thead>
+                                <tr><th>Categoria</th><th class="num">Peças</th><th class="num">Valor total</th><th class="num">Média por peça</th><th>Participação</th></tr>
+                            </thead>
+                            <tbody id="custosCategoria"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="custos-duas">
+                    <div class="card custos-card">
+                        <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> Por local</div>
+                        <div class="table-area">
+                            <table class="inventory-table custos-tabela">
+                                <thead>
+                                    <tr><th>Local</th><th class="num">Peças</th><th class="num">Valor total</th><th class="num">Média por peça</th><th>Participação</th></tr>
+                                </thead>
+                                <tbody id="custosLocal"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card custos-card">
+                        <div class="form-section-title"><i class="fa-solid fa-walkie-talkie"></i> Rádios por setor</div>
+                        <div class="table-area">
+                            <table class="inventory-table custos-tabela">
+                                <thead>
+                                    <tr><th>Setor</th><th class="num">Rádios</th><th class="num">Valor total</th><th class="num">Média por rádio</th><th>Participação</th></tr>
+                                </thead>
+                                <tbody id="custosRadios"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card custos-card" id="custosPendentesCard">
+                    <div class="form-section-title"><i class="fa-solid fa-pen-to-square"></i> Falta informar o valor</div>
+                    <p class="custos-ajuda">Digite o valor de referência por peça e clique em salvar. Ele vale para todas as unidades daquela peça, em todos os locais.</p>
+                    <div id="custosRadiosPendentes" class="custos-radios-pendentes" hidden></div>
+                    <div class="table-area">
+                        <table class="inventory-table custos-tabela">
+                            <thead>
+                                <tr><th>Peça</th><th>Categoria</th><th class="num">No acervo</th><th>Valor por peça (R$)</th></tr>
+                            </thead>
+                            <tbody id="custosSemValor"></tbody>
                         </table>
                     </div>
                 </div>

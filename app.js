@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -712,6 +712,7 @@ const TELAS_PUBLICAS = ['loginTela', 'consultaPublicaTela'];
 const AO_ABRIR_TELA = {
     dashboardTela: () => atualizarResumoDashboard(),
     historicoTela: () => carregarHistorico(),
+    custosTela: () => carregarCustos(),
     radiosTela: () => carregarRadios(),
     consultaPublicaTela: () => carregarConsultaPublica()
 };
@@ -925,6 +926,7 @@ function atualizarMenus() {
         menuProdutos: logado,
         menuHistorico: opera,
         menuDashboard: gestao,
+        menuCustos: gestao,
         menuAdministracao: gestao,
         menuMinhaSenha: logado,
         menuLogout: logado,
@@ -944,6 +946,8 @@ function atualizarMenus() {
         }
         titulo.hidden = !algum;
     });
+
+    document.body.classList.toggle('ve-custos', gestao);
 
     document.querySelectorAll('.somente-gestao').forEach(elemento => {
         elemento.style.display = gestao ? '' : 'none';
@@ -1635,7 +1639,7 @@ function renderizarProdutos() {
                     ${manutencao ? `<small class="celula-sub">${numero.format(manutencao)} em manutenção</small>` : ''}
                 </td>
                 <td class="num">${numero.format(Number(produto.locais) || 0)}</td>
-                <td class="num">${valor ? moeda.format(valor) : '—'}</td>
+                <td class="num col-custo">${valor ? moeda.format(valor) : '—'}</td>
                 <td><span class="status-badge ${situacao.classe}">${situacao.texto}</span></td>
                 <td>
                     <div class="acoes-tabela">
@@ -3992,6 +3996,8 @@ function camposRadio(r = {}) {
         { id: 'bateria_reserva_serie', rotulo: 'Bateria reserva · nº de série', valor: r.bateria_reserva_serie, placeholder: 'Ex.: 2430901996' },
         { id: 'carregador_codigo', rotulo: 'Base carregadora · número', valor: r.carregador_codigo, placeholder: 'Ex.: 00101' },
         { id: 'carregador_serie', rotulo: 'Base carregadora · nº de série', valor: r.carregador_serie, placeholder: 'Ex.: 24N28G2551' },
+        ...(podeAdministrar() ? [{ id: 'valor_referencia', rotulo: 'Valor de referência (R$) — rádio + kit', tipo: 'number', min: 0, step: '0.01',
+          valor: r.valor_referencia ?? '', placeholder: '0,00', ajuda: 'Opcional. Usado no controle de custos (só a gestão vê).' }] : []),
         { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', valor: r.observacao, largo: true,
           placeholder: 'Acessórios, estado de conservação, canal programado...' }
     ];
@@ -4014,6 +4020,15 @@ function campoModeloRadio(r = {}) {
     };
 }
 
+/* "1.250,50", "1250.5" ou vazio → número (ou null). */
+function valorEmReais(texto) {
+    const limpo = String(texto ?? '').trim();
+    if (!limpo) return null;
+    const numero = Number(limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo);
+    if (!Number.isFinite(numero) || numero < 0) throw new Error('Confira o valor de referência.');
+    return Math.round(numero * 100) / 100;
+}
+
 function dadosRadio(v) {
     const [marca, modelo] = String(v.modelo_radio || '|').split('|');
     return {
@@ -4028,6 +4043,7 @@ function dadosRadio(v) {
         ...(v.responsavel_documento !== undefined ? { responsavel_documento: v.responsavel_documento || null } : {}),
         status: v.status || 'Ativo',
         observacao: v.observacao || null,
+        ...(v.valor_referencia !== undefined ? { valor_referencia: valorEmReais(v.valor_referencia) } : {}),
         ...(v.bateria_codigo !== undefined ? {
             bateria_codigo: v.bateria_codigo || null,
             bateria_serie: v.bateria_serie || null,
@@ -4378,6 +4394,8 @@ function editarRadiosSelecionados() {
             { id: 'status', rotulo: 'Status', tipo: 'select', valor: NAO,
               opcoes: [{ valor: NAO, texto: '— Não alterar —' }, ...STATUS_RADIO.map(s => ({ valor: s, texto: s }))] },
             { ...modelo, valor: NAO, opcoes: [{ valor: NAO, texto: '— Não alterar —' }, ...modelo.opcoes], ajuda: '' },
+            { id: 'valor_referencia', rotulo: 'Valor de referência (R$) — rádio + kit', tipo: 'number', min: 0, step: '0.01',
+              placeholder: 'Não alterar', ajuda: 'O mesmo valor para todos os selecionados.' },
             { id: 'devolver', tipo: 'checkbox', largo: true,
               rotulo: 'Devolução: tirar o responsável de todos (ficam como "Reserva")' }
         ],
@@ -4404,6 +4422,7 @@ function editarRadiosSelecionados() {
                 mudancas.marca = marca || null;
                 mudancas.modelo = mod || null;
             }
+            if (String(v.valor_referencia ?? '').trim()) mudancas.valor_referencia = valorEmReais(v.valor_referencia);
             if (!Object.keys(mudancas).length) throw new Error('Nada para mudar: preencha pelo menos um campo.');
 
             const { error } = await supabaseClient.from('radios').update(mudancas).in('id', lista.map(r => Number(r.id)));
@@ -4483,7 +4502,8 @@ async function baixarCopiaSeguranca() {
             status && (status.textContent = `Lendo ${tabela}...`);
             const ordem = ORDEM_COPIA[tabela] || 'id';
             // Rádios: lidos pela lista da tela (o CPF só sai para a gestão).
-            const origem = tabela === 'radios' ? 'vw_radios' : tabela;
+            // Peças: lidas pelo catálogo com saldo (o valor só sai para a gestão).
+            const origem = { radios: 'vw_radios', produtos: 'vw_produtos_saldo' }[tabela] || tabela;
             copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(origem).select('*').order(ordem));
         }
 
@@ -5110,6 +5130,155 @@ function mostrarPreviaImportacao(lido, resumo, nomeArquivo, aba) {
             await carregarRadios();
             avisar(`Importação concluída: ${data.novos} novo(s), ${data.atualizados} atualizado(s)` +
                    (erros.length ? `. Ficaram de fora ${lido.radios.length - linhas.length} linha(s) com problema.` : '.'));
+        }
+    });
+}
+
+/* =========================================================
+   CUSTOS — valor de referência do acervo (Gestor/Administrador)
+   Total, média por peça, por categoria, por local e rádios
+   por setor; lista do que ainda está sem valor, com campo
+   para lançar o valor ali mesmo.
+========================================================= */
+
+let resumoCustos = null;
+
+function abrirCustos() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador.', 'erro');
+    abrirTela('custosTela', document.getElementById('menuCustos'));
+}
+
+const media = (valor, quantidade) => (Number(quantidade) > 0 ? Number(valor) / Number(quantidade) : null);
+const reais = v => (v === null || v === undefined ? '—' : moeda.format(Number(v) || 0));
+
+async function carregarCustos() {
+    const { data, error } = await supabaseClient.rpc('resumo_custos');
+    if (error) {
+        avisar('Não foi possível carregar os custos: ' + traduzirErro(error), 'erro');
+        return;
+    }
+    resumoCustos = data || {};
+    renderizarCustos();
+}
+
+function linhasParticipacao(lista, nome, total, rotuloUnidade) {
+    if (!lista.length) return `<tr><td colspan="5" class="empty-state">Nada no acervo ainda.</td></tr>`;
+    const maior = Math.max(...lista.map(x => Number(x.valor) || 0), 0);
+    return lista.map(x => {
+        const valor = Number(x.valor) || 0;
+        const parte = total > 0 ? valor / total : 0;
+        const largura = maior > 0 ? Math.max(valor > 0 ? 2 : 0, (valor / maior) * 100) : 0;
+        const semValor = Number(x.quantidade) - Number(x.com_valor);
+        const m = media(valor, x.com_valor);
+        return `
+        <tr>
+            <td><strong>${escaparHTML(x[nome])}</strong>
+                ${semValor > 0 ? `<small class="celula-sub">${numero.format(semValor)} ${rotuloUnidade} sem valor</small>` : ''}</td>
+            <td class="num">${numero.format(Number(x.quantidade) || 0)}</td>
+            <td class="num"><strong>${valor ? moeda.format(valor) : '—'}</strong></td>
+            <td class="num">${m === null ? '—' : moeda.format(m)}</td>
+            <td>
+                <div class="custo-barra" title="${escaparHTML(x[nome])}: ${moeda.format(valor)} (${(parte * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% do total)">
+                    <span class="custo-barra-trilho"><span class="custo-barra-valor" style="width:${largura.toFixed(1)}%"></span></span>
+                    <span class="custo-barra-pct">${(parte * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderizarCustos() {
+    const r = resumoCustos || {};
+    const pecas = r.pecas || {};
+    const radios = r.radios || {};
+    const valorPecas = Number(pecas.valor) || 0;
+    const valorRadios = Number(radios.valor) || 0;
+    const total = valorPecas + valorRadios;
+
+    definirTexto('custoTotal', moeda.format(total));
+    definirTexto('custoPecas', moeda.format(valorPecas));
+    const mPeca = media(valorPecas, pecas.com_valor);
+    definirTexto('custoPecasInfo', `${numero.format(Number(pecas.quantidade) || 0)} peças`
+        + (mPeca === null ? '' : ` · média de ${moeda.format(mPeca)} por peça com valor`));
+    definirTexto('custoRadios', moeda.format(valorRadios));
+    const mRadio = media(valorRadios, radios.com_valor);
+    definirTexto('custoRadiosInfo', `${numero.format(Number(radios.quantidade) || 0)} rádios`
+        + (mRadio === null ? '' : ` · média de ${moeda.format(mRadio)} por rádio`));
+
+    const produtosSemValor = r.produtos_sem_valor || [];
+    const radiosSemValor = (Number(radios.quantidade) || 0) - (Number(radios.com_valor) || 0);
+    const pendentes = produtosSemValor.length + radiosSemValor;
+    definirTexto('custoPendente', numero.format(pendentes));
+    definirTexto('custoPendenteInfo', pendentes
+        ? `Sem valor: ${numero.format(produtosSemValor.length)} peça(s) do catálogo e ${numero.format(radiosSemValor)} rádio(s)`
+        : 'Tudo com valor informado');
+    document.getElementById('custoPendenteKpi')?.classList.toggle('alerta', pendentes > 0);
+
+    document.getElementById('custosCategoria').innerHTML = linhasParticipacao(r.por_categoria || [], 'categoria', valorPecas, 'peça(s)');
+    document.getElementById('custosLocal').innerHTML = linhasParticipacao(r.por_local || [], 'local', valorPecas, 'peça(s)');
+    document.getElementById('custosRadios').innerHTML = linhasParticipacao(r.radios_por_setor || [], 'setor', valorRadios, 'rádio(s)');
+
+    const avisoRadios = document.getElementById('custosRadiosPendentes');
+    if (avisoRadios) {
+        avisoRadios.hidden = radiosSemValor <= 0;
+        avisoRadios.innerHTML = radiosSemValor > 0 ? `
+            <i class="fa-solid fa-walkie-talkie"></i>
+            <span><strong>${numero.format(radiosSemValor)} rádio(s)</strong> sem valor de referência.</span>
+            <button type="button" class="btn-primary btn-small" onclick="definirValorRadiosSemValor()">Definir valor</button>` : '';
+    }
+
+    document.getElementById('custosSemValor').innerHTML = produtosSemValor.length
+        ? produtosSemValor.map(p => `
+            <tr data-produto="${Number(p.id)}">
+                <td><strong>${escaparHTML(p.nome)}</strong></td>
+                <td>${escaparHTML(p.categoria || '—')}</td>
+                <td class="num">${numero.format(Number(p.quantidade) || 0)}</td>
+                <td>
+                    <form class="custo-lancar" onsubmit="event.preventDefault(); salvarCustoProduto(${Number(p.id)}, this)">
+                        <input type="text" inputmode="decimal" placeholder="0,00" aria-label="Valor por peça de ${escaparHTML(p.nome)}" required />
+                        <button type="submit" class="btn-primary btn-small" title="Salvar valor"><i class="fa-solid fa-check"></i> Salvar</button>
+                    </form>
+                </td>
+            </tr>`).join('')
+        : '<tr><td colspan="4" class="empty-state">Todas as peças do catálogo têm valor. 👍</td></tr>';
+}
+
+async function salvarCustoProduto(id, formulario) {
+    const campo = formulario.querySelector('input');
+    const botao = formulario.querySelector('button');
+    let valor;
+    try {
+        valor = valorEmReais(campo.value);
+    } catch (erro) {
+        return avisar(erro.message, 'erro');
+    }
+    if (!valor) return avisar('Digite um valor maior que zero.', 'erro');
+    botao.disabled = true;
+    const { error } = await supabaseClient.from('produtos').update({ custo_unitario: valor }).eq('id', id);
+    botao.disabled = false;
+    if (error) return avisar('Não foi possível salvar: ' + traduzirErro(error), 'erro');
+    avisar(`Valor salvo: ${moeda.format(valor)} por peça.`);
+    await carregarCustos();
+}
+
+async function definirValorRadiosSemValor() {
+    const { data, error } = await supabaseClient.from('vw_radios').select('id,status,valor_referencia').is('valor_referencia', null);
+    if (error) return avisar('Não foi possível ler os rádios: ' + traduzirErro(error), 'erro');
+    const ids = (data || []).filter(r => !['Baixado', 'Extraviado'].includes(r.status)).map(r => Number(r.id));
+    if (!ids.length) return carregarCustos();
+
+    abrirFormulario({
+        titulo: `Valor de ${ids.length} rádio(s)`,
+        subtitulo: 'O mesmo valor de referência (rádio + kit) para todos os rádios que ainda estão sem valor. Depois dá para ajustar um a um na tela Rádios.',
+        textoSalvar: 'Aplicar',
+        campos: [{ id: 'valor', rotulo: 'Valor por rádio (R$)', tipo: 'number', min: 0, step: '0.01', obrigatorio: true, largo: true, placeholder: '0,00' }],
+        aoSalvar: async ({ valor }) => {
+            const numeroValor = valorEmReais(valor);
+            if (!numeroValor) throw new Error('Digite um valor maior que zero.');
+            const { error: erro } = await supabaseClient.from('radios').update({ valor_referencia: numeroValor }).in('id', ids);
+            if (erro) throw new Error(traduzirErro(erro));
+            avisar(`${ids.length} rádio(s) com valor de ${moeda.format(numeroValor)}.`);
+            await carregarCustos();
         }
     });
 }
