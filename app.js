@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -714,6 +714,7 @@ const AO_ABRIR_TELA = {
     historicoTela: () => carregarHistorico(),
     custosTela: () => carregarCustos(),
     radiosTela: () => carregarRadios(),
+    fonesTela: () => carregarFones(),
     consultaPublicaTela: () => carregarConsultaPublica()
 };
 
@@ -922,6 +923,7 @@ function atualizarMenus() {
         menuForaLugar: logado,
         menuCadastro: opera,
         menuRadios: logado,
+        menuFones: logado,
         menuEstoque: logado,
         menuProdutos: logado,
         menuHistorico: opera,
@@ -3891,7 +3893,10 @@ function renderizarRadios() {
 
         let acaoTermo = '';
         if (gestao && r.responsavel_nome) {
-            if (r.situacao_termo === 'ASSINADO' && r.termo_token) {
+            if (r.situacao_termo === 'ASSINADO' && r.termo_origem === 'PAPEL' && r.termo_arquivo) {
+                acaoTermo = `<button type="button" class="btn-icon" title="Ver termo assinado em papel" onclick="verTermoPapel('${escaparHTML(r.termo_arquivo)}')">
+                    <i class="fa-solid fa-file-image"></i></button>`;
+            } else if (r.situacao_termo === 'ASSINADO' && r.termo_token) {
                 acaoTermo = `<button type="button" class="btn-icon" title="Ver termo assinado" onclick="abrirLinkTermo('${escaparHTML(r.termo_token)}')">
                     <i class="fa-solid fa-file-circle-check"></i></button>`;
             } else if (r.situacao_termo === 'PENDENTE' && r.termo_token) {
@@ -3902,6 +3907,12 @@ function renderizarRadios() {
                     <i class="fa-solid fa-file-signature"></i></button>`;
             }
         }
+
+        if (gestao && r.responsavel_nome && r.situacao_termo !== 'ASSINADO') {
+            acaoTermo += `<button type="button" class="btn-icon" title="Anexar termo assinado em papel" onclick="anexarTermoPapelRadio(${Number(r.id)})">
+                <i class="fa-solid fa-file-arrow-up"></i></button>`;
+        }
+        const textoSituacao = r.situacao_termo === 'ASSINADO' && r.termo_origem === 'PAPEL' ? 'Assinado (papel)' : situacao.texto;
 
         return `
             <tr class="${marcado ? 'linha-selecionada' : ''}">
@@ -3917,7 +3928,7 @@ function renderizarRadios() {
                         ? `<strong>${escaparHTML(r.responsavel_nome)}</strong>${r.responsavel_telefone ? `<small class="celula-sub">${escaparHTML(formatarTelefone(r.responsavel_telefone))}</small>` : ''}`
                         : '<span class="texto-suave">Sem responsável</span>'}</td>
                 <td><span class="status-badge ${classeStatusRadio(r.status)}">${escaparHTML(r.status)}</span></td>
-                <td><span class="status-badge ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${situacao.texto}</span>${dataTermo}</td>
+                <td><span class="status-badge ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${textoSituacao}</span>${dataTermo}</td>
                 <td>
                     <div class="acoes-tabela">
                         ${acaoTermo}
@@ -4181,17 +4192,23 @@ function confirmarGerarTermo(opcoes, marcados) {
 
 function mostrarLinkTermo(token, radioId) {
     const r = radios.find(x => Number(x.id) === Number(radioId)) || {};
+    dialogoLinkTermo({ token, nome: r.responsavel_nome, telefone: r.responsavel_telefone,
+                       assunto: 'Rádio HT', itens: 'do(s) rádio(s) HT sob sua guarda' });
+}
+
+/* Janela com o link do termo e atalhos de envio (rádios e fones). */
+function dialogoLinkTermo({ token, nome, telefone, assunto, itens }) {
     const link = linkDoTermo(token);
-    const primeiroNome = String(r.responsavel_nome || '').split(' ')[0];
-    const mensagem = `Olá${primeiroNome ? ', ' + primeiroNome : ''}! Segue o termo de responsabilidade do(s) rádio(s) HT sob sua guarda. ` +
+    const primeiroNome = String(nome || '').split(' ')[0];
+    const mensagem = `Olá${primeiroNome ? ', ' + primeiroNome : ''}! Segue o termo de responsabilidade ${itens}. ` +
                      `Por favor, leia e assine pelo link: ${link}`;
-    const telefone = String(r.responsavel_telefone || '').replace(/\D/g, '');
-    const whatsapp = `https://wa.me/${telefone ? (telefone.length <= 11 ? '55' + telefone : telefone) : ''}?text=${encodeURIComponent(mensagem)}`;
-    const email = `mailto:?subject=${encodeURIComponent('Termo de responsabilidade — Rádio HT')}&body=${encodeURIComponent(mensagem)}`;
+    const fone = String(telefone || '').replace(/\D/g, '');
+    const whatsapp = `https://wa.me/${fone ? (fone.length <= 11 ? '55' + fone : fone) : ''}?text=${encodeURIComponent(mensagem)}`;
+    const email = `mailto:?subject=${encodeURIComponent('Termo de responsabilidade — ' + assunto)}&body=${encodeURIComponent(mensagem)}`;
 
     abrirFormulario({
         titulo: 'Link do termo pronto',
-        subtitulo: `Envie para ${r.responsavel_nome || 'o responsável'}. A pessoa assina pelo celular, sem precisar de login.`,
+        subtitulo: `Envie para ${nome || 'o responsável'}. A pessoa assina pelo celular, sem precisar de login.`,
         textoSalvar: 'Concluir',
         semCancelar: true,
         campos: [{
@@ -4204,7 +4221,7 @@ function mostrarLinkTermo(token, radioId) {
                         <a class="btn-secondary" href="${escaparHTML(email)}"><i class="fa-solid fa-envelope"></i> E-mail</a>
                         <a class="btn-secondary" href="${escaparHTML(link)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a>
                     </div>
-                    ${telefone ? '' : '<small>Sem celular cadastrado: no WhatsApp, escolha o contato manualmente.</small>'}
+                    ${fone ? '' : '<small>Sem celular cadastrado: no WhatsApp, escolha o contato manualmente.</small>'}
                 </div>`
         }],
         aoSalvar: async () => {}
@@ -4223,27 +4240,28 @@ async function copiarLinkTermo() {
     avisar('Link copiado.');
 }
 
-async function editarModeloTermo() {
+async function editarModeloTermo(chave = 'termo_radio_modelo') {
     if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador edita o modelo.', 'erro');
+    const lista = chave === 'termo_fone_modelo' ? '{{itens}}' : '{{radios}}';
 
-    const { data, error } = await supabaseClient.from('configuracoes').select('valor').eq('chave', 'termo_radio_modelo').maybeSingle();
+    const { data, error } = await supabaseClient.from('configuracoes').select('valor').eq('chave', chave).maybeSingle();
     if (error) return avisar(traduzirErro(error), 'erro');
 
     abrirFormulario({
-        titulo: 'Modelo do termo',
+        titulo: chave === 'termo_fone_modelo' ? 'Modelo do termo dos fones' : 'Modelo do termo dos rádios',
         subtitulo: 'Vale para os próximos termos gerados. Os já gerados não mudam.',
         textoSalvar: 'Salvar modelo',
         campos: [
             { id: 'ajuda', tipo: 'html', html: `<p class="modelo-ajuda">Campos automáticos:
-                <code>{{nome}}</code> <code>{{cpf}}</code> <code>{{setor}}</code> <code>{{radios}}</code> <code>{{data}}</code>.
+                <code>{{nome}}</code> <code>{{cpf}}</code> <code>{{setor}}</code> <code>${lista}</code> <code>{{data}}</code>.
                 Recomendamos validar o texto com o RH/Jurídico.</p>` },
             { id: 'valor', rotulo: 'Texto do termo', tipo: 'textarea', valor: data?.valor || '', obrigatorio: true, largo: true }
         ],
         aoSalvar: async ({ valor }) => {
-            const faltando = ['{{nome}}', '{{cpf}}', '{{radios}}', '{{data}}'].filter(m => !valor.includes(m));
+            const faltando = ['{{nome}}', '{{cpf}}', lista, '{{data}}'].filter(m => !valor.includes(m));
             if (faltando.length) throw new Error(`O texto precisa conter: ${faltando.join(', ')}.`);
             const { data: salvo, error: erroSalvar } = await supabaseClient.from('configuracoes')
-                .update({ valor }).eq('chave', 'termo_radio_modelo').select('chave');
+                .update({ valor }).eq('chave', chave).select('chave');
             if (erroSalvar) throw erroSalvar;
             if (!salvo?.length) throw new Error('Seu perfil não tem permissão para esta operação.');
             avisar('Modelo do termo atualizado.');
@@ -4484,10 +4502,10 @@ async function verificarIntegridade() {
 /* ---------------- Cópia de segurança ---------------- */
 
 const TABELAS_COPIA = ['locais', 'subsetores', 'produtos', 'itens', 'movimentacoes', 'auditoria',
-    'usuarios', 'radios', 'termos', 'termo_radios', 'configuracoes'];
+    'usuarios', 'radios', 'termos', 'termo_radios', 'configuracoes', 'fones_entregas', 'termo_fones'];
 
 /* Tabelas sem coluna "id": ordenadas pela chave delas (paginação estável). */
-const ORDEM_COPIA = { termo_radios: 'termo_id', configuracoes: 'chave' };
+const ORDEM_COPIA = { termo_radios: 'termo_id', termo_fones: 'termo_id', configuracoes: 'chave' };
 
 async function baixarCopiaSeguranca() {
     if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador.', 'erro');
@@ -4503,7 +4521,7 @@ async function baixarCopiaSeguranca() {
             const ordem = ORDEM_COPIA[tabela] || 'id';
             // Rádios: lidos pela lista da tela (o CPF só sai para a gestão).
             // Peças: lidas pelo catálogo com saldo (o valor só sai para a gestão).
-            const origem = { radios: 'vw_radios', produtos: 'vw_produtos_saldo' }[tabela] || tabela;
+            const origem = { radios: 'vw_radios', produtos: 'vw_produtos_saldo', fones_entregas: 'vw_fones_entregas' }[tabela] || tabela;
             copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(origem).select('*').order(ordem));
         }
 
@@ -4886,8 +4904,9 @@ function lerCsv(texto) {
     return linhas;
 }
 
-/* Devolve a tabela crua: [[cabeçalho...], [linha...], ...] da aba que tem a coluna SERIE. */
-async function lerTabelaPlanilha(arquivo) {
+/* Devolve a tabela crua: [[cabeçalho...], [linha...], ...] da aba que tem uma das colunas-chave. */
+async function lerTabelaPlanilha(arquivo, colunasChave = ['SERIE'],
+                                 mensagem = 'Não achei a coluna "SERIE" (número de série do rádio) em nenhuma aba da planilha.') {
     if (/\.(csv|txt)$/i.test(arquivo.name)) {
         return { aba: null, linhas: lerCsv((await arquivo.text()).replace(/^﻿/, '')) };
     }
@@ -4898,8 +4917,8 @@ async function lerTabelaPlanilha(arquivo) {
     const abas = await window.readXlsxFile(arquivo);
     const lista = Array.isArray(abas) && abas[0]?.data ? abas : [{ sheet: '', data: abas }];
     const comSerie = lista.find(aba => (aba.data || []).slice(0, 10)
-        .some(linha => (linha || []).some(celula => chaveColuna(celula) === 'SERIE')));
-    if (!comSerie) throw new Error('Não achei a coluna "SERIE" (número de série do rádio) em nenhuma aba da planilha.');
+        .some(linha => (linha || []).some(celula => colunasChave.includes(chaveColuna(celula)))));
+    if (!comSerie) throw new Error(mensagem);
     return { aba: comSerie.sheet, linhas: comSerie.data };
 }
 
@@ -5284,6 +5303,608 @@ async function definirValorRadiosSemValor() {
 }
 
 /* =========================================================
+   19 · FONES DOS RÁDIOS HT E TERMO ASSINADO EM PAPEL
+   Fone não tem número: há um estoque (quantidade) e cada entrega
+   (cautela) a um prestador — nome, CPF, setor, data, quantidade.
+   Cada entrega tem o seu termo: digital (link) ou papel (anexo).
+   Os arquivos dos termos em papel ficam num armazenamento privado.
+========================================================= */
+
+let fonesEntregas = [];
+let resumoFonesAtual = null;
+
+const SITUACAO_FONE = {
+    COM_PRESTADOR: { texto: 'Com o prestador', classe: 'ativo' },
+    DEVOLVIDO:     { texto: 'Devolvido',       classe: 'neutro' },
+    EXTRAVIADO:    { texto: 'Extraviado',      classe: 'baixado' }
+};
+
+
+/* ---------------- Termo em papel (rádios e fones) ---------------- */
+
+/* SHA-256 do arquivo (impressão digital gravada junto do termo). */
+async function sha256Arquivo(arquivo) {
+    const dados = new Uint8Array(await arquivo.arrayBuffer());
+    if (window.crypto?.subtle) {
+        const resumo = await crypto.subtle.digest('SHA-256', dados);
+        return [...new Uint8Array(resumo)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    return sha256Manual(dados);
+}
+
+/* Para navegadores sem crypto.subtle (página aberta sem https, por exemplo). */
+function sha256Manual(bytes) {
+    const K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+    const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    const tamanho = bytes.length;
+    const total = Math.ceil((tamanho + 9) / 64) * 64;
+    const m = new Uint8Array(total);
+    m.set(bytes);
+    m[tamanho] = 0x80;
+    const visao = new DataView(m.buffer);
+    visao.setUint32(total - 8, Math.floor(tamanho / 0x20000000));
+    visao.setUint32(total - 4, (tamanho << 3) >>> 0);
+    const w = new Uint32Array(64);
+    const rot = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let i = 0; i < total; i += 64) {
+        for (let t = 0; t < 16; t++) w[t] = visao.getUint32(i + t * 4);
+        for (let t = 16; t < 64; t++) {
+            const s0 = rot(w[t - 15], 7) ^ rot(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+            const s1 = rot(w[t - 2], 17) ^ rot(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+            w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+        }
+        let [a, b, c, d, e, f, g, h] = H;
+        for (let t = 0; t < 64; t++) {
+            const t1 = (h + (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) + ((e & f) ^ (~e & g)) + K[t] + w[t]) >>> 0;
+            const t2 = ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+            h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+        }
+        [a, b, c, d, e, f, g, h].forEach((v, k) => { H[k] = (H[k] + v) >>> 0; });
+    }
+    return H.map(v => v.toString(16).padStart(8, '0')).join('');
+}
+
+const TIPOS_TERMO_PAPEL = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
+function hojeISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/*
+   Janela para anexar o termo assinado em papel.
+   tipo: 'RADIO' ou 'FONE'; ids: itens do mesmo responsável/prestador.
+*/
+function anexarTermoPapel({ tipo, ids, nome, temCpf, descricao, aoConcluir }) {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador anexa termos.', 'erro');
+
+    abrirFormulario({
+        titulo: 'Anexar termo assinado em papel',
+        subtitulo: `${nome} · ${descricao}. Use quando a pessoa não conseguir assinar pelo celular.`,
+        textoSalvar: 'Anexar termo',
+        campos: [
+            { id: 'arquivo', tipo: 'arquivo', rotulo: 'Foto ou PDF do termo assinado', obrigatorio: true, largo: true,
+              accept: 'application/pdf,image/*', ajuda: 'Pode tirar foto do papel pelo celular. Até 10 MB. Fica guardado de forma privada.' },
+            { id: 'data', tipo: 'date', rotulo: 'Data em que foi assinado', obrigatorio: true, valor: hojeISO() },
+            ...(temCpf ? [] : [{ id: 'cpf', rotulo: 'CPF de quem assinou (opcional)', inputmode: 'numeric', placeholder: '000.000.000-00' }])
+        ],
+        aoSalvar: async valores => {
+            let arquivo = valores.arquivo;
+            if (!arquivo) throw new Error('Escolha a foto ou o PDF do termo.');
+            if (!TIPOS_TERMO_PAPEL.includes(arquivo.type)) throw new Error('Envie um PDF ou uma foto (JPG, PNG, WEBP ou HEIC).');
+            if (!valores.data || valores.data > hojeISO()) throw new Error('Informe a data da assinatura (não pode ser no futuro).');
+
+            // Foto grande é reduzida, mas continua legível.
+            if (arquivo.type.startsWith('image/') && !/heic|heif/.test(arquivo.type)) {
+                arquivo = await comprimirImagem(arquivo, 2400, 0.86);
+            }
+            if (arquivo.size > 10 * 1024 * 1024) throw new Error('O arquivo passa de 10 MB. Envie um PDF menor ou uma foto.');
+
+            const extensao = { 'application/pdf': 'pdf', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/heif': 'heif' }[arquivo.type] || 'jpg';
+            const caminho = `${tipo === 'RADIO' ? 'radios' : 'fones'}/${Date.now()}-${gerarId().replace(/[^a-z0-9]/gi, '').slice(0, 10)}.${extensao}`;
+            const impressao = await sha256Arquivo(arquivo);
+
+            const envio = await supabaseClient.storage.from('termos').upload(caminho, arquivo, { contentType: arquivo.type, upsert: false });
+            if (envio.error) {
+                throw new Error(/bucket|not found/i.test(envio.error.message || '')
+                    ? 'Rode a atualização v18 no Supabase (armazenamento dos termos).'
+                    : 'Não foi possível enviar o arquivo: ' + envio.error.message);
+            }
+
+            const { error } = await supabaseClient.rpc('registrar_termo_papel', {
+                p_tipo: tipo, p_ids: ids, p_assinado_em: valores.data,
+                p_arquivo_path: caminho, p_arquivo_nome: valores.arquivo.name || 'termo',
+                p_arquivo_tipo: arquivo.type, p_arquivo_sha256: impressao,
+                p_cpf: valores.cpf ? valores.cpf.replace(/\D/g, '') : null
+            });
+            if (error) throw new Error(traduzirErro(error));
+            avisar('Termo em papel anexado. A situação ficou como "Assinado (papel)".');
+            await aoConcluir?.();
+        }
+    });
+}
+
+/* Abre o arquivo do termo em papel com um link temporário (10 minutos). */
+async function verTermoPapel(caminho) {
+    const pdf = /\.pdf$/i.test(caminho);
+    const janela = pdf ? window.open('', '_blank') : null;
+    const { data, error } = await supabaseClient.storage.from('termos').createSignedUrl(caminho, 600);
+    if (error || !data?.signedUrl) {
+        janela?.close();
+        return avisar('Não foi possível abrir o termo: ' + (error?.message || 'arquivo não encontrado'), 'erro');
+    }
+    if (pdf) {
+        if (janela) janela.location = data.signedUrl;
+        else window.open(data.signedUrl, '_blank', 'noopener');
+    } else {
+        abrirModalFoto(data.signedUrl, 'Termo assinado em papel');
+    }
+}
+
+function anexarTermoPapelRadio(id) {
+    const r = radios.find(x => Number(x.id) === Number(id));
+    if (!r?.responsavel_nome) return avisar('Informe o responsável do rádio antes de anexar o termo.', 'erro');
+    anexarTermoPapelRadios([r]);
+}
+
+function anexarTermoPapelSelecionados() {
+    const lista = radios.filter(r => radiosSelecionados.has(Number(r.id)));
+    if (!lista.length) return;
+    if (lista.some(r => !r.responsavel_nome)) return avisar('Há rádio selecionado sem responsável.', 'erro');
+    if (new Set(lista.map(r => normalizarTexto(r.responsavel_nome))).size > 1) {
+        return avisar('Um termo é por pessoa: selecione rádios do mesmo responsável.', 'erro');
+    }
+    anexarTermoPapelRadios(lista);
+}
+
+function anexarTermoPapelRadios(lista) {
+    anexarTermoPapel({
+        tipo: 'RADIO',
+        ids: lista.map(r => Number(r.id)),
+        nome: lista[0].responsavel_nome,
+        temCpf: lista.some(r => r.responsavel_documento),
+        descricao: lista.length === 1 ? (lista[0].identificacao || `rádio ${lista[0].numero_serie}`) : `${lista.length} rádios`,
+        aoConcluir: async () => { radiosSelecionados.clear(); await carregarRadios(); }
+    });
+}
+
+
+/* ---------------- Tela Fones ---------------- */
+
+function abrirFones() {
+    abrirTela('fonesTela', document.getElementById('menuFones'));
+}
+
+async function carregarFones() {
+    const [lista, resumo] = await Promise.all([
+        buscarTodasLinhas(() => supabaseClient.from('vw_fones_entregas').select('*')
+            .order('situacao').order('prestador_nome')).catch(erro => ({ erro })),
+        supabaseClient.rpc('resumo_fones')
+    ]);
+    if (lista?.erro || resumo.error) {
+        const erro = lista?.erro || resumo.error;
+        document.getElementById('listaFones').innerHTML = `<tr><td colspan="8" class="empty-state">
+            ${/vw_fones_entregas|resumo_fones|does not exist|Could not find/i.test(erro.message || '')
+                ? 'Rode a atualização v18 no Supabase para liberar o controle de fones.'
+                : 'Não foi possível carregar os fones: ' + escaparHTML(traduzirErro(erro))}</td></tr>`;
+        return;
+    }
+    fonesEntregas = lista || [];
+    resumoFonesAtual = resumo.data || {};
+    popularFiltrosFones();
+    renderizarFones();
+}
+
+function popularFiltrosFones() {
+    const filtro = document.getElementById('filtroSetorFones');
+    if (filtro) {
+        const atual = filtro.value;
+        const setores = [...new Set(fonesEntregas.map(e => e.setor).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        filtro.innerHTML = '<option value="">Todos os setores</option>' +
+            setores.map(s => `<option value="${escaparHTML(s)}">${escaparHTML(s)}</option>`).join('');
+        filtro.value = setores.includes(atual) ? atual : '';
+    }
+    const lista = document.getElementById('dlSetoresFones');
+    if (lista) {
+        const setores = new Set([...fonesEntregas.map(e => e.setor), ...(typeof radios !== 'undefined' ? radios : []).map(r => r.setor)].filter(Boolean));
+        lista.innerHTML = [...setores].sort().map(s => `<option value="${escaparHTML(s)}">`).join('');
+    }
+}
+
+function fonesFiltrados() {
+    const busca = normalizarTexto(valorCampo('buscaFones'));
+    const setor = valorCampo('filtroSetorFones');
+    const situacao = valorCampo('filtroSituacaoFones');
+    const termo = valorCampo('filtroTermoFones');
+    return fonesEntregas.filter(e =>
+        (!busca || normalizarTexto(`${e.prestador_nome} ${e.setor || ''} ${e.prestador_documento || ''}`).includes(busca)) &&
+        (!setor || e.setor === setor) &&
+        (!situacao || e.situacao === situacao) &&
+        (!termo || (termo === 'PENDENTE' ? ['PENDENTE', 'EXPIRADO'].includes(e.situacao_termo) : e.situacao_termo === termo)));
+}
+
+function renderizarFones() {
+    const tbody = document.getElementById('listaFones');
+    if (!tbody) return;
+    const gestao = podeAdministrar();
+    const r = resumoFonesAtual || {};
+    const ativos = fonesEntregas.filter(e => e.situacao === 'COM_PRESTADOR');
+    const semTermo = ativos.filter(e => e.situacao_termo !== 'ASSINADO').length;
+
+    definirTexto('fonesTotal', numero.format(Number(r.total) || 0));
+    definirTexto('fonesComPrestador', numero.format(Number(r.com_prestador) || 0));
+    definirTexto('fonesDisponiveis', numero.format(Number(r.disponiveis) || 0));
+    definirTexto('fonesSemTermo', numero.format(semTermo));
+    document.getElementById('fonesDisponiveisCaixa')?.classList.toggle('falta', Number(r.disponiveis) < 0);
+    definirTexto('fonesModelo', r.modelo ? `Modelo: ${r.modelo}` : '');
+
+    const lista = fonesFiltrados();
+    definirTexto('fonesListados', numero.format(lista.length));
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-headphones"></i>
+            ${fonesEntregas.length ? 'Nenhuma entrega com esses filtros.' : 'Nenhuma entrega de fone registrada ainda.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(e => {
+        const situacao = SITUACAO_FONE[e.situacao] || SITUACAO_FONE.COM_PRESTADOR;
+        const termo = SITUACAO_TERMO[e.situacao_termo] || SITUACAO_TERMO.SEM_TERMO;
+        const textoTermo = e.situacao_termo === 'ASSINADO' && e.termo_origem === 'PAPEL' ? 'Assinado (papel)' : termo.texto;
+        const dataTermo = e.situacao_termo === 'ASSINADO' && e.termo_assinado_em
+            ? `<small class="celula-sub">em ${dataCurta(e.termo_assinado_em)}</small>`
+            : (e.situacao_termo === 'PENDENTE' && e.termo_expira_em ? `<small class="celula-sub">link válido até ${dataCurta(e.termo_expira_em)}</small>` : '');
+
+        let acoes = '';
+        if (gestao) {
+            if (e.situacao_termo === 'ASSINADO' && e.termo_origem === 'PAPEL' && e.termo_arquivo) {
+                acoes += `<button type="button" class="btn-icon" title="Ver termo assinado em papel" onclick="verTermoPapel('${escaparHTML(e.termo_arquivo)}')"><i class="fa-solid fa-file-image"></i></button>`;
+            } else if (e.situacao_termo === 'ASSINADO' && e.termo_token) {
+                acoes += `<button type="button" class="btn-icon" title="Ver termo assinado" onclick="abrirLinkTermo('${escaparHTML(e.termo_token)}')"><i class="fa-solid fa-file-circle-check"></i></button>`;
+            } else if (e.situacao_termo === 'PENDENTE' && e.termo_token) {
+                acoes += `<button type="button" class="btn-icon btn-destaque" title="Enviar link do termo" onclick="enviarLinkTermoFone(${Number(e.id)})"><i class="fa-solid fa-share-from-square"></i></button>`;
+            } else if (e.situacao === 'COM_PRESTADOR') {
+                acoes += `<button type="button" class="btn-icon btn-destaque" title="Gerar termo digital" onclick="gerarTermoFone(${Number(e.id)})"><i class="fa-solid fa-file-signature"></i></button>`;
+            }
+            if (e.situacao_termo !== 'ASSINADO') {
+                acoes += `<button type="button" class="btn-icon" title="Anexar termo assinado em papel" onclick="anexarTermoPapelFone(${Number(e.id)})"><i class="fa-solid fa-file-arrow-up"></i></button>`;
+            }
+            if (e.situacao === 'COM_PRESTADOR') {
+                acoes += `<button type="button" class="btn-icon btn-devolver" title="Registrar devolução" onclick="devolverFone(${Number(e.id)})"><i class="fa-solid fa-rotate-left"></i></button>`;
+            }
+            acoes += `<button type="button" class="btn-icon" title="Editar entrega" onclick="abrirEntregaFone(${Number(e.id)})"><i class="fa-solid fa-pen"></i></button>
+                      <button type="button" class="btn-icon btn-excluir" title="Excluir entrega" onclick="excluirEntregaFone(${Number(e.id)})"><i class="fa-solid fa-trash-can"></i></button>`;
+        }
+
+        return `
+            <tr class="${e.situacao !== 'COM_PRESTADOR' ? 'linha-inativa' : ''}">
+                <td><strong>${escaparHTML(e.prestador_nome)}</strong>
+                    ${e.prestador_documento ? `<small class="celula-sub">CPF ${escaparHTML(formatarCpf(e.prestador_documento))}</small>` : ''}</td>
+                <td>${escaparHTML(e.setor || '—')}</td>
+                <td class="num">${numero.format(Number(e.quantidade) || 0)}</td>
+                <td>${dataCurta(e.entregue_em + 'T12:00:00')}</td>
+                <td><span class="status-badge ${situacao.classe}">${situacao.texto}</span>
+                    ${e.situacao === 'DEVOLVIDO' && e.devolvido_em ? `<small class="celula-sub">em ${dataCurta(e.devolvido_em + 'T12:00:00')}</small>` : ''}</td>
+                <td><span class="status-badge ${termo.classe}"><i class="fa-solid ${termo.icone}"></i> ${textoTermo}</span>${dataTermo}</td>
+                <td><div class="acoes-tabela">${acoes}</div></td>
+            </tr>`;
+    }).join('');
+}
+
+function camposEntregaFone(e = {}) {
+    return [
+        { id: 'prestador_nome', rotulo: 'Nome do prestador', valor: e.prestador_nome, obrigatorio: true, largo: true, placeholder: 'Nome completo' },
+        { id: 'prestador_documento', rotulo: 'CPF', valor: e.prestador_documento ? formatarCpf(e.prestador_documento) : '',
+          placeholder: '000.000.000-00', inputmode: 'numeric', ajuda: 'Com CPF, só essa pessoa consegue assinar o termo digital.' },
+        { id: 'setor', rotulo: 'Setor', valor: e.setor, lista: 'dlSetoresFones', placeholder: 'Ex.: Segurança' },
+        { id: 'quantidade', rotulo: 'Quantidade', tipo: 'number', min: 1, step: '1', valor: e.quantidade || 1, obrigatorio: true },
+        { id: 'entregue_em', rotulo: 'Data da entrega', tipo: 'date', valor: e.entregue_em || hojeISO(), obrigatorio: true },
+        { id: 'situacao', rotulo: 'Situação', tipo: 'select', valor: e.situacao || 'COM_PRESTADOR',
+          opcoes: Object.entries(SITUACAO_FONE).map(([valor, s]) => ({ valor, texto: s.texto })) },
+        { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', valor: e.observacao, largo: true }
+    ];
+}
+
+function dadosEntregaFone(v) {
+    return {
+        prestador_nome: v.prestador_nome,
+        prestador_documento: v.prestador_documento ? v.prestador_documento.replace(/\D/g, '') : null,
+        setor: v.setor || null,
+        quantidade: Math.max(1, Math.round(Number(v.quantidade) || 1)),
+        entregue_em: v.entregue_em,
+        situacao: v.situacao || 'COM_PRESTADOR',
+        observacao: v.observacao || null
+    };
+}
+
+function erroFone(erro) {
+    const texto = traduzirErro(erro);
+    return /CPF inválido/i.test(texto) ? 'CPF inválido. Confira os números.' : texto;
+}
+
+function novaEntregaFone() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador registra entregas.', 'erro');
+    abrirFormulario({
+        titulo: 'Nova entrega de fone',
+        subtitulo: `Disponíveis no estoque: ${numero.format(Number(resumoFonesAtual?.disponiveis) || 0)}. Depois de salvar, gere o termo digital ou anexe o termo em papel.`,
+        textoSalvar: 'Registrar entrega',
+        campos: camposEntregaFone(),
+        aoSalvar: async valores => {
+            const dados = dadosEntregaFone(valores);
+            const disponiveis = Number(resumoFonesAtual?.disponiveis) || 0;
+            if (dados.situacao === 'COM_PRESTADOR' && dados.quantidade > disponiveis &&
+                !(await confirmar({ titulo: 'Estoque insuficiente', mensagem: `O estoque mostra ${disponiveis} fone(s) disponível(is). Registrar mesmo assim? Lembre de ajustar o estoque depois.`, textoConfirmar: 'Registrar mesmo assim' }))) {
+                throw new Error('Ajuste o estoque em "Estoque" antes de registrar.');
+            }
+            const { data, error } = await supabaseClient.from('fones_entregas').insert([dados]).select('id');
+            if (error) throw new Error(erroFone(error));
+            await carregarFones();
+            const id = data?.[0]?.id;
+            avisar('Entrega registrada.');
+            if (id) setTimeout(() => perguntarTermoNovaEntrega(Number(id)), 50);
+        }
+    });
+}
+
+async function perguntarTermoNovaEntrega(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === id);
+    if (!e) return;
+    abrirFormulario({
+        titulo: 'Termo da entrega',
+        subtitulo: `${e.prestador_nome} · ${e.quantidade} fone(s). Como será o termo?`,
+        textoSalvar: 'Gerar termo digital',
+        textoCancelar: 'Depois',
+        campos: [{ id: 'info', tipo: 'html', html: `<div class="termo-escolha">
+            <p><i class="fa-solid fa-mobile-screen"></i> <strong>Digital:</strong> gera um link e a pessoa assina pelo celular.</p>
+            <p><i class="fa-solid fa-file-arrow-up"></i> <strong>Papel:</strong> se ela assinou no papel,
+               <button type="button" class="btn-secondary btn-small" onclick="fecharFormulario(); setTimeout(() => anexarTermoPapelFone(${id}), 30)">anexe a foto ou o PDF</button>.</p></div>` }],
+        aoSalvar: async () => { setTimeout(() => gerarTermoFone(id), 30); }
+    });
+}
+
+function abrirEntregaFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    abrirFormulario({
+        titulo: 'Editar entrega de fone',
+        subtitulo: e.situacao_termo === 'ASSINADO' ? 'Atenção: o termo já assinado continua com os dados da época da assinatura.' : '',
+        campos: camposEntregaFone(e),
+        aoSalvar: async valores => {
+            const { error } = await supabaseClient.from('fones_entregas').update(dadosEntregaFone(valores)).eq('id', id);
+            if (error) throw new Error(erroFone(error));
+            await carregarFones();
+            avisar('Entrega atualizada.');
+        }
+    });
+}
+
+async function devolverFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    if (!(await confirmar({ titulo: `Registrar devolução de ${e.prestador_nome}?`,
+        mensagem: `${e.quantidade} fone(s) voltam para o estoque com a data de hoje.`, textoConfirmar: 'Registrar devolução' }))) return;
+    const { error } = await supabaseClient.from('fones_entregas').update({ situacao: 'DEVOLVIDO', devolvido_em: hojeISO() }).eq('id', id);
+    if (error) return avisar(erroFone(error), 'erro');
+    await carregarFones();
+    avisar('Devolução registrada.');
+}
+
+async function excluirEntregaFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    if (!(await confirmar({ titulo: `Excluir a entrega de ${e.prestador_nome}?`,
+        mensagem: e.situacao_termo === 'ASSINADO'
+            ? 'O termo assinado continua guardado. Use excluir só para lançamento errado; para devolução, use "Registrar devolução".'
+            : 'Use só para lançamento errado. Para devolução, use "Registrar devolução".',
+        textoConfirmar: 'Excluir', perigo: true }))) return;
+    const { error } = await supabaseClient.from('fones_entregas').delete().eq('id', id);
+    if (error) return avisar(erroFone(error), 'erro');
+    await carregarFones();
+    avisar('Entrega excluída.');
+}
+
+async function gerarTermoFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    const { data, error } = await supabaseClient.rpc('gerar_termo_fones', { p_entrega_ids: [Number(id)], p_validade_dias: 30 });
+    if (error) return avisar('Não foi possível gerar o termo: ' + traduzirErro(error), 'erro');
+    await carregarFones();
+    dialogoLinkTermo({ token: data.token, nome: e.prestador_nome, assunto: 'Fone de ouvido',
+                       itens: 'do fone de ouvido (rádio HT) que está com você' });
+}
+
+function enviarLinkTermoFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e?.termo_token) return;
+    dialogoLinkTermo({ token: e.termo_token, nome: e.prestador_nome, assunto: 'Fone de ouvido',
+                       itens: 'do fone de ouvido (rádio HT) que está com você' });
+}
+
+function anexarTermoPapelFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    anexarTermoPapel({
+        tipo: 'FONE', ids: [Number(id)], nome: e.prestador_nome, temCpf: Boolean(e.prestador_documento),
+        descricao: `${e.quantidade} fone(s) entregue(s) em ${dataCurta(e.entregue_em + 'T12:00:00')}`,
+        aoConcluir: carregarFones
+    });
+}
+
+async function ajustarEstoqueFones() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador ajusta o estoque.', 'erro');
+    const r = resumoFonesAtual || {};
+    abrirFormulario({
+        titulo: 'Estoque de fones',
+        subtitulo: `Hoje: ${numero.format(Number(r.com_prestador) || 0)} com prestadores e ${numero.format(Number(r.extraviados) || 0)} extraviado(s).`,
+        textoSalvar: 'Salvar estoque',
+        campos: [
+            { id: 'total', rotulo: 'Total de fones da empresa', tipo: 'number', min: 0, step: '1', valor: Number(r.total) || 0, obrigatorio: true,
+              ajuda: 'Todos os fones que a empresa tem: os que estão com prestadores + os guardados. Ao comprar mais, aumente aqui.' },
+            { id: 'modelo', rotulo: 'Modelo do fone (opcional)', valor: r.modelo || '', placeholder: 'Ex.: Fone tipo D com PTT' },
+            { id: 'valor', rotulo: 'Valor de referência por fone (R$) — opcional', tipo: 'number', min: 0, step: '0.01',
+              valor: r.valor_referencia ?? '', placeholder: '0,00', ajuda: 'Entra no controle de custos (só a gestão vê).' }
+        ],
+        aoSalvar: async v => {
+            const total = Math.max(0, Math.round(Number(v.total) || 0));
+            const { data, error } = await supabaseClient.from('fones_estoque')
+                .update({ total, modelo: v.modelo || null, valor_referencia: valorEmReais(v.valor) }).eq('id', 1).select('id');
+            if (error) throw new Error(traduzirErro(error));
+            if (!data?.length) throw new Error('Seu perfil não tem permissão para esta operação.');
+            await carregarFones();
+            avisar('Estoque atualizado.');
+        }
+    });
+}
+
+
+/* ---------------- Importar entregas da planilha ---------------- */
+
+const COLUNAS_PLANILHA_FONES = {
+    prestador_nome: ['NOME', 'PRESTADOR', 'FUNCIONARIO', 'COLABORADOR', 'NOMECOMPLETO', 'NOMEDOPRESTADOR', 'RESPONSAVEL'],
+    prestador_documento: ['DOCUMENTO', 'CPF', 'DOC', 'DOCUMENTODOPRESTADOR'],
+    setor: ['SETOR', 'AREA'],
+    entregue_em: ['DATA', 'DATAENTREGA', 'DATADEENTREGA', 'ENTREGA', 'DATADORECEBIMENTO', 'RECEBIMENTO', 'ENTREGUEEM'],
+    quantidade: ['QUANTIDADE', 'QTD', 'QTDE', 'QUANT'],
+    situacao: ['SITUACAO', 'STATUS'],
+    observacao: ['OBSERVACAO', 'OBS', 'OBSERVACOES']
+};
+
+/* Data da planilha (data do Excel, número de série ou texto dd/mm/aaaa) → AAAA-MM-DD. */
+function dataDaPlanilha(valor) {
+    if (valor === null || valor === undefined || valor === '') return '';
+    if (valor instanceof Date && !isNaN(valor)) {
+        return `${valor.getUTCFullYear()}-${String(valor.getUTCMonth() + 1).padStart(2, '0')}-${String(valor.getUTCDate()).padStart(2, '0')}`;
+    }
+    if (typeof valor === 'number' && valor > 20000 && valor < 80000) {
+        return dataDaPlanilha(new Date(Date.UTC(1899, 11, 30) + valor * 86400000));
+    }
+    const texto = String(valor).trim();
+    let m = texto.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+    if (m) {
+        const ano = m[3].length === 2 ? '20' + m[3] : m[3];
+        return `${ano}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    }
+    m = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[1]}-${m[2]}-${m[3]}` : texto;
+}
+
+function interpretarPlanilhaFones(tabela) {
+    const linhas = tabela.linhas || [];
+    const nomes = COLUNAS_PLANILHA_FONES.prestador_nome;
+    const indice = linhas.slice(0, 10).findIndex(l => (l || []).some(c => nomes.includes(chaveColuna(c))));
+    if (indice < 0) throw new Error('Não achei a coluna com o nome do prestador (NOME, PRESTADOR ou FUNCIONÁRIO).');
+    const colunas = (linhas[indice] || []).map(celula => {
+        const chave = chaveColuna(celula);
+        return { titulo: String(celula ?? '').trim(), campo: Object.keys(COLUNAS_PLANILHA_FONES).find(c => COLUNAS_PLANILHA_FONES[c].includes(chave)) };
+    });
+    const entregas = [];
+    linhas.slice(indice + 1).forEach((linha, i) => {
+        const e = { linha: indice + i + 2 };
+        colunas.forEach((col, j) => {
+            if (!col.campo || e[col.campo]) return;
+            const valor = linha?.[j];
+            e[col.campo] = col.campo === 'entregue_em' ? dataDaPlanilha(valor) : String(valor ?? '').trim();
+        });
+        if (!Object.entries(e).some(([k, v]) => k !== 'linha' && v)) return;
+        const s = chaveColuna(e.situacao || '');
+        e.situacao = s.startsWith('DEVOLV') ? 'DEVOLVIDO' : s.startsWith('EXTRAV') || s.startsWith('PERD') ? 'EXTRAVIADO' : 'COM_PRESTADOR';
+        if (e.setor) e.setor = tituloSetor(e.setor);
+        entregas.push(e);
+    });
+    return { entregas, ignoradas: colunas.filter(c => !c.campo && c.titulo).map(c => c.titulo) };
+}
+
+function abrirImportacaoFones() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador importa.', 'erro');
+    abrirFormulario({
+        titulo: 'Importar entregas de fones',
+        subtitulo: 'O sistema lê as colunas pelo nome, confere tudo e mostra o resultado antes de gravar.',
+        textoSalvar: 'Ler planilha',
+        campos: [
+            { id: 'arquivo', tipo: 'arquivo', rotulo: 'Planilha (.xlsx ou .csv)', obrigatorio: true, largo: true,
+              accept: '.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv' },
+            { id: 'ajuda', tipo: 'html', html: `<div class="importar-ajuda">
+                <strong>Colunas reconhecidas</strong>
+                <span>NOME (ou PRESTADOR / FUNCIONÁRIO) · DOCUMENTO (ou CPF) · SETOR · DATA (da entrega) · QUANTIDADE · SITUAÇÃO · OBSERVAÇÃO</span>
+                <small>Só o nome é obrigatório. Sem quantidade, conta 1 fone. Sem data, usa a de hoje.
+                A mesma pessoa com a mesma data não é cadastrada duas vezes.</small></div>` }
+        ],
+        aoSalvar: async ({ arquivo }) => {
+            if (!arquivo) throw new Error('Escolha a planilha.');
+            const tabela = await lerTabelaPlanilha(arquivo, COLUNAS_PLANILHA_FONES.prestador_nome,
+                'Não achei a coluna com o nome do prestador (NOME, PRESTADOR ou FUNCIONÁRIO) em nenhuma aba.');
+            const lido = interpretarPlanilhaFones(tabela);
+            if (!lido.entregas.length) throw new Error('A planilha não tem nenhuma linha preenchida.');
+            const linhas = lido.entregas.map(({ linha, ...resto }) => resto);
+            const { data, error } = await supabaseClient.rpc('importar_fones', { p_linhas: linhas, p_gravar: false });
+            if (error) throw new Error(/importar_fones/.test(error.message || '') ? 'Rode a atualização v18 no Supabase.' : traduzirErro(error));
+            setTimeout(() => mostrarPreviaFones(lido, linhas, data, arquivo.name), 0);
+        }
+    });
+}
+
+function mostrarPreviaFones(lido, linhas, resumo, nomeArquivo) {
+    // O banco numera as linhas enviadas (1, 2, 3...); aqui voltam para a linha da planilha.
+    const linhaPlanilha = n => lido.entregas[n - 1]?.linha ?? n;
+    const erros = resumo.erros || [];
+    const avisos = resumo.avisos || [];
+    const comErro = new Set(erros.map(e => e.linha));
+    const caixa = (n, texto, classe) => `<div class="importar-numero ${classe}"><b>${n}</b><span>${texto}</span></div>`;
+    const tabela = lido.entregas.slice(0, 400).map((e, i) => `
+        <tr class="${comErro.has(i + 1) ? 'importar-linha-erro' : ''}">
+            <td>${e.linha}</td><td><b>${escaparHTML(e.prestador_nome || '—')}</b></td>
+            <td>${e.prestador_documento ? escaparHTML(e.prestador_documento) : '—'}</td>
+            <td>${escaparHTML(e.setor || '—')}</td><td>${escaparHTML(e.entregue_em || 'hoje')}</td>
+            <td>${escaparHTML(e.quantidade || '1')}</td><td>${escaparHTML(SITUACAO_FONE[e.situacao]?.texto || '')}</td>
+        </tr>`).join('');
+
+    const html = `
+        <div class="importar-previa">
+            <p class="importar-origem"><i class="fa-solid fa-file-excel"></i> ${escaparHTML(nomeArquivo)} · ${lido.entregas.length} linha(s)</p>
+            <div class="importar-numeros">
+                ${caixa(resumo.novos || 0, 'novas entregas', 'novo')}
+                ${caixa(resumo.iguais || 0, 'já cadastradas', 'igual')}
+                ${caixa(erros.length, erros.length === 1 ? 'linha com problema' : 'linhas com problema', erros.length ? 'erro' : 'igual')}
+            </div>
+            ${erros.length ? `<p class="importar-aviso-erro"><i class="fa-solid fa-triangle-exclamation"></i>
+                Linhas com problema ficam de fora: ${erros.map(e => `linha ${linhaPlanilha(e.linha)} (${escaparHTML(e.erro)})`).join('; ')}.</p>` : ''}
+            ${avisos.length ? `<details class="importar-avisos"><summary><i class="fa-solid fa-circle-info"></i> ${avisos.length} aviso(s)</summary>
+                <ul>${avisos.map(a => `<li>Linha ${linhaPlanilha(a.linha)}: ${escaparHTML(a.aviso)}</li>`).join('')}</ul></details>` : ''}
+            ${lido.ignoradas.length ? `<p class="importar-ignoradas">Colunas ignoradas: ${lido.ignoradas.map(escaparHTML).join(', ')}</p>` : ''}
+            <div class="importar-tabela"><table>
+                <thead><tr><th>Linha</th><th>Prestador</th><th>CPF</th><th>Setor</th><th>Entrega</th><th>Qtd</th><th>Situação</th></tr></thead>
+                <tbody>${tabela}</tbody>
+            </table></div>
+        </div>`;
+
+    const aGravar = resumo.novos || 0;
+    abrirFormulario({
+        titulo: aGravar ? 'Confira antes de gravar' : 'Nada novo para gravar',
+        subtitulo: aGravar ? `${aGravar} entrega(s) serão gravadas.` : 'As entregas desta planilha já estão cadastradas (ou têm problemas).',
+        textoSalvar: aGravar ? `Gravar ${aGravar} entrega(s)` : 'Fechar',
+        largo: true,
+        campos: [{ id: 'previa', tipo: 'html', html }],
+        aoSalvar: async () => {
+            if (!aGravar) return;
+            const { data, error } = await supabaseClient.rpc('importar_fones', { p_linhas: linhas, p_gravar: true });
+            if (error) throw new Error(traduzirErro(error));
+            await carregarFones();
+            const r = resumoFonesAtual || {};
+            avisar(`Importação concluída: ${data.novos} entrega(s) gravada(s).` +
+                   (Number(r.disponiveis) < 0 ? ' O estoque ficou menor que as entregas: ajuste em "Estoque".' : ''),
+                   Number(r.disponiveis) < 0 ? 'info' : 'sucesso');
+        }
+    });
+}
+
+/* =========================================================
    99 · INICIALIZAÇÃO
    Todos os eventos e a partida do sistema ficam aqui
    (antes estavam espalhados em 6 pontos diferentes).
@@ -5348,6 +5969,10 @@ function ligarEventos() {
     /* Rádios */
     ligar('buscaRadio', 'input', renderizarRadios);
     ['filtroSetorRadio', 'filtroSituacaoRadio', 'filtroStatusRadio'].forEach(id => ligar(id, 'change', renderizarRadios));
+
+    /* Fones */
+    ligar('buscaFones', 'input', renderizarFones);
+    ['filtroSetorFones', 'filtroSituacaoFones', 'filtroTermoFones'].forEach(id => ligar(id, 'change', renderizarFones));
 
     /* Consulta pública */
     iniciarConsultaPublica();

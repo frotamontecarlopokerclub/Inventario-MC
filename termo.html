@@ -139,9 +139,9 @@
         </div>
 
         <div class="cartao">
-            <h2><i class="fa-solid fa-walkie-talkie"></i> Equipamento(s) sob sua responsabilidade</h2>
+            <h2><i id="iconeItens" class="fa-solid fa-walkie-talkie"></i> Equipamento(s) sob sua responsabilidade</h2>
             <table class="radios">
-                <thead><tr><th>Nº de série</th><th>Descrição</th></tr></thead>
+                <thead><tr><th id="tituloColunaItem">Nº de série</th><th>Descrição</th></tr></thead>
                 <tbody id="listaRadios"></tbody>
             </table>
         </div>
@@ -378,6 +378,10 @@
 
         $('nomeSaudacao').textContent = String(termo.responsavel_nome || '').split(' ')[0];
         $('nomeCompleto').value = termo.responsavel_nome || '';
+        if (termo.tipo === 'FONE') {
+            $('tituloColunaItem').textContent = 'Item';
+            $('iconeItens').className = 'fa-solid fa-headphones';
+        }
         $('listaRadios').innerHTML = (termo.radios || []).map(r =>
             `<tr><td>${escapar(r.numero_serie)}</td><td>${escapar(r.descricao || '—')}</td></tr>`).join('');
         renderizarTexto();

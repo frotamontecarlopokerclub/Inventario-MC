@@ -74,6 +74,10 @@
                         <i class="fa-solid fa-walkie-talkie"></i>
                         <span>Rádios HT</span>
                     </li>
+                    <li id="menuFones" class="menu-item" style="display: none" onclick="abrirFones()">
+                        <i class="fa-solid fa-headphones"></i>
+                        <span>Fones HT</span>
+                    </li>
 
                     <li class="menu-grupo" aria-hidden="true">Consultas</li>
                     <li id="menuEstoque" class="menu-item" style="display: none" onclick="abrirTela('estoqueTela', this)">
@@ -1119,7 +1123,7 @@
                 <div class="page-title">
                     <div>
                         <h2>Rádios HT</h2>
-                        <p>Cada rádio com setor, responsável e termo de responsabilidade assinado online.</p>
+                        <p>Cada rádio com setor, responsável e termo de responsabilidade, assinado online ou em papel.</p>
                     </div>
                     <div class="radios-botoes somente-gestao">
                         <button type="button" class="btn-secondary" onclick="abrirImportacaoRadios()">
@@ -1184,6 +1188,9 @@
                         <button type="button" class="btn-primary btn-small" onclick="gerarTermoSelecionados()">
                             <i class="fa-solid fa-file-signature"></i> Gerar termo para os selecionados
                         </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="anexarTermoPapelSelecionados()">
+                            <i class="fa-solid fa-file-arrow-up"></i> Anexar termo em papel
+                        </button>
                         <button type="button" class="btn-secondary btn-small" onclick="editarRadiosSelecionados()">
                             <i class="fa-solid fa-pen"></i> Editar selecionados
                         </button>
@@ -1218,6 +1225,86 @@
                     </div>
                 </div>
             </section>
+
+            <!-- =================================================
+                 FONES DOS RÁDIOS HT
+            ================================================== -->
+            <section id="fonesTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Fones HT</h2>
+                        <p>Fones de ouvido dos rádios: estoque e cautela de cada prestador, com termo assinado online ou em papel.</p>
+                    </div>
+                    <div class="radios-botoes somente-gestao">
+                        <button type="button" class="btn-secondary" onclick="abrirImportacaoFones()">
+                            <i class="fa-solid fa-file-import"></i> Importar planilha
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="ajustarEstoqueFones()">
+                            <i class="fa-solid fa-boxes-stacked"></i> Estoque
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="editarModeloTermo('termo_fone_modelo')">
+                            <i class="fa-solid fa-file-lines"></i> Modelo do termo
+                        </button>
+                        <button type="button" class="btn-primary" onclick="novaEntregaFone()"><i class="fa-solid fa-plus"></i> Nova entrega</button>
+                    </div>
+                </div>
+
+                <div class="radios-resumo">
+                    <div><strong id="fonesTotal">0</strong><small>Fones no total</small></div>
+                    <div class="ok"><strong id="fonesComPrestador">0</strong><small>Com prestadores</small></div>
+                    <div id="fonesDisponiveisCaixa"><strong id="fonesDisponiveis">0</strong><small>Disponíveis no estoque</small></div>
+                    <div class="falta"><strong id="fonesSemTermo">0</strong><small>Sem termo assinado</small></div>
+                </div>
+                <p id="fonesModelo" class="fones-modelo"></p>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaFones" placeholder="Buscar prestador, CPF ou setor..." autocomplete="off" />
+                        </div>
+                        <select id="filtroSetorFones" aria-label="Filtrar por setor">
+                            <option value="">Todos os setores</option>
+                        </select>
+                        <select id="filtroSituacaoFones" aria-label="Filtrar pela situação">
+                            <option value="COM_PRESTADOR">Com o prestador</option>
+                            <option value="DEVOLVIDO">Devolvidos</option>
+                            <option value="EXTRAVIADO">Extraviados</option>
+                            <option value="">Todas as situações</option>
+                        </select>
+                        <select id="filtroTermoFones" aria-label="Filtrar pela situação do termo">
+                            <option value="">Todas as situações do termo</option>
+                            <option value="ASSINADO">Assinado</option>
+                            <option value="PENDENTE">Aguardando assinatura</option>
+                            <option value="SEM_TERMO">Sem termo</option>
+                        </select>
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-headphones"></i>
+                            <span>Listados:</span>
+                            <strong id="fonesListados">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table fones-tabela">
+                            <thead>
+                                <tr>
+                                    <th>Prestador</th>
+                                    <th>Setor</th>
+                                    <th class="num">Qtd</th>
+                                    <th>Entregue em</th>
+                                    <th>Situação</th>
+                                    <th>Termo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaFones"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <datalist id="dlSetoresFones"></datalist>
+            </section>
+
 
             <!-- =================================================
          HISTÓRICO

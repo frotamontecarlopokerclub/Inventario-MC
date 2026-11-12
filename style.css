@@ -7023,7 +7023,8 @@ html body #loginTela .login-links .link-esqueci-senha {
     background: var(--mc-perigo-fundo) !important;
     color: var(--mc-perigo) !important;
 }
-.dash-extra-seta {
+.dash-extra-seta,
+.linha-inativa td {
     color: var(--mc-texto-3) !important;
 }
 .dash-card,
@@ -7095,6 +7096,7 @@ span.mov-tipo {
     background: #f3effa !important;
     color: #5b3a8c !important;
 }
+#fonesDisponiveisCaixa.falta strong,
 .dashboard-status-grid .baixado-card h3 {
     color: var(--mc-perigo) !important;
 }
@@ -7473,4 +7475,35 @@ html body .tela .custo-lancar input {
     .custos-radios-pendentes {
         flex-wrap: wrap;
     }
+}
+.fones-modelo {
+    margin: -6px 0 12px;
+    color: var(--mc-texto-2);
+    font-size: 13px;
+    font-weight: 600;
+}
+.fones-modelo:empty {
+    display: none;
+}
+.fones-tabela td:nth-child(3) {
+    font-weight: 700;
+}
+.termo-escolha p {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+    color: var(--mc-tinta);
+    font-size: 14px;
+    line-height: 1.5;
+}
+.termo-escolha i {
+    color: var(--mc-caramelo);
+    width: 18px;
+    text-align: center;
+}
+.termo-escolha .btn-small {
+    width: auto !important;
+    padding: 0 12px !important;
 }
