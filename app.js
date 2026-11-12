@@ -512,9 +512,10 @@ function caminhoNoStorage(url) {
 function imgMiniatura(url, { classe = 'foto-tabela', alt = '' } = {}) {
     const original = escaparHTML(url);
     const mini = escaparHTML(urlMiniatura(url));
-    return `<img src="${mini}" alt="${escaparHTML(alt)}" class="${classe}" loading="lazy"
+    return `<img src="${mini}" alt="${escaparHTML(alt)}" class="${classe} foto-ampliavel" loading="lazy"
+                 title="Toque para ampliar"
                  onerror="if (this.src !== '${original}') this.src = '${original}';"
-                 onclick="abrirModalFoto('${original}')">`;
+                 onclick="event.stopPropagation(); abrirModalFoto('${original}', this.alt)">`;
 }
 
 /* Foto só para mostrar (sem ampliar ao tocar), com marcador quando não há foto. */
@@ -565,20 +566,137 @@ async function enviarFoto(arquivo, pasta = 'inventario') {
    (antes o modal nunca aparecia: faltava o estilo do estado "aberto")
 ========================================================= */
 
-function abrirModalFoto(url) {
+/* =========================================================
+   VISOR DE FOTO
+   Abre a foto original inteira na tela. Tocar/clicar na foto
+   aproxima (no ponto tocado); arrastar mostra os detalhes;
+   tocar de novo volta. Esc, X ou "voltar" do celular fecham.
+========================================================= */
+
+const ZOOM_FOTO = 2.5;
+let zoomFotoAtivo = false;
+let arrasteFoto = null;
+
+function abrirModalFoto(url, legenda = '') {
     if (!url) return;
     const modal = document.getElementById('modalFoto');
     const imagem = document.getElementById('imagemModal');
     if (!modal || !imagem) return window.open(url, '_blank');
+
+    sairDoZoomFoto();
+    modal.classList.add('carregando');
+    imagem.onload = () => modal.classList.remove('carregando');
+    imagem.onerror = () => modal.classList.remove('carregando');
     imagem.src = url;
+    imagem.alt = legenda ? `Foto: ${legenda}` : 'Foto ampliada';
+    definirTexto('visorLegenda', legenda || '');
+
+    if (!modal.classList.contains('active')) {
+        try { history.pushState({ visorFoto: true }, ''); } catch { /* sem histórico */ }
+    }
     modal.classList.add('active');
     document.body.classList.add('modal-aberto');
+    document.getElementById('visorZoom')?.focus({ preventScroll: true });
 }
 
-function fecharModalFoto(evento) {
-    if (evento?.target && evento.currentTarget && evento.target !== evento.currentTarget) return;
-    document.getElementById('modalFoto')?.classList.remove('active');
+function fecharModalFoto(evento, { peloHistorico = false } = {}) {
+    const modal = document.getElementById('modalFoto');
+    if (!modal?.classList.contains('active')) return;
+    modal.classList.remove('active', 'carregando');
+    sairDoZoomFoto();
     if (document.getElementById('mcModalForm')?.hidden !== false) document.body.classList.remove('modal-aberto');
+    if (!peloHistorico && history.state?.visorFoto) history.back();
+}
+
+function sairDoZoomFoto() {
+    const palco = document.getElementById('visorPalco');
+    const imagem = document.getElementById('imagemModal');
+    zoomFotoAtivo = false;
+    palco?.classList.remove('ampliada');
+    if (imagem) imagem.style.width = '';
+    atualizarBotaoZoom();
+}
+
+function atualizarBotaoZoom() {
+    const botao = document.getElementById('visorZoom');
+    if (botao) {
+        botao.innerHTML = `<i class="fa-solid fa-magnifying-glass-${zoomFotoAtivo ? 'minus' : 'plus'}"></i>`;
+        botao.setAttribute('aria-label', zoomFotoAtivo ? 'Afastar' : 'Aproximar');
+        botao.title = zoomFotoAtivo ? 'Afastar' : 'Aproximar';
+    }
+    definirTexto('visorDica', zoomFotoAtivo ? 'Arraste para ver os detalhes · toque para afastar' : 'Toque na foto para aproximar');
+}
+
+/* Aproxima mantendo o ponto tocado embaixo do dedo/cursor. */
+function aproximarFoto(x, y) {
+    const palco = document.getElementById('visorPalco');
+    const imagem = document.getElementById('imagemModal');
+    if (!palco || !imagem || !imagem.naturalWidth) return;
+
+    const antes = imagem.getBoundingClientRect();
+    const caixa = palco.getBoundingClientRect();
+    const px = x ?? antes.left + antes.width / 2;
+    const py = y ?? antes.top + antes.height / 2;
+    const rx = Math.min(1, Math.max(0, (px - antes.left) / antes.width));
+    const ry = Math.min(1, Math.max(0, (py - antes.top) / antes.height));
+
+    const largura = Math.round(Math.max(antes.width * ZOOM_FOTO, Math.min(imagem.naturalWidth, caixa.width * 1.5)));
+    zoomFotoAtivo = true;
+    palco.classList.add('ampliada');
+    imagem.style.width = largura + 'px';
+    const altura = largura * imagem.naturalHeight / imagem.naturalWidth;
+    palco.scrollLeft = rx * largura - (px - caixa.left);
+    palco.scrollTop = ry * altura - (py - caixa.top);
+    atualizarBotaoZoom();
+}
+
+function alternarZoomFoto(x, y) {
+    if (zoomFotoAtivo) sairDoZoomFoto();
+    else aproximarFoto(x, y);
+}
+
+function ligarVisorFoto() {
+    const modal = document.getElementById('modalFoto');
+    const palco = document.getElementById('visorPalco');
+    const imagem = document.getElementById('imagemModal');
+    if (!modal || !palco || !imagem) return;
+
+    // Clique fora da foto (sem zoom) fecha.
+    palco.addEventListener('click', evento => {
+        if (evento.target === palco && !zoomFotoAtivo) fecharModalFoto();
+    });
+    modal.querySelector('.visor-topo')?.addEventListener('click', evento => {
+        if (evento.target.classList.contains('visor-topo')) fecharModalFoto();
+    });
+
+    // Arrastar com o mouse quando aproximada (no celular o dedo já rola).
+    palco.addEventListener('pointerdown', evento => {
+        if (!zoomFotoAtivo || evento.pointerType !== 'mouse') return;
+        arrasteFoto = { x: evento.clientX, y: evento.clientY, left: palco.scrollLeft, top: palco.scrollTop, moveu: false };
+        palco.classList.add('arrastando');
+    });
+    window.addEventListener('pointermove', evento => {
+        if (!arrasteFoto) return;
+        const dx = evento.clientX - arrasteFoto.x;
+        const dy = evento.clientY - arrasteFoto.y;
+        if (Math.abs(dx) + Math.abs(dy) > 4) arrasteFoto.moveu = true;
+        palco.scrollLeft = arrasteFoto.left - dx;
+        palco.scrollTop = arrasteFoto.top - dy;
+    });
+    window.addEventListener('pointerup', () => {
+        palco.classList.remove('arrastando');
+        if (arrasteFoto?.moveu) imagem.dataset.arrastou = '1';
+        arrasteFoto = null;
+    });
+
+    imagem.addEventListener('click', evento => {
+        evento.stopPropagation();
+        if (imagem.dataset.arrastou) { delete imagem.dataset.arrastou; return; }
+        alternarZoomFoto(evento.clientX, evento.clientY);
+    });
+
+    // Botão "voltar" do celular fecha a foto em vez de sair da tela.
+    window.addEventListener('popstate', () => fecharModalFoto(null, { peloHistorico: true }));
 }
 
 
@@ -1484,7 +1602,7 @@ function renderizarProdutos() {
         const manutencao = Number(produto.saldo_manutencao) || 0;
         const valor = Number(produto.custo_unitario) || 0;
         const foto = produto.foto_url
-            ? imgMiniatura(produto.foto_url)
+            ? imgMiniatura(produto.foto_url, { alt: produto.nome })
             : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>';
 
         return `
@@ -1731,7 +1849,7 @@ function renderizarOndeEsta() {
                 </li>`).join('');
 
         const foto = grupo.foto
-            ? imgMiniatura(grupo.foto, { classe: '' })
+            ? imgMiniatura(grupo.foto, { classe: '', alt: grupo.nome })
             : '<div class="onde-sem-foto"><i class="fa-solid fa-couch"></i></div>';
 
         return `
@@ -1832,7 +1950,7 @@ function renderizarForaDoLugar() {
         return `
             <tr class="${atrasado ? 'linha-atrasada' : ''}">
                 <td>${foto
-                    ? imgMiniatura(foto)
+                    ? imgMiniatura(foto, { alt: item.nome })
                     : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>'}</td>
                 <td><strong>${escaparHTML(item.nome)}</strong>
                     ${item.status !== 'Ativo' ? `<small class="celula-sub">${escaparHTML(item.status)}</small>` : ''}</td>
@@ -2611,7 +2729,7 @@ function renderizarItens() {
         return `
             <tr data-subsetor-id="${item.subsetor_id ? Number(item.subsetor_id) : ''}" data-item-id="${Number(item.id)}">
                 <td>${foto
-                    ? imgMiniatura(foto)
+                    ? imgMiniatura(foto, { alt: item.nome })
                     : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>'}</td>
                 <td><strong>${escaparHTML(item.nome || '—')}</strong>
                     ${item.descricao ? `<small class="celula-sub">${escaparHTML(item.descricao)}</small>` : ''}</td>
@@ -3440,7 +3558,7 @@ function renderizarConsultaPublica() {
             ? `<div class="consulta-foto">
                    ${imgMiniatura(item.foto_url, { classe: '', alt: item.nome })}
                    <button type="button" class="consulta-foto-expandir" title="Ampliar foto"
-                           onclick="event.stopPropagation(); abrirModalFoto('${escaparHTML(item.foto_url)}')">
+                           onclick="event.stopPropagation(); abrirModalFoto('${escaparHTML(item.foto_url)}', '${escaparHTML(String(item.nome || '').replace(/'/g, ''))}')">
                        <i class="fa-solid fa-expand"></i>
                    </button>
                </div>`
@@ -4956,6 +5074,7 @@ function ligarEventos() {
     ligarBuscaGeral();
     ligarAtualizacaoAutomatica();
     ligarTabelasCelular();
+    ligarVisorFoto();
 
     /* Onde está? / Fora do lugar */
     let espera = null;

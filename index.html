@@ -1509,14 +1509,22 @@
      MODAL FOTO
 ===================================================== -->
 
-        <div id="modalFoto" class="modal-foto" onclick="fecharModalFoto()">
-            <div class="modal-foto-conteudo" onclick="event.stopPropagation()">
-                <button type="button" class="modal-fechar" onclick="fecharModalFoto()" aria-label="Fechar">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-
-                <img id="imagemModal" src="" alt="Foto do item" />
+        <div id="modalFoto" class="visor-foto" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+            <div class="visor-topo">
+                <span id="visorLegenda" class="visor-legenda"></span>
+                <div class="visor-botoes">
+                    <button type="button" id="visorZoom" class="visor-botao" onclick="alternarZoomFoto()" aria-label="Aproximar" title="Aproximar">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    </button>
+                    <button type="button" class="visor-botao" onclick="fecharModalFoto()" aria-label="Fechar" title="Fechar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
+            <div id="visorPalco" class="visor-palco">
+                <img id="imagemModal" src="" alt="Foto ampliada" draggable="false" />
+            </div>
+            <p id="visorDica" class="visor-dica">Toque na foto para aproximar</p>
         </div>
 
         <!-- =====================================================
