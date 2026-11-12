@@ -982,9 +982,7 @@ function esqueciSenha() {
             const destino = window.location.href.split('#')[0].split('?')[0];
             const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: destino });
             if (error) {
-                throw new Error(/rate|limit/i.test(error.message)
-                    ? 'Muitos pedidos seguidos. Aguarde alguns minutos e tente de novo.'
-                    : error.message);
+                throw new Error(erroDeLimite(error) || error.message);
             }
             avisar('Se o e-mail estiver cadastrado, o link chegará em instantes. Confira também o spam.', 'info');
         }
@@ -999,7 +997,24 @@ function problemaNaSenha(senha, confirmacao) {
     return '';
 }
 
+/* Limites do Supabase: diz qual foi e o que fazer. */
+function erroDeLimite(erro) {
+    const codigo = String(erro?.code || '');
+    const texto = String(erro?.message || '');
+    if (codigo === 'over_email_send_rate_limit' || /email rate limit/i.test(texto)) {
+        return 'O Supabase atingiu o limite de e-mails por hora (o envio padrão manda só 2 por hora). '
+            + 'Desligue "Confirm email" em Authentication → Sign In / Providers → Email, ou configure o envio de e-mails (SMTP).';
+    }
+    if (codigo === 'over_request_rate_limit' || erro?.status === 429 || /rate limit|too many/i.test(texto)) {
+        return 'O Supabase bloqueou por excesso de cadastros/entradas seguidos desta rede. Aguarde uns minutos e tente de novo '
+            + '(o limite fica em Authentication → Rate Limits).';
+    }
+    return '';
+}
+
 function traduzirErroSenha(erro) {
+    const limite = erroDeLimite(erro);
+    if (limite) return limite;
     const texto = String(erro?.message || erro || '');
     if (/different from the old|same.?password/i.test(texto)) return 'A nova senha precisa ser diferente da atual.';
     if (/weak|pwned|leaked|characters/i.test(texto)) return 'Senha muito fraca. Use uma senha mais longa, com letras e números.';
