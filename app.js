@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -6330,6 +6330,139 @@ function renderizarMovsInicio() {
 }
 
 /* =========================================================
+   21 · INSTALAR O APP NA TELA DE INÍCIO DO CELULAR
+   · Android (Chrome, Edge…): abre a janela "Instalar app" do sistema.
+   · iPhone/iPad: a Apple não deixa o site se instalar sozinho, então
+     mostramos o passo a passo do Safari (Compartilhar → Tela de Início).
+========================================================= */
+
+let pedidoInstalacao = null;          // evento guardado do Chrome/Android
+const CHAVE_AVISO_INSTALAR = 'mc-aviso-instalar-fechado';
+
+function appJaInstalado() {
+    return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function ehIOS() {
+    const ua = navigator.userAgent || '';
+    return /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+function ehAndroid() {
+    return /Android/i.test(navigator.userAgent || '');
+}
+
+function ehAparelhoMovel() {
+    return ehIOS() || ehAndroid() || /Mobi/i.test(navigator.userAgent || '');
+}
+
+/* Mostra os botões de instalar só onde faz sentido. */
+function atualizarBotoesInstalar() {
+    const pode = !appJaInstalado() && (ehAparelhoMovel() || Boolean(pedidoInstalacao));
+    document.body.classList.toggle('pode-instalar', pode);
+
+    let fechado = false;
+    try { fechado = localStorage.getItem(CHAVE_AVISO_INSTALAR) === '1'; } catch (_) { /* sem armazenamento */ }
+    const aviso = document.getElementById('avisoInstalarApp');
+    if (aviso) aviso.hidden = !pode || fechado || !ehAparelhoMovel();
+}
+
+function fecharAvisoInstalar() {
+    try { localStorage.setItem(CHAVE_AVISO_INSTALAR, '1'); } catch (_) { /* sem armazenamento */ }
+    const aviso = document.getElementById('avisoInstalarApp');
+    if (aviso) aviso.hidden = true;
+}
+
+async function instalarApp() {
+    if (appJaInstalado()) return avisar('O app já está instalado neste aparelho.', 'info');
+
+    // Android / Chrome: janela oficial de instalação.
+    if (pedidoInstalacao) {
+        const pedido = pedidoInstalacao;
+        pedidoInstalacao = null;
+        try {
+            await pedido.prompt();
+            const { outcome } = await pedido.userChoice;
+            if (outcome === 'accepted') fecharAvisoInstalar();
+        } catch (erro) {
+            console.warn('Instalação não abriu:', erro?.message || erro);
+            mostrarPassosInstalar();
+        }
+        atualizarBotoesInstalar();
+        return;
+    }
+
+    mostrarPassosInstalar();
+}
+
+function passoInstalar(numero, texto, icone) {
+    return `<li><b>${numero}</b><span>${texto}</span>${icone ? `<i class="fa-solid ${icone}"></i>` : ''}</li>`;
+}
+
+function mostrarPassosInstalar() {
+    const ua = navigator.userAgent || '';
+    const dentroDeOutroApp = /Instagram|FBAN|FBAV|Line\//i.test(ua);
+    let titulo, passos, observacao = '';
+
+    if (ehIOS()) {
+        const noSafari = !/CriOS|FxiOS|EdgiOS/i.test(ua);
+        titulo = 'Instalar no iPhone';
+        passos = [
+            passoInstalar(1, noSafari
+                ? 'Toque no botão <strong>Compartilhar</strong>, na barra do Safari'
+                : 'Toque no botão <strong>Compartilhar</strong>, no canto de cima da tela', 'fa-arrow-up-from-bracket'),
+            passoInstalar(2, 'Role a lista e toque em <strong>Adicionar à Tela de Início</strong>', 'fa-square-plus'),
+            passoInstalar(3, 'Confirme em <strong>Adicionar</strong>. O ícone do Inventário aparece na tela do celular.', 'fa-circle-check')
+        ];
+        if (dentroDeOutroApp) observacao = 'Você abriu o link dentro de outro aplicativo. Abra o endereço no <strong>Safari</strong> para conseguir instalar.';
+    } else if (ehAndroid()) {
+        titulo = 'Instalar no Android';
+        passos = [
+            passoInstalar(1, 'Toque no menu <strong>⋮</strong>, no canto de cima do Chrome', 'fa-ellipsis-vertical'),
+            passoInstalar(2, 'Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>', 'fa-mobile-screen-button'),
+            passoInstalar(3, 'Confirme. O ícone do Inventário aparece na tela do celular.', 'fa-circle-check')
+        ];
+        if (dentroDeOutroApp) observacao = 'Você abriu o link dentro de outro aplicativo. Abra o endereço no <strong>Chrome</strong> para conseguir instalar.';
+    } else {
+        titulo = 'Instalar no celular';
+        passos = [
+            passoInstalar(1, `Abra <strong>${escaparHTML(location.host)}</strong> no navegador do celular`, 'fa-mobile-screen-button'),
+            passoInstalar(2, 'Entre com seu e-mail e senha e toque em <strong>Instalar app</strong>', 'fa-download'),
+            passoInstalar(3, 'Siga o passo a passo que aparece no celular', 'fa-circle-check')
+        ];
+    }
+
+    abrirFormulario({
+        titulo,
+        textoSalvar: 'Entendi',
+        semCancelar: true,
+        campos: [{ id: 'instalar', tipo: 'html', html: `
+            <div class="instalar-app">
+                <img src="apple-touch-icon.png" alt="" width="64" height="64" />
+                <p>Com o ícone na tela do celular, o Inventário abre direto, em tela cheia, como um aplicativo.</p>
+            </div>
+            <ol class="instalar-passos">${passos.join('')}</ol>
+            ${observacao ? `<p class="instalar-obs">${observacao}</p>` : ''}` }],
+        aoSalvar: async () => {}
+    });
+}
+
+function ligarInstalarApp() {
+    window.addEventListener('beforeinstallprompt', evento => {
+        evento.preventDefault();          // nós mostramos o botão na hora certa
+        pedidoInstalacao = evento;
+        atualizarBotoesInstalar();
+    });
+    window.addEventListener('appinstalled', () => {
+        pedidoInstalacao = null;
+        fecharAvisoInstalar();
+        atualizarBotoesInstalar();
+        avisar('Pronto! O Inventário foi instalado na tela do celular.');
+    });
+    atualizarBotoesInstalar();
+}
+
+/* =========================================================
    99 · INICIALIZAÇÃO
    Todos os eventos e a partida do sistema ficam aqui
    (antes estavam espalhados em 6 pontos diferentes).
@@ -6344,6 +6477,7 @@ function ligarEventos() {
     ligarVisorFoto();
     ligarMenuMaisCelular();
     ligarFiltrosCelular();
+    ligarInstalarApp();
 
     /* Onde está? / Fora do lugar */
     let espera = null;

@@ -119,6 +119,10 @@
                     </li>
 
                     <li class="menu-separador" aria-hidden="true"></li>
+                    <li id="menuInstalarApp" class="menu-item menu-instalar so-instalar" onclick="instalarApp()">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Instalar app</span>
+                    </li>
                     <li id="menuMinhaSenha" class="menu-item" style="display: none" onclick="trocarMinhaSenha()">
                         <i class="fa-solid fa-key"></i>
                         <span>Minha senha</span>
@@ -260,6 +264,10 @@
                                 </button>
                                 <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
                             </div>
+
+                            <button type="button" class="btn-instalar-login so-instalar" onclick="instalarApp()">
+                                <i class="fa-solid fa-mobile-screen-button"></i> Instalar o app no celular
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -537,6 +545,16 @@
                             <span>valor de referência do acervo</span>
                         </button>
                     </div>
+                </div>
+
+                <div id="avisoInstalarApp" class="inicio-instalar" hidden>
+                    <img src="apple-touch-icon.png" alt="" width="44" height="44" />
+                    <div>
+                        <strong>Instale o app no celular</strong>
+                        <span>Abra o Inventário direto pelo ícone, em tela cheia.</span>
+                    </div>
+                    <button type="button" class="inicio-instalar-btn" onclick="instalarApp()">Instalar</button>
+                    <button type="button" class="inicio-instalar-fechar" onclick="fecharAvisoInstalar()" aria-label="Não mostrar mais"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
                 <nav class="inicio-atalhos" aria-label="Atalhos">
