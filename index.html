@@ -53,6 +53,10 @@
             <nav class="sidebar-menu" aria-label="Menu principal">
                 <ul>
                     <li class="menu-grupo" aria-hidden="true">Dia a dia</li>
+                    <li id="menuDashboard" class="menu-item" style="display: none" onclick="abrirInicio()">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Início</span>
+                    </li>
                     <li id="menuOndeEsta" class="menu-item" style="display: none" onclick="abrirOndeEsta()">
                         <i class="fa-solid fa-magnifying-glass-location"></i>
                         <span>Onde está?</span>
@@ -91,10 +95,6 @@
                     <li id="menuHistorico" class="menu-item" style="display: none" onclick="abrirTela('historicoTela', this)">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         <span>Histórico</span>
-                    </li>
-                    <li id="menuDashboard" class="menu-item" style="display: none" onclick="abrirTela('dashboardTela', this)">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Painel geral</span>
                     </li>
                     <li id="menuCustos" class="menu-item" style="display: none" onclick="abrirCustos()">
                         <i class="fa-solid fa-sack-dollar"></i>
@@ -498,191 +498,116 @@
          DASHBOARD
     ================================================== -->
 
-            <section id="dashboardTela" class="tela">
-                <div class="page-title">
-                    <div>
-                        <h2>Painel geral</h2>
-
-                        <p>Acompanhe o inventário do Grupo Monte Carlo.</p>
-                    </div>
-                </div>
-
-                <!-- CARDS -->
-
-                <div class="dashboard">
-                    <div class="dash-card">
-                        <div class="dash-icon">
-                            <i class="fa-solid fa-boxes-stacked"></i>
-                        </div>
-
-                        <div>
-                            <h3 id="totalItens">0</h3>
-
-                            <p>Total de peças</p>
-                        </div>
+            <section id="dashboardTela" class="tela inicio-tela">
+                <div class="inicio-hero">
+                    <div class="inicio-saudacao">
+                        <h2><span id="inicioCumprimento">Olá</span><span id="inicioNome" class="inicio-nome"></span></h2>
+                        <p id="inicioData"></p>
                     </div>
 
-                    <div class="dash-card">
-                        <div class="dash-icon">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-
-                        <div>
-                            <h3 id="totalLocais">0</h3>
-
-                            <p>Locais</p>
-                        </div>
-                    </div>
-
-                    <div class="dash-card">
-                        <div class="dash-icon">
-                            <i class="fa-solid fa-right-left"></i>
-                        </div>
-
-                        <div>
-                            <h3 id="totalMov">0</h3>
-
-                            <p>Movimentações</p>
-                        </div>
-                    </div>
-
-                    <div class="dash-card">
-                        <div class="dash-icon">
-                            <i class="fa-solid fa-ban"></i>
-                        </div>
-
-                        <div>
-                            <h3 id="totalBaixados">0</h3>
-
-                            <p>Baixados</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- LOCAL DE ORIGEM: FORA DO LUGAR E VALOR -->
-
-                <div id="dashExtra" class="dash-extra" hidden>
-                    <button type="button" id="dashForaItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar()">
-                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                        <div>
-                            <strong id="dashForaLugar">—</strong>
-                            <small>Fora do lugar</small>
-                        </div>
-                        <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
-                    </button>
-
-                    <button type="button" id="dashAtrasoItem" class="dash-extra-item dash-extra-alerta" onclick="abrirForaDoLugar(true)">
-                        <i class="fa-solid fa-clock"></i>
-                        <div>
-                            <strong id="dashAtrasados">—</strong>
-                            <small>Retorno atrasado</small>
-                        </div>
-                        <i class="fa-solid fa-chevron-right dash-extra-seta"></i>
-                    </button>
-
-                    <div class="dash-extra-item dash-extra-link" role="button" tabindex="0" onclick="abrirCustos()" title="Ver custos por categoria e local">
-                        <i class="fa-solid fa-sack-dollar"></i>
-                        <div>
+                    <div class="inicio-kpis">
+                        <button type="button" class="inicio-kpi" onclick="abrirTela('estoqueTela', document.getElementById('menuEstoque'))">
+                            <strong id="totalItens">—</strong>
+                            <span>peças no acervo</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirOndeEsta()">
+                            <strong id="totalLocais">—</strong>
+                            <span>locais</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirRadios()">
+                            <strong id="inicioRadios">—</strong>
+                            <span>rádios HT</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirFones()">
+                            <strong id="inicioFones">—</strong>
+                            <span>fones com prestadores</span>
+                        </button>
+                        <button type="button" class="inicio-kpi inicio-kpi-valor somente-gestao" onclick="abrirCustos()">
                             <strong id="dashValorPatrimonio">—</strong>
-                            <small>Valor de referência do acervo</small>
-                        </div>
+                            <span>valor de referência do acervo</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- RELATÓRIO -->
+                <nav class="inicio-atalhos" aria-label="Atalhos">
+                    <button type="button" onclick="abrirOndeEsta()"><i class="fa-solid fa-magnifying-glass-location"></i><span>Procurar peça</span></button>
+                    <button type="button" class="so-opera" onclick="abrirMoverPecas()"><i class="fa-solid fa-right-left"></i><span>Mover peças</span></button>
+                    <button type="button" class="so-opera" onclick="abrirTela('cadastroTela', document.getElementById('menuCadastro'))"><i class="fa-solid fa-box-open"></i><span>Cadastrar</span></button>
+                    <button type="button" onclick="abrirRadios()"><i class="fa-solid fa-walkie-talkie"></i><span>Rádios HT</span></button>
+                    <button type="button" onclick="abrirFones()"><i class="fa-solid fa-headphones"></i><span>Fones HT</span></button>
+                </nav>
 
-                <div class="dashboard-advanced">
-                    <div class="card dashboard-table">
-                        <div class="dashboard-topo">
-                            <div>
-                                <h2>Quantidade por Item e Local</h2>
-                            </div>
-
-                            <div class="dashboard-filtros">
-                                <div class="input-wrapper">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-
-                                    <input
-                                        type="text"
-                                        id="filtroDashboard"
-                                        placeholder="Pesquisar item ou local..."
-                                        onkeyup="filtrarDashboard()"
-                                    />
-                                </div>
-
-                                <select id="filtroLocalDashboard" onchange="atualizarSubsetoresDashboardPorLocal()">
-                                    <option value="">Todos os Locais</option>
-                                </select>
-
-                                <select id="filtroSubsetorDashboard" onchange="filtrarDashboard()">
-                                    <option value="">Todos os setores</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="table-area">
-                            <table class="inventory-table">
-                                <thead>
-                                    <tr>
-                                        <th>Item</th>
-
-                                        <th>Local</th>
-
-                                        <th>Setor</th>
-
-                                        <th>Quantidade</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="dashboardLocais"></tbody>
-                            </table>
-                        </div>
+                <div class="inicio-grade">
+                    <div id="dashExtra" class="card inicio-card inicio-atencao">
+                        <h3>Precisa de atenção</h3>
+                        <ul id="inicioAtencao" class="inicio-alertas">
+                            <li class="inicio-carregando">Carregando…</li>
+                        </ul>
+                        <span id="dashForaLugar" hidden></span>
+                        <span id="dashAtrasados" hidden></span>
                     </div>
 
-                    <!-- STATUS -->
+                    <div class="card inicio-card inicio-situacao">
+                        <h3>Situação das peças</h3>
+                        <div id="inicioBarraSituacao" class="inicio-barra-situacao" role="img" aria-label="Situação das peças"></div>
+                        <ul class="inicio-legenda">
+                            <li><i class="ponto ponto-ativo"></i><span>Ativas</span><strong id="dashAtivo">0</strong></li>
+                            <li><i class="ponto ponto-manutencao"></i><span>Em manutenção</span><strong id="dashManutencao">0</strong></li>
+                            <li><i class="ponto ponto-baixado"></i><span>Baixadas</span><strong id="dashBaixado">0</strong></li>
+                            <li><i class="ponto ponto-extraviado"></i><span>Extraviadas</span><strong id="dashExtraviado">0</strong></li>
+                        </ul>
+                    </div>
 
-                    <div class="dashboard-status-grid">
-                        <div class="status-card manutencao-card">
-                            <div class="status-icon">
-                                <i class="fa-solid fa-screwdriver-wrench"></i>
-                            </div>
-
-                            <h3 id="dashManutencao">0</h3>
-
-                            <p>Em Manutenção</p>
+                    <div class="card inicio-card inicio-locais">
+                        <div class="inicio-card-topo">
+                            <h3>Peças por local</h3>
+                            <button type="button" class="inicio-link" onclick="abrirOndeEsta()">Ver tudo</button>
                         </div>
+                        <ul id="inicioLocais" class="inicio-barras"></ul>
+                    </div>
 
-                        <div class="status-card extraviado-card">
-                            <div class="status-icon">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                            </div>
-
-                            <h3 id="dashExtraviado">0</h3>
-
-                            <p>Extraviados</p>
+                    <div class="card inicio-card inicio-movs so-opera">
+                        <div class="inicio-card-topo">
+                            <h3>Últimas movimentações</h3>
+                            <button type="button" class="inicio-link" onclick="abrirTela('historicoTela', document.getElementById('menuHistorico'))">Histórico</button>
                         </div>
-
-                        <div class="status-card baixado-card">
-                            <div class="status-icon">
-                                <i class="fa-solid fa-circle-xmark"></i>
-                            </div>
-
-                            <h3 id="dashBaixado">0</h3>
-
-                            <p>Baixados</p>
-                        </div>
-
-                        <div class="status-card ativo-card">
-                            <div class="status-icon">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </div>
-
-                            <h3 id="dashAtivo">0</h3>
-
-                            <p>Ativos</p>
-                        </div>
+                        <ul id="inicioMovs" class="inicio-movs-lista">
+                            <li class="inicio-carregando">Carregando…</li>
+                        </ul>
                     </div>
                 </div>
+
+                <details class="card inicio-detalhe dashboard-table">
+                    <summary>
+                        <span>Quantidade por item e local</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+
+                    <div class="dashboard-filtros">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filtroDashboard" placeholder="Pesquisar item ou local..." onkeyup="filtrarDashboard()" />
+                        </div>
+                        <select id="filtroLocalDashboard" onchange="atualizarSubsetoresDashboardPorLocal()">
+                            <option value="">Todos os Locais</option>
+                        </select>
+                        <select id="filtroSubsetorDashboard" onchange="filtrarDashboard()">
+                            <option value="">Todos os setores</option>
+                        </select>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr><th>Item</th><th>Local</th><th>Setor</th><th>Quantidade</th></tr>
+                            </thead>
+                            <tbody id="dashboardLocais"></tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <span id="totalMov" hidden></span>
+                <span id="totalBaixados" hidden></span>
             </section>
 
             <!-- =================================================

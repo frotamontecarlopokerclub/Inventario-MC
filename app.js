@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -792,7 +792,7 @@ const TELAS_PUBLICAS = ['loginTela', 'consultaPublicaTela'];
 
 /* O que carregar ao entrar em cada tela. */
 const AO_ABRIR_TELA = {
-    dashboardTela: () => atualizarResumoDashboard(),
+    dashboardTela: () => atualizarInicio(),
     historicoTela: () => carregarHistorico(),
     custosTela: () => carregarCustos(),
     radiosTela: () => carregarRadios(),
@@ -917,7 +917,7 @@ async function entrarNoSistema() {
     document.body.classList.remove('login-mode');
     atualizarMenus();
     atualizarUsuarioInterface();
-    abrirTela('ondeEstaTela', document.getElementById('menuOndeEsta'));
+    abrirInicio();
     await Promise.all([carregarDashboard(), carregarSubsetores()]);
     if (podeAdministrar()) atualizarPedidosAcesso();
     if (precisaTrocarSenha) pedirNovaSenha({ obrigatoria: true });
@@ -1009,7 +1009,7 @@ function atualizarMenus() {
         menuEstoque: logado,
         menuProdutos: logado,
         menuHistorico: opera,
-        menuDashboard: gestao,
+        menuDashboard: logado,
         menuCustos: gestao,
         menuAdministracao: gestao,
         menuMinhaSenha: logado,
@@ -1032,6 +1032,7 @@ function atualizarMenus() {
     });
 
     document.body.classList.toggle('ve-custos', gestao);
+    document.body.classList.toggle('pode-operar', opera);
 
     document.querySelectorAll('.somente-gestao').forEach(elemento => {
         elemento.style.display = gestao ? '' : 'none';
@@ -1533,23 +1534,16 @@ function resumoCalculadoNoNavegador() {
 }
 
 function renderizarResumoExtra(resumo) {
-    const area = document.getElementById('dashExtra');
-    if (!area) return;
+    const fora = Number(resumo?.fora_do_lugar) || 0;
+    const atrasados = Number(resumo?.retornos_atrasados) || 0;
+    const valor = Number(resumo?.valor_patrimonio) || 0;
 
-    const temDados = resumo && 'fora_do_lugar' in resumo;
-    area.hidden = !temDados;
-    if (!temDados) return;
-
-    const fora = Number(resumo.fora_do_lugar) || 0;
-    const atrasados = Number(resumo.retornos_atrasados) || 0;
-    const valor = Number(resumo.valor_patrimonio) || 0;
-
-    definirTexto('dashForaLugar', fora ? `${numero.format(fora)} peça(s)` : 'Tudo no lugar');
-    definirTexto('dashAtrasados', atrasados ? `${numero.format(atrasados)} peça(s)` : 'Nenhum');
+    definirTexto('dashForaLugar', fora ? `${numero.format(fora)} ${fora === 1 ? 'peça' : 'peças'}` : 'Tudo no lugar');
+    definirTexto('dashAtrasados', atrasados ? `${numero.format(atrasados)} ${atrasados === 1 ? 'peça' : 'peças'}` : 'Nenhum');
     definirTexto('dashValorPatrimonio', valor > 0 ? moeda.format(valor) : 'Não informado');
-
-    document.getElementById('dashForaItem')?.classList.toggle('tem-alerta', fora > 0);
-    document.getElementById('dashAtrasoItem')?.classList.toggle('tem-alerta', atrasados > 0);
+    document.getElementById('dashValorPatrimonio')?.classList.toggle('inicio-sem-valor', !(valor > 0));
+    resumoInicio.pecas = resumo || null;
+    renderizarInicio();
 }
 
 /* Tabela "Quantidade por Item e Local". */
@@ -4693,13 +4687,11 @@ async function baixarCopiaSeguranca() {
 function botoesBarraInferior() {
     const opera = podeMovimentar();
     return [
+        { tela: 'dashboardTela', icone: 'fa-house', texto: 'Início', acao: 'abrirInicio()' },
         { tela: 'ondeEstaTela', icone: 'fa-magnifying-glass-location', texto: 'Procurar', acao: 'abrirOndeEsta()' },
         opera
             ? { tela: 'movimentacaoTela', icone: 'fa-right-left', texto: 'Mover', acao: 'abrirMoverPecas()' }
             : { tela: 'foraLugarTela', icone: 'fa-arrow-right-arrow-left', texto: 'Fora do lugar', acao: 'abrirForaDoLugar()' },
-        opera
-            ? { tela: 'cadastroTela', icone: 'fa-box-open', texto: 'Cadastrar', acao: "abrirTela('cadastroTela', document.getElementById('menuCadastro'))" }
-            : { tela: 'estoqueTela', icone: 'fa-warehouse', texto: 'Inventário', acao: "abrirTela('estoqueTela', document.getElementById('menuEstoque'))" },
         { tela: 'radiosTela', icone: 'fa-walkie-talkie', texto: 'Rádios', acao: 'abrirRadios()' },
         { tela: null, icone: 'fa-bars', texto: 'Menu', acao: 'toggleSidebar()' }
     ];
@@ -4912,6 +4904,7 @@ async function atualizarDadosSeNecessario(forcar = false) {
     atualizandoAgora = true;
     try {
         await carregarDashboard();
+        if (document.querySelector('#dashboardTela.activeTela')) await carregarExtrasInicio();
         if (podeAdministrar()) await atualizarPedidosAcesso();
         ultimaAtualizacao = Date.now();
     } catch (erro) {
@@ -6084,6 +6077,256 @@ function mostrarPreviaFones(lido, linhas, resumo, nomeArquivo) {
                    Number(r.disponiveis) < 0 ? 'info' : 'sucesso');
         }
     });
+}
+
+/* =========================================================
+   20 · INÍCIO
+   Primeira tela depois do login: saudação, números principais,
+   o que precisa de atenção, situação das peças, peças por local
+   e as últimas movimentações.
+========================================================= */
+
+const resumoInicio = { pecas: null, radios: null, fones: null, movs: null };
+
+function abrirInicio() {
+    abrirTela('dashboardTela', document.getElementById('menuDashboard'));
+}
+
+async function atualizarInicio() {
+    renderizarInicio();
+    await Promise.all([atualizarResumoDashboard(), carregarExtrasInicio()]);
+}
+
+async function carregarExtrasInicio() {
+    const radiosPromessa = buscarTodasLinhas(() => supabaseClient.from('vw_radios').select('id,status,situacao_termo'))
+        .then(lista => {
+            const conta = filtro => lista.filter(filtro).length;
+            const emUso = r => !['Baixado', 'Extraviado'].includes(r.status);
+            resumoInicio.radios = {
+                total: conta(emUso),
+                aguardando: conta(r => emUso(r) && ['PENDENTE', 'EXPIRADO'].includes(r.situacao_termo)),
+                semTermo: conta(r => emUso(r) && r.situacao_termo === 'SEM_TERMO'),
+                manutencao: conta(r => r.status === 'Em manutenção')
+            };
+        })
+        .catch(() => { resumoInicio.radios = null; });
+
+    const fonesPromessa = supabaseClient.rpc('resumo_fones')
+        .then(({ data, error }) => { resumoInicio.fones = error ? null : data; })
+        .catch(() => { resumoInicio.fones = null; });
+
+    const movsPromessa = !podeMovimentar() ? Promise.resolve() : supabaseClient
+        .from('movimentacoes')
+        .select('id,item_id,item_nome,tipo_movimento,destino_id,destino_subsetor_id,destino_onde_fica,quantidade,data')
+        .order('data', { ascending: false })
+        .limit(5)
+        .then(({ data, error }) => { resumoInicio.movs = error ? [] : (data || []); })
+        .catch(() => { resumoInicio.movs = []; });
+
+    await Promise.all([radiosPromessa, fonesPromessa, movsPromessa]);
+    renderizarInicio();
+}
+
+/* ---------------- Montagem da tela ---------------- */
+
+function renderizarInicio() {
+    if (!document.getElementById('dashboardTela') || !usuarioLogado) return;
+    renderizarSaudacaoInicio();
+    renderizarNumerosInicio();
+    renderizarAtencaoInicio();
+    renderizarSituacaoInicio();
+    renderizarLocaisInicio();
+    renderizarMovsInicio();
+}
+
+function primeiroNomeUsuario() {
+    const nome = String(nomeUsuarioLogado || '').trim();
+    if (!nome || nome.includes('@')) return '';
+    const primeiro = nome.split(/\s+/)[0];
+    return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
+}
+
+function renderizarSaudacaoInicio() {
+    const hora = new Date().getHours();
+    const cumprimento = hora < 5 ? 'Boa noite' : hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    const nome = primeiroNomeUsuario();
+    definirTexto('inicioCumprimento', nome ? `${cumprimento}, ` : cumprimento);
+    definirTexto('inicioNome', nome);
+
+    const data = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const pendencias = alertasInicio().length;
+    const situacao = !resumoInicio.pecas ? ''
+        : pendencias ? ` · ${pendencias} ${pendencias === 1 ? 'ponto pede' : 'pontos pedem'} atenção`
+        : ' · tudo em ordem';
+    definirTexto('inicioData', data.charAt(0).toUpperCase() + data.slice(1) + situacao);
+}
+
+function renderizarNumerosInicio() {
+    const p = resumoInicio.pecas;
+    const pecasNoAcervo = p ? (Number(p.ativos) || 0) + (Number(p.manutencao) || 0)
+        : itens.filter(i => !['Baixado', 'Extraviado'].includes(i.status)).reduce((t, i) => t + quantidadeItem(i), 0);
+    definirTexto('totalItens', numero.format(pecasNoAcervo));
+    definirTexto('totalLocais', numero.format(LOCAIS.length));
+    definirTexto('inicioRadios', resumoInicio.radios ? numero.format(resumoInicio.radios.total) : '—');
+    definirTexto('inicioFones', resumoInicio.fones ? numero.format(Number(resumoInicio.fones.com_prestador) || 0) : '—');
+}
+
+function plural(qtd, um, varios) {
+    return `${numero.format(qtd)} ${qtd === 1 ? um : varios}`;
+}
+
+/* Cada pendência: quantidade, texto, nível (aviso/perigo), ícone e para onde leva. */
+function alertasInicio() {
+    const p = resumoInicio.pecas || {};
+    const r = resumoInicio.radios || {};
+    const f = resumoInicio.fones || {};
+    const n = valor => Number(valor) || 0;
+    return [
+        { qtd: n(p.retornos_atrasados), texto: q => `${q === 1 ? 'peça com retorno atrasado' : 'peças com retorno atrasado'}`, nivel: 'perigo', icone: 'fa-clock', acao: () => abrirForaDoLugar(true) },
+        { qtd: n(p.fora_do_lugar), texto: q => q === 1 ? 'peça fora do lugar' : 'peças fora do lugar', nivel: 'aviso', icone: 'fa-arrow-right-arrow-left', acao: () => abrirForaDoLugar() },
+        { qtd: n(r.semTermo), texto: q => q === 1 ? 'rádio sem termo' : 'rádios sem termo', nivel: 'perigo', icone: 'fa-file-circle-exclamation', acao: () => abrirRadiosComTermo('SEM_TERMO') },
+        { qtd: n(r.aguardando), texto: q => q === 1 ? 'termo de rádio aguardando assinatura' : 'termos de rádio aguardando assinatura', nivel: 'aviso', icone: 'fa-hourglass-half', acao: () => abrirRadiosComTermo('PENDENTE') },
+        { qtd: n(p.manutencao), texto: q => q === 1 ? 'peça em manutenção' : 'peças em manutenção', nivel: 'aviso', icone: 'fa-screwdriver-wrench', acao: () => abrirTela('estoqueTela', document.getElementById('menuEstoque')) },
+        { qtd: n(r.manutencao), texto: q => q === 1 ? 'rádio em manutenção' : 'rádios em manutenção', nivel: 'aviso', icone: 'fa-walkie-talkie', acao: () => abrirRadiosComStatus('Em manutenção') },
+        { qtd: n(p.extraviados), texto: q => q === 1 ? 'peça extraviada' : 'peças extraviadas', nivel: 'perigo', icone: 'fa-triangle-exclamation', acao: () => abrirTela('estoqueTela', document.getElementById('menuEstoque')) },
+        { qtd: n(f.extraviados), texto: q => q === 1 ? 'fone extraviado' : 'fones extraviados', nivel: 'perigo', icone: 'fa-headphones', acao: () => abrirFones() }
+    ].filter(a => a.qtd > 0);
+}
+
+function abrirRadiosComTermo(situacao) {
+    abrirRadios();
+    const filtro = document.getElementById('filtroSituacaoRadio');
+    if (filtro && [...filtro.options].some(o => o.value === situacao)) {
+        filtro.value = situacao;
+        filtro.dispatchEvent(new Event('change'));
+    }
+}
+
+function abrirRadiosComStatus(status) {
+    abrirRadios();
+    const filtro = document.getElementById('filtroStatusRadio');
+    if (filtro && [...filtro.options].some(o => o.value === status)) {
+        filtro.value = status;
+        filtro.dispatchEvent(new Event('change'));
+    }
+}
+
+let acoesAtencaoInicio = [];
+
+function renderizarAtencaoInicio() {
+    const lista = document.getElementById('inicioAtencao');
+    if (!lista) return;
+    if (!resumoInicio.pecas) {
+        lista.innerHTML = '<li class="inicio-carregando">Carregando…</li>';
+        return;
+    }
+    const alertas = alertasInicio();
+    acoesAtencaoInicio = alertas.map(a => a.acao);
+    if (!alertas.length) {
+        lista.innerHTML = `<li class="inicio-tudo-certo"><i class="fa-solid fa-circle-check"></i>
+            <div><strong>Tudo em ordem</strong><span>Nenhuma peça fora do lugar, atrasada ou pendente.</span></div></li>`;
+        return;
+    }
+    lista.innerHTML = alertas.map((a, i) => `
+        <li><button type="button" class="inicio-alerta inicio-${a.nivel}" onclick="acoesAtencaoInicio[${i}]()">
+            <i class="fa-solid ${a.icone}"></i>
+            <span><strong>${numero.format(a.qtd)}</strong> ${escaparHTML(a.texto(a.qtd))}</span>
+            <i class="fa-solid fa-chevron-right inicio-seta"></i>
+        </button></li>`).join('');
+}
+
+function renderizarSituacaoInicio() {
+    const barra = document.getElementById('inicioBarraSituacao');
+    if (!barra) return;
+    const p = resumoInicio.pecas;
+    const soma = status => itens.filter(i => i.status === status).reduce((t, i) => t + quantidadeItem(i), 0);
+    const partes = [
+        { classe: 'ativo', valor: p ? Number(p.ativos) || 0 : soma('Ativo'), nome: 'Ativas' },
+        { classe: 'manutencao', valor: p ? Number(p.manutencao) || 0 : soma('Em manutenção'), nome: 'Em manutenção' },
+        { classe: 'baixado', valor: p ? Number(p.baixados) || 0 : soma('Baixado'), nome: 'Baixadas' },
+        { classe: 'extraviado', valor: p ? Number(p.extraviados) || 0 : soma('Extraviado'), nome: 'Extraviadas' }
+    ];
+    const total = partes.reduce((t, x) => t + x.valor, 0);
+    barra.innerHTML = total ? partes.filter(x => x.valor > 0).map(x =>
+        `<span class="inicio-seg ponto-${x.classe}" style="flex-grow:${x.valor}" title="${x.nome}: ${numero.format(x.valor)}"></span>`).join('')
+        : '<span class="inicio-seg inicio-seg-vazio"></span>';
+    barra.setAttribute('aria-label', partes.map(x => `${x.nome}: ${x.valor}`).join(', '));
+    partes.forEach((x, i) => definirTexto(['dashAtivo', 'dashManutencao', 'dashBaixado', 'dashExtraviado'][i], numero.format(x.valor)));
+}
+
+function renderizarLocaisInicio() {
+    const lista = document.getElementById('inicioLocais');
+    if (!lista) return;
+    const porLocal = new Map();
+    itens.filter(i => !['Baixado', 'Extraviado'].includes(i.status) && quantidadeItem(i) > 0).forEach(i => {
+        const chave = i.local_id || 'sem';
+        porLocal.set(chave, (porLocal.get(chave) || 0) + quantidadeItem(i));
+    });
+    const ordenados = [...porLocal.entries()]
+        .map(([id, qtd]) => ({ id, nome: id === 'sem' ? 'Sem local' : nomeLocal(id) || 'Sem local', qtd }))
+        .sort((a, b) => b.qtd - a.qtd || compararTexto(a.nome, b.nome));
+    if (!ordenados.length) {
+        lista.innerHTML = '<li class="inicio-carregando">Nenhuma peça cadastrada ainda.</li>';
+        return;
+    }
+    const LIMITE = 6;
+    const maior = ordenados[0].qtd;
+    const mostrar = ordenados.slice(0, LIMITE);
+    const resto = ordenados.slice(LIMITE);
+    lista.innerHTML = mostrar.map(l => `
+        <li>
+            <div class="inicio-barra-rotulo"><span>${escaparHTML(l.nome)}</span><strong>${numero.format(l.qtd)}</strong></div>
+            <div class="inicio-barra-trilho"><span style="width:${Math.max(2, Math.round(l.qtd / maior * 100))}%"></span></div>
+        </li>`).join('') + (resto.length
+        ? `<li class="inicio-barra-resto">+ ${plural(resto.length, 'outro local', 'outros locais')} com ${plural(resto.reduce((t, l) => t + l.qtd, 0), 'peça', 'peças')}</li>`
+        : '');
+}
+
+function tempoRelativo(data) {
+    if (!data) return '';
+    const minutos = Math.round((Date.now() - new Date(data).getTime()) / 60000);
+    if (minutos < 1) return 'agora';
+    if (minutos < 60) return `há ${minutos} min`;
+    const horas = Math.round(minutos / 60);
+    if (horas < 24) return `há ${horas} h`;
+    const dias = Math.round(horas / 24);
+    if (dias === 1) return 'ontem';
+    if (dias < 7) return `há ${dias} dias`;
+    return new Date(data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+const ICONES_MOVIMENTO = {
+    ENTRADA: 'fa-box-open', TRANSFERENCIA: 'fa-right-left', SAIDA_TEMPORARIA: 'fa-arrow-right-from-bracket',
+    REMANEJAMENTO: 'fa-arrows-rotate', DEVOLUCAO: 'fa-rotate-left', STATUS: 'fa-tag'
+};
+
+function renderizarMovsInicio() {
+    const lista = document.getElementById('inicioMovs');
+    if (!lista || !podeMovimentar()) return;
+    const movs = resumoInicio.movs;
+    if (!movs) {
+        lista.innerHTML = '<li class="inicio-carregando">Carregando…</li>';
+        return;
+    }
+    if (!movs.length) {
+        lista.innerHTML = '<li class="inicio-carregando">Nenhuma movimentação ainda.</li>';
+        return;
+    }
+    lista.innerHTML = movs.map(mov => {
+        const item = itens.find(i => Number(i.id) === Number(mov.item_id));
+        const nome = mov.item_nome || item?.nome || 'Peça';
+        const qtd = Number(mov.quantidade) || 0;
+        const destino = mov.destino_id ? lugarCompleto(mov.destino_id, mov.destino_subsetor_id, mov.destino_onde_fica) : '';
+        return `
+            <li>
+                <i class="fa-solid ${ICONES_MOVIMENTO[mov.tipo_movimento] || 'fa-right-left'}"></i>
+                <div>
+                    <strong>${escaparHTML(nome)}${qtd > 1 ? ` <small>× ${numero.format(qtd)}</small>` : ''}</strong>
+                    <span>${escaparHTML(ROTULOS_MOVIMENTO[mov.tipo_movimento] || 'Movimentação')}${destino ? ' → ' + escaparHTML(destino) : ''}</span>
+                </div>
+                <time>${escaparHTML(tempoRelativo(mov.data))}</time>
+            </li>`;
+    }).join('');
 }
 
 /* =========================================================
