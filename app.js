@@ -569,6 +569,88 @@ async function enviarFoto(arquivo, pasta = 'inventario') {
 ========================================================= */
 
 /* =========================================================
+   CELULAR: LINHA QUE ABRE DETALHE, MENU "MAIS" E FILTROS
+========================================================= */
+
+const ehCelular = () => window.matchMedia('(max-width: 640px)').matches;
+
+/* No celular, tocar na linha abre o detalhe (fora de botões e caixas de seleção). */
+function tocarLinhaCelular(evento, abrir) {
+    if (!ehCelular()) return;
+    if (evento.target.closest('button, a, input, select, label, .foto-ampliavel')) return;
+    abrir();
+}
+
+/* Janela de detalhe: lista "rótulo: valor" e os botões de ação. */
+function abrirDetalhe({ titulo, subtitulo = '', linhas = [], acoes = [] }) {
+    const corpo = linhas.filter(([, valor]) => valor !== null && valor !== undefined && valor !== '')
+        .map(([rotulo, valor, html]) => `<div><dt>${escaparHTML(rotulo)}</dt><dd>${html ? valor : escaparHTML(valor)}</dd></div>`).join('');
+    abrirFormulario({
+        titulo, subtitulo,
+        textoSalvar: 'Fechar',
+        semCancelar: true,
+        campos: [{ id: 'detalhe', tipo: 'html', html: `
+            <dl class="detalhe-lista">${corpo}</dl>
+            ${acoes.length ? `<div class="detalhe-acoes">${acoes.join('')}</div>` : ''}` }],
+        aoSalvar: async () => {}
+    });
+}
+
+/* Botões secundários do topo da tela viram um menu "Mais" no celular. */
+function ligarMenuMaisCelular() {
+    document.querySelectorAll('.page-title .radios-botoes').forEach(grupo => {
+        if (grupo.querySelector('.btn-mais')) return;
+        const secundarios = [...grupo.querySelectorAll('.btn-secondary')];
+        if (secundarios.length < 2) return;
+        grupo.classList.add('tem-mais');
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'btn-secondary btn-mais';
+        botao.setAttribute('aria-label', 'Mais opções');
+        botao.innerHTML = '<i class="fa-solid fa-ellipsis"></i> Mais';
+        botao.addEventListener('click', () => {
+            const opcoes = secundarios.map((b, i) =>
+                `<button type="button" class="btn-secondary" data-mais="${i}">${b.innerHTML}</button>`).join('');
+            abrirFormulario({
+                titulo: 'Mais opções', textoSalvar: 'Fechar', semCancelar: true,
+                campos: [{ id: 'mais', tipo: 'html', html: `<div class="detalhe-acoes">${opcoes}</div>` }],
+                aoSalvar: async () => {}
+            });
+            document.querySelectorAll('[data-mais]').forEach(item => item.addEventListener('click', () => {
+                fecharFormulario();
+                setTimeout(() => secundarios[Number(item.dataset.mais)].click(), 40);
+            }));
+        });
+        grupo.prepend(botao);
+    });
+}
+
+/* Filtros recolhidos no celular: botão "Filtros" com quantos estão ligados. */
+function ligarFiltrosCelular() {
+    document.querySelectorAll('.estoque-toolbar').forEach(barra => {
+        const selects = [...barra.querySelectorAll('select')];
+        if (!selects.length || barra.querySelector('.btn-filtros')) return;
+        selects.forEach(s => { s.dataset.padrao = s.value; });
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'btn-secondary btn-filtros';
+        botao.innerHTML = '<i class="fa-solid fa-sliders"></i> <span>Filtros</span><b hidden></b>';
+        botao.addEventListener('click', () => barra.classList.toggle('filtros-abertos'));
+        const contar = () => {
+            const ligados = selects.filter(s => s.value !== s.dataset.padrao).length;
+            const selo = botao.querySelector('b');
+            selo.textContent = ligados;
+            selo.hidden = !ligados;
+        };
+        selects.forEach(s => s.addEventListener('change', contar));
+        const busca = barra.querySelector('.estoque-busca');
+        (busca || barra.firstElementChild).after(botao);
+        barra.classList.add('com-filtros-celular');
+    });
+}
+
+
+/* =========================================================
    VISOR DE FOTO
    Abre a foto original inteira na tela. Tocar/clicar na foto
    aproxima (no ponto tocado); arrastar mostra os detalhes;
@@ -1856,7 +1938,10 @@ function renderizarOndeEsta() {
                     <div class="onde-local">
                         <i class="fa-solid fa-location-dot"></i>
                         <div>
-                            <strong>${escaparHTML(lugarDoItem(item))}</strong>
+                            <strong>${escaparHTML(nomeLocal(item.local_id) || lugarDoItem(item))}</strong>
+                            ${(() => { const completo = lugarDoItem(item); const nome = nomeLocal(item.local_id);
+                                const resto = completo.startsWith(nome) ? completo.slice(nome.length).replace(/^\s*[/·]\s*/, '') : '';
+                                return resto ? `<span class="onde-sublocal">${escaparHTML(resto)}</span>` : ''; })()}
                             ${item.status !== 'Ativo' ? `<span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status)}</span>` : ''}
                             ${seloFora(item)}
                         </div>
@@ -1886,7 +1971,7 @@ function renderizarOndeEsta() {
                         </div>
                         <div class="onde-total">
                             <strong>${numero.format(total)}</strong>
-                            <span>peça(s)${fora ? ` · <b>${numero.format(fora)} fora</b>` : ''}</span>
+                            <span>${total === 1 ? 'peça' : 'peças'}${fora ? ` · <b>${numero.format(fora)} fora</b>` : ''}</span>
                         </div>
                     </header>
                     <ul class="onde-lista">${linhas}</ul>
@@ -3914,22 +3999,28 @@ function renderizarRadios() {
         }
         const textoSituacao = r.situacao_termo === 'ASSINADO' && r.termo_origem === 'PAPEL' ? 'Assinado (papel)' : situacao.texto;
 
+        // Celular: linha resumida (quem está com o rádio · setor) e termo curto.
+        const linhaCelular = [r.responsavel_nome || 'Sem responsável', r.setor].filter(Boolean).map(escaparHTML).join(' · ');
+        const termoCurto = { ASSINADO: r.termo_origem === 'PAPEL' ? 'Papel' : 'Assinado', PENDENTE: 'Pendente', EXPIRADO: 'Expirado' }[r.situacao_termo] || 'Sem termo';
+
         return `
-            <tr class="${marcado ? 'linha-selecionada' : ''}">
+            <tr class="${marcado ? 'linha-selecionada' : ''} linha-radio" onclick="tocarLinhaCelular(event, () => detalheRadio(${Number(r.id)}))">
                 ${gestao ? `<td class="col-check"><input type="checkbox" aria-label="Selecionar rádio" ${marcado ? 'checked' : ''}
                     onchange="alternarSelecaoRadio(${Number(r.id)}, this.checked)"></td>` : ''}
-                <td>
+                <td class="cel-radio">
+                    <span class="so-celular termo-curto ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${termoCurto}</span>
                     <strong>${escaparHTML(r.identificacao || r.numero_serie)}</strong>
-                    <small class="celula-sub serie">${r.identificacao ? `Série ${escaparHTML(r.numero_serie)} · ` : ''}${escaparHTML([r.marca, r.modelo].filter(Boolean).join(' ') || '—')}</small>
-                    ${resumoKit(r)}
+                    <small class="so-celular linha-celular">${linhaCelular}${!['Ativo', 'Reserva'].includes(r.status) ? ` · <b class="${classeStatusRadio(r.status)}">${escaparHTML(r.status)}</b>` : ''}</small>
+                    <small class="celula-sub serie so-computador">${r.identificacao ? `Série ${escaparHTML(r.numero_serie)} · ` : ''}${escaparHTML([r.marca, r.modelo].filter(Boolean).join(' ') || '—')}</small>
+                    <span class="so-computador">${resumoKit(r)}</span>
                 </td>
-                <td>${escaparHTML(r.setor || '—')}${r.local_id ? `<small class="celula-sub">${escaparHTML(nomeLocal(r.local_id))}</small>` : ''}</td>
-                <td>${r.responsavel_nome
+                <td class="so-computador">${escaparHTML(r.setor || '—')}${r.local_id ? `<small class="celula-sub">${escaparHTML(nomeLocal(r.local_id))}</small>` : ''}</td>
+                <td class="so-computador">${r.responsavel_nome
                         ? `<strong>${escaparHTML(r.responsavel_nome)}</strong>${r.responsavel_telefone ? `<small class="celula-sub">${escaparHTML(formatarTelefone(r.responsavel_telefone))}</small>` : ''}`
                         : '<span class="texto-suave">Sem responsável</span>'}</td>
-                <td><span class="status-badge ${classeStatusRadio(r.status)}">${escaparHTML(r.status)}</span></td>
-                <td><span class="status-badge ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${textoSituacao}</span>${dataTermo}</td>
-                <td>
+                <td class="so-computador"><span class="status-badge ${classeStatusRadio(r.status)}">${escaparHTML(r.status)}</span></td>
+                <td class="so-computador"><span class="status-badge ${situacao.classe}"><i class="fa-solid ${situacao.icone}"></i> ${textoSituacao}</span>${dataTermo}</td>
+                <td class="so-computador">
                     <div class="acoes-tabela">
                         ${acaoTermo}
                         ${gestao ? `<button type="button" class="btn-icon" title="Editar rádio" onclick="abrirRadio(${Number(r.id)})">
@@ -3945,6 +4036,50 @@ function renderizarRadios() {
 
     const todos = document.getElementById('selecionarTodosRadios');
     if (todos) todos.checked = lista.length > 0 && lista.every(r => radiosSelecionados.has(Number(r.id)));
+}
+
+/* Celular: tocar no rádio abre o detalhe com tudo e os botões. */
+function detalheRadio(id) {
+    const r = radios.find(x => Number(x.id) === Number(id));
+    if (!r) return;
+    const gestao = podeAdministrar();
+    const situacao = SITUACAO_TERMO[r.situacao_termo] || SITUACAO_TERMO.SEM_TERMO;
+    const textoSituacao = r.situacao_termo === 'ASSINADO' && r.termo_origem === 'PAPEL' ? 'Assinado (papel)' : situacao.texto;
+    const quandoTermo = r.situacao_termo === 'ASSINADO' && r.termo_assinado_em ? ` em ${dataCurta(r.termo_assinado_em)}`
+        : (r.situacao_termo === 'PENDENTE' && r.termo_expira_em ? ` · link até ${dataCurta(r.termo_expira_em)}` : '');
+    const kit = [['Bateria', r.bateria_codigo, r.bateria_serie], ['Bateria reserva', r.bateria_reserva_codigo, r.bateria_reserva_serie],
+                 ['Base carregadora', r.carregador_codigo, r.carregador_serie]]
+        .filter(([, c, sr]) => c || sr).map(([n, c, sr]) => [n, [c, sr && `série ${sr}`].filter(Boolean).join(' · ')]);
+
+    const acoes = [];
+    const acao = (icone, texto, chamada, classe = 'btn-secondary') =>
+        acoes.push(`<button type="button" class="${classe}" onclick="fecharFormulario(); setTimeout(() => { ${chamada} }, 40)"><i class="fa-solid ${icone}"></i> ${texto}</button>`);
+    if (gestao && r.responsavel_nome) {
+        if (r.situacao_termo === 'ASSINADO' && r.termo_origem === 'PAPEL' && r.termo_arquivo) acao('fa-file-image', 'Ver termo em papel', `verTermoPapel('${escaparHTML(r.termo_arquivo)}')`, 'btn-primary');
+        else if (r.situacao_termo === 'ASSINADO' && r.termo_token) acao('fa-file-circle-check', 'Ver termo assinado', `abrirLinkTermo('${escaparHTML(r.termo_token)}')`, 'btn-primary');
+        else if (r.situacao_termo === 'PENDENTE' && r.termo_token) acao('fa-share-from-square', 'Enviar link do termo', `mostrarLinkTermo('${escaparHTML(r.termo_token)}', ${Number(r.id)})`, 'btn-primary');
+        else acao('fa-file-signature', 'Gerar termo', `gerarTermoDoResponsavel(${Number(r.id)})`, 'btn-primary');
+        if (r.situacao_termo !== 'ASSINADO') acao('fa-file-arrow-up', 'Anexar termo em papel', `anexarTermoPapelRadio(${Number(r.id)})`);
+    }
+    if (gestao) acao('fa-pen', 'Editar', `abrirRadio(${Number(r.id)})`);
+    if (gestao && r.responsavel_nome) acao('fa-rotate-left', 'Registrar devolução', `devolverRadio(${Number(r.id)})`);
+    if (gestao) acao('fa-trash-can', 'Excluir', `excluirRadios([${Number(r.id)}])`, 'btn-secondary btn-excluir-texto');
+
+    abrirDetalhe({
+        titulo: r.identificacao || r.numero_serie,
+        subtitulo: [r.marca, r.modelo].filter(Boolean).join(' '),
+        linhas: [
+            ['Responsável', r.responsavel_nome || 'Sem responsável'],
+            ['Celular', r.responsavel_telefone && formatarTelefone(r.responsavel_telefone)],
+            ['Setor', r.setor],
+            ['Local', r.local_id && nomeLocal(r.local_id)],
+            ['Situação', r.status],
+            ['Termo', `<span class="status-badge ${situacao.classe}">${textoSituacao}</span>${quandoTermo}`, true],
+            ['Nº de série', r.numero_serie],
+            ...kit
+        ],
+        acoes
+    });
 }
 
 function classeStatusRadio(status) {
@@ -5583,19 +5718,66 @@ function renderizarFones() {
                       <button type="button" class="btn-icon btn-excluir" title="Excluir entrega" onclick="excluirEntregaFone(${Number(e.id)})"><i class="fa-solid fa-trash-can"></i></button>`;
         }
 
+        const termoCurto = { ASSINADO: e.termo_origem === 'PAPEL' ? 'Papel' : 'Assinado', PENDENTE: 'Pendente', EXPIRADO: 'Expirado' }[e.situacao_termo] || 'Sem termo';
+        const linhaCelular = [e.setor, `${numero.format(Number(e.quantidade) || 0)} fone${Number(e.quantidade) === 1 ? '' : 's'}`,
+                              dataCurta(e.entregue_em + 'T12:00:00')].filter(Boolean).map(escaparHTML).join(' · ')
+            + (e.situacao !== 'COM_PRESTADOR' ? ` · <b class="${situacao.classe}">${situacao.texto}</b>` : '');
+
         return `
-            <tr class="${e.situacao !== 'COM_PRESTADOR' ? 'linha-inativa' : ''}">
-                <td><strong>${escaparHTML(e.prestador_nome)}</strong>
-                    ${e.prestador_documento ? `<small class="celula-sub">CPF ${escaparHTML(formatarCpf(e.prestador_documento))}</small>` : ''}</td>
-                <td>${escaparHTML(e.setor || '—')}</td>
-                <td class="num">${numero.format(Number(e.quantidade) || 0)}</td>
-                <td>${dataCurta(e.entregue_em + 'T12:00:00')}</td>
-                <td><span class="status-badge ${situacao.classe}">${situacao.texto}</span>
+            <tr class="${e.situacao !== 'COM_PRESTADOR' ? 'linha-inativa' : ''} linha-radio" onclick="tocarLinhaCelular(event, () => detalheFone(${Number(e.id)}))">
+                <td class="cel-radio"><span class="so-celular termo-curto ${termo.classe}"><i class="fa-solid ${termo.icone}"></i> ${termoCurto}</span>
+                    <strong>${escaparHTML(e.prestador_nome)}</strong>
+                    <small class="so-celular linha-celular">${linhaCelular}</small>
+                    ${e.prestador_documento ? `<small class="celula-sub so-computador">CPF ${escaparHTML(formatarCpf(e.prestador_documento))}</small>` : ''}</td>
+                <td class="so-computador">${escaparHTML(e.setor || '—')}</td>
+                <td class="num so-computador">${numero.format(Number(e.quantidade) || 0)}</td>
+                <td class="so-computador">${dataCurta(e.entregue_em + 'T12:00:00')}</td>
+                <td class="so-computador"><span class="status-badge ${situacao.classe}">${situacao.texto}</span>
                     ${e.situacao === 'DEVOLVIDO' && e.devolvido_em ? `<small class="celula-sub">em ${dataCurta(e.devolvido_em + 'T12:00:00')}</small>` : ''}</td>
-                <td><span class="status-badge ${termo.classe}"><i class="fa-solid ${termo.icone}"></i> ${textoTermo}</span>${dataTermo}</td>
-                <td><div class="acoes-tabela">${acoes}</div></td>
+                <td class="so-computador"><span class="status-badge ${termo.classe}"><i class="fa-solid ${termo.icone}"></i> ${textoTermo}</span>${dataTermo}</td>
+                <td class="so-computador"><div class="acoes-tabela">${acoes}</div></td>
             </tr>`;
     }).join('');
+}
+
+/* Celular: tocar na entrega abre o detalhe com tudo e os botões. */
+function detalheFone(id) {
+    const e = fonesEntregas.find(x => Number(x.id) === Number(id));
+    if (!e) return;
+    const situacao = SITUACAO_FONE[e.situacao] || SITUACAO_FONE.COM_PRESTADOR;
+    const termo = SITUACAO_TERMO[e.situacao_termo] || SITUACAO_TERMO.SEM_TERMO;
+    const textoTermo = e.situacao_termo === 'ASSINADO' && e.termo_origem === 'PAPEL' ? 'Assinado (papel)' : termo.texto;
+    const quandoTermo = e.situacao_termo === 'ASSINADO' && e.termo_assinado_em ? ` em ${dataCurta(e.termo_assinado_em)}`
+        : (e.situacao_termo === 'PENDENTE' && e.termo_expira_em ? ` · link até ${dataCurta(e.termo_expira_em)}` : '');
+
+    const acoes = [];
+    const acao = (icone, texto, chamada, classe = 'btn-secondary') =>
+        acoes.push(`<button type="button" class="${classe}" onclick="fecharFormulario(); setTimeout(() => { ${chamada} }, 40)"><i class="fa-solid ${icone}"></i> ${texto}</button>`);
+    if (podeAdministrar()) {
+        if (e.situacao_termo === 'ASSINADO' && e.termo_origem === 'PAPEL' && e.termo_arquivo) acao('fa-file-image', 'Ver termo em papel', `verTermoPapel('${escaparHTML(e.termo_arquivo)}')`, 'btn-primary');
+        else if (e.situacao_termo === 'ASSINADO' && e.termo_token) acao('fa-file-circle-check', 'Ver termo assinado', `abrirLinkTermo('${escaparHTML(e.termo_token)}')`, 'btn-primary');
+        else if (e.situacao_termo === 'PENDENTE' && e.termo_token) acao('fa-share-from-square', 'Enviar link do termo', `enviarLinkTermoFone(${Number(e.id)})`, 'btn-primary');
+        else if (e.situacao === 'COM_PRESTADOR') acao('fa-file-signature', 'Gerar termo digital', `gerarTermoFone(${Number(e.id)})`, 'btn-primary');
+        if (e.situacao_termo !== 'ASSINADO') acao('fa-file-arrow-up', 'Anexar termo em papel', `anexarTermoPapelFone(${Number(e.id)})`);
+        if (e.situacao === 'COM_PRESTADOR') acao('fa-rotate-left', 'Registrar devolução', `devolverFone(${Number(e.id)})`);
+        acao('fa-pen', 'Editar', `abrirEntregaFone(${Number(e.id)})`);
+        acao('fa-trash-can', 'Excluir', `excluirEntregaFone(${Number(e.id)})`, 'btn-secondary btn-excluir-texto');
+    }
+
+    abrirDetalhe({
+        titulo: e.prestador_nome,
+        subtitulo: 'Fone de ouvido · cautela individual',
+        linhas: [
+            ['CPF', e.prestador_documento && formatarCpf(e.prestador_documento)],
+            ['Setor', e.setor],
+            ['Quantidade', `${numero.format(Number(e.quantidade) || 0)} fone(s)`],
+            ['Entregue em', dataCurta(e.entregue_em + 'T12:00:00')],
+            ['Situação', situacao.texto + (e.situacao === 'DEVOLVIDO' && e.devolvido_em ? ` em ${dataCurta(e.devolvido_em + 'T12:00:00')}` : '')],
+            ['Termo', `<span class="status-badge ${termo.classe}">${textoTermo}</span>${quandoTermo}`, true],
+            ['Observação', e.observacao]
+        ],
+        acoes
+    });
 }
 
 function camposEntregaFone(e = {}) {
@@ -5917,6 +6099,8 @@ function ligarEventos() {
     ligarAtualizacaoAutomatica();
     ligarTabelasCelular();
     ligarVisorFoto();
+    ligarMenuMaisCelular();
+    ligarFiltrosCelular();
 
     /* Onde está? / Fora do lugar */
     let espera = null;
