@@ -6768,7 +6768,7 @@ body:not(.ve-custos) .col-custo {
 }
 .custos-kpis {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 18px;
 }
@@ -6977,8 +6977,7 @@ html body .tela .custo-lancar input {
 }
 .btn-filtros,
 .btn-mais,
-.so-celular,
-body.login-mode #menuInstalarApp {
+.so-celular {
     display: none !important;
 }
 .detalhe-lista {
@@ -7038,6 +7037,7 @@ body.login-mode #menuInstalarApp {
     .so-celular {
         display: revert !important;
     }
+    #carrosTela .page-title p,
     #estoqueTela .page-title p,
     #fonesTela .page-title p,
     #foraLugarTela .page-title p,
@@ -7719,11 +7719,12 @@ body:not(.pode-operar) .so-opera {
     .inicio-kpi span {
         font-size: 12px;
     }
-    .inicio-kpi-valor {
-        grid-column: 1/-1;
-    }
     .inicio-kpi-valor strong {
-        font-size: 20px;
+        font-size: 17px;
+        padding-top: 4px;
+    }
+    body:not(.ve-custos) #inicioKpiCarros {
+        grid-column: 1/-1;
     }
     .inicio-atalhos {
         grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
@@ -7780,6 +7781,10 @@ body:not(.pode-operar) .so-opera {
 body.pode-instalar:not(.login-mode) #menuInstalarApp {
     display: flex !important;
 }
+#dashboardTela .inicio-instalar[hidden],
+body.login-mode #menuInstalarApp {
+    display: none !important;
+}
 html body #loginTela .btn-instalar-login {
     width: 100%;
     display: flex;
@@ -7809,9 +7814,6 @@ html body #loginTela .btn-instalar-login i {
     border-radius: 16px;
     padding: 12px 12px 12px 14px;
     box-shadow: var(--mc-sombra);
-}
-#dashboardTela .inicio-instalar[hidden] {
-    display: none !important;
 }
 .inicio-instalar img {
     width: 44px;
@@ -7927,4 +7929,50 @@ html body #loginTela .btn-instalar-login {
     background: var(--mc-aviso-fundo);
     color: var(--mc-aviso);
     font-size: 13.5px;
+}
+@media (max-width: 900px), (pointer: coarse) {
+    html body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not(#_):not(#__),
+    html body select:not(#_):not(#__),
+    html body textarea:not(#_):not(#__) {
+        font-size: 16px !important;
+    }
+    html body input::placeholder,
+    html body textarea::placeholder {
+        font-size: 15px;
+    }
+}
+.placa {
+    display: inline-block;
+    font-family: "Montserrat", sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: #1b1b1b;
+    background: #fff;
+    white-space: nowrap;
+    border: 1.5px solid #2b2b2b;
+    border-top: 4px solid #1f4aa8;
+    border-radius: 5px;
+    padding: 2px 8px 3px;
+}
+.placa-texto {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--mc-tinta);
+}
+.num-texto {
+    font-variant-numeric: tabular-nums;
+}
+.carros-tabela td {
+    vertical-align: middle;
+}
+.radios-resumo .carros-valor strong {
+    font-size: 20px;
+}
+@media (max-width: 640px) {
+    html body .radios-resumo .carros-valor strong {
+        font-size: 13px !important;
+        line-height: 1.6;
+        white-space: nowrap;
+    }
 }

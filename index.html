@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
         <title>Inventário Central Grupo Monte Carlo</title>
 
@@ -91,6 +91,10 @@
                     <li id="menuFones" class="menu-item" style="display: none" onclick="abrirFones()">
                         <i class="fa-solid fa-headphones"></i>
                         <span>Fones HT</span>
+                    </li>
+                    <li id="menuCarros" class="menu-item" style="display: none" onclick="abrirCarros()">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Carros</span>
                     </li>
 
                     <li class="menu-grupo" aria-hidden="true">Consultas</li>
@@ -539,6 +543,10 @@
                         <button type="button" class="inicio-kpi" onclick="abrirFones()">
                             <strong id="inicioFones">—</strong>
                             <span>fones com prestadores</span>
+                        </button>
+                        <button type="button" id="inicioKpiCarros" class="inicio-kpi" onclick="abrirCarros()">
+                            <strong id="inicioCarros">—</strong>
+                            <span>carros na frota</span>
                         </button>
                         <button type="button" class="inicio-kpi inicio-kpi-valor somente-gestao" onclick="abrirCustos()">
                             <strong id="dashValorPatrimonio">—</strong>
@@ -1258,6 +1266,87 @@
                 <datalist id="dlSetoresFones"></datalist>
             </section>
 
+            <section id="carrosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Carros</h2>
+                        <p>Carros da empresa: placa, RENAVAM, ano, cor, valor e situação de cada um.</p>
+                    </div>
+                    <div class="radios-botoes somente-gestao">
+                        <button type="button" class="btn-secondary" onclick="abrirImportacaoCarros()">
+                            <i class="fa-solid fa-file-import"></i> Importar planilha
+                        </button>
+                        <button type="button" class="btn-primary" onclick="novoCarro()"><i class="fa-solid fa-plus"></i> Novo carro</button>
+                    </div>
+                </div>
+
+                <div class="radios-resumo">
+                    <div><strong id="carrosTotal">0</strong><small>Na frota</small></div>
+                    <div class="ok"><strong id="carrosEmUso">0</strong><small>Em uso</small></div>
+                    <div class="alerta"><strong id="carrosManutencao">0</strong><small>Em manutenção</small></div>
+                    <div class="somente-gestao carros-valor"><strong id="carrosValor">—</strong><small>Valor da frota</small></div>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaCarros" placeholder="Buscar placa, modelo, cor ou RENAVAM..." autocomplete="off" />
+                        </div>
+                        <select id="filtroMarcaCarros" aria-label="Filtrar por marca">
+                            <option value="">Todas as marcas</option>
+                        </select>
+                        <select id="filtroSituacaoCarros" aria-label="Filtrar pela situação">
+                            <option value="FROTA">Na frota (em uso e manutenção)</option>
+                            <option value="Em uso">Em uso</option>
+                            <option value="Em manutenção">Em manutenção</option>
+                            <option value="Vendido">Vendidos</option>
+                            <option value="Baixado">Baixados</option>
+                            <option value="">Todas as situações</option>
+                        </select>
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-car"></i>
+                            <span>Listados:</span>
+                            <strong id="carrosListados">0</strong>
+                        </div>
+                    </div>
+
+                    <div id="barraSelecaoCarros" class="barra-selecao" hidden>
+                        <span id="carrosSelecionadosQtd"></span>
+                        <button type="button" class="btn-secondary btn-small" onclick="mudarSituacaoSelecionados()">
+                            <i class="fa-solid fa-pen"></i> Mudar situação
+                        </button>
+                        <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="excluirCarros([...carrosSelecionados])">
+                            <i class="fa-solid fa-trash-can"></i> Excluir selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoCarros()">Limpar seleção</button>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table carros-tabela">
+                            <thead>
+                                <tr>
+                                    <th class="col-check somente-gestao">
+                                        <input type="checkbox" id="selecionarTodosCarros" aria-label="Selecionar todos" onchange="alternarTodosCarros(this.checked)" />
+                                    </th>
+                                    <th>Carro</th>
+                                    <th>Placa</th>
+                                    <th>Cor</th>
+                                    <th>Ano</th>
+                                    <th>RENAVAM</th>
+                                    <th class="col-custo num">Valor</th>
+                                    <th>Situação</th>
+                                    <th class="somente-gestao">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaCarros"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <datalist id="dlMarcasCarros"></datalist>
+                <datalist id="dlCoresCarros"></datalist>
+            </section>
+
 
             <!-- =================================================
          HISTÓRICO
@@ -1309,7 +1398,7 @@
                 <div class="page-title">
                     <div>
                         <h2>Custos</h2>
-                        <p>Valor de referência do que está no acervo: peças e rádios. Itens baixados ou extraviados não entram.</p>
+                        <p>Valor de referência do que está no acervo: peças, rádios, fones e carros. Itens baixados, extraviados ou vendidos não entram.</p>
                     </div>
                     <button type="button" class="btn-secondary" onclick="carregarCustos()">
                         <i class="fa-solid fa-rotate"></i> Atualizar
@@ -1328,6 +1417,14 @@
                     <div class="custo-kpi">
                         <strong id="custoRadios">—</strong>
                         <span id="custoRadiosInfo">Rádios</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoFones">—</strong>
+                        <span id="custoFonesInfo">Fones</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoCarros">—</strong>
+                        <span id="custoCarrosInfo">Carros</span>
                     </div>
                     <div class="custo-kpi" id="custoPendenteKpi">
                         <strong id="custoPendente">—</strong>

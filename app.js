@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 22_carros.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -357,6 +357,7 @@ function campoFormularioHTML(campo) {
                     ${campo.step ? `step="${campo.step}"` : ''}
                     ${campo.maxlength ? `maxlength="${campo.maxlength}"` : ''}
                     ${campo.inputmode ? `inputmode="${campo.inputmode}"` : ''}
+                    ${campo.maiusculas ? 'autocapitalize="characters" style="text-transform:uppercase"' : ''}
                     placeholder="${escaparHTML(campo.placeholder || '')}" autocomplete="${campo.autocomplete || 'off'}">${ajuda}</div>`;
 }
 
@@ -797,8 +798,19 @@ const AO_ABRIR_TELA = {
     custosTela: () => carregarCustos(),
     radiosTela: () => carregarRadios(),
     fonesTela: () => carregarFones(),
+    carrosTela: () => carregarCarros(),
     consultaPublicaTela: () => carregarConsultaPublica()
 };
+
+/* iPhone: se a tela ficou aproximada (zoom), volta ao tamanho normal ao trocar de tela. */
+function voltarZoomNormal() {
+    if (!/iPhone|iPad|iPod/i.test(navigator.userAgent || '') && !(navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''))) return;
+    const meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) return;
+    const original = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+    meta.setAttribute('content', original + ', maximum-scale=1.0');
+    setTimeout(() => meta.setAttribute('content', original), 350);
+}
 
 function abrirTela(idTela, elemento) {
     if (!usuarioLogado && !TELAS_PUBLICAS.includes(idTela)) {
@@ -819,6 +831,7 @@ function abrirTela(idTela, elemento) {
     document.body.classList.toggle('public-mode', idTela === 'consultaPublicaTela');
 
     document.getElementById('sidebar')?.classList.remove('open');
+    voltarZoomNormal();
     window.scrollTo(0, 0);
 
     AO_ABRIR_TELA[idTela]?.();
@@ -1006,6 +1019,7 @@ function atualizarMenus() {
         menuCadastro: opera,
         menuRadios: logado,
         menuFones: logado,
+        menuCarros: logado,
         menuEstoque: logado,
         menuProdutos: logado,
         menuHistorico: opera,
@@ -4631,7 +4645,7 @@ async function verificarIntegridade() {
 /* ---------------- Cópia de segurança ---------------- */
 
 const TABELAS_COPIA = ['locais', 'subsetores', 'produtos', 'itens', 'movimentacoes', 'auditoria',
-    'usuarios', 'radios', 'termos', 'termo_radios', 'configuracoes', 'fones_entregas', 'termo_fones'];
+    'usuarios', 'radios', 'termos', 'termo_radios', 'configuracoes', 'fones_entregas', 'termo_fones', 'veiculos'];
 
 /* Tabelas sem coluna "id": ordenadas pela chave delas (paginação estável). */
 const ORDEM_COPIA = { termo_radios: 'termo_id', termo_fones: 'termo_id', configuracoes: 'chave' };
@@ -4650,7 +4664,7 @@ async function baixarCopiaSeguranca() {
             const ordem = ORDEM_COPIA[tabela] || 'id';
             // Rádios: lidos pela lista da tela (o CPF só sai para a gestão).
             // Peças: lidas pelo catálogo com saldo (o valor só sai para a gestão).
-            const origem = { radios: 'vw_radios', produtos: 'vw_produtos_saldo', fones_entregas: 'vw_fones_entregas' }[tabela] || tabela;
+            const origem = { radios: 'vw_radios', produtos: 'vw_produtos_saldo', fones_entregas: 'vw_fones_entregas', veiculos: 'vw_veiculos' }[tabela] || tabela;
             copia.tabelas[tabela] = await buscarTodasLinhas(() => supabaseClient.from(origem).select('*').order(ordem));
         }
 
@@ -4789,6 +4803,20 @@ function resultadosBuscaGeral(texto) {
             }))
         });
     }
+    // Carros: placa, marca, modelo ou RENAVAM.
+    const textoPlaca = texto.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const listaCarros = (typeof carros !== 'undefined' ? carros : []).filter(c =>
+        bate(c.marca, c.modelo, c.cor, c.renavam) || (textoPlaca.length >= 3 && String(c.placa || '').includes(textoPlaca)));
+    if (listaCarros.length) {
+        grupos.push({
+            titulo: 'Carros', total: listaCarros.length,
+            itens: listaCarros.slice(0, LIMITE_BUSCA_GERAL).map(c => ({
+                icone: 'fa-car', titulo: `${nomeCarro(c)} · ${formatarPlaca(c.placa)}`,
+                detalhe: [c.cor, c.ano, c.situacao].filter(Boolean).join(' · '),
+                acao: () => { abrirCarros(); const campo = document.getElementById('buscaCarros'); if (campo) { campo.value = c.placa; renderizarCarros(); } }
+            }))
+        });
+    }
     return grupos;
 }
 
@@ -4871,6 +4899,10 @@ function ligarBuscaGeral() {
             radiosPedidosParaBusca = true;
             carregarRadios().then(renderizarBuscaGeral).catch(() => {});
         }
+        if (!carros.length && !carrosPedidosParaBusca && usuarioLogado) {
+            carrosPedidosParaBusca = true;
+            carregarCarros().then(renderizarBuscaGeral).catch(() => {});
+        }
         renderizarBuscaGeral();
     });
     campo.addEventListener('blur', () => setTimeout(() => fecharBuscaGeral(), 150));
@@ -4927,7 +4959,7 @@ function ligarAtualizacaoAutomatica() {
    e as células especiais (nome, foto, seleção, ações) uma classe.
 ---------------------------------------------------------- */
 
-const COLUNAS_PRINCIPAIS = ['peça', 'rádio', 'item', 'nome', 'local', 'data'];
+const COLUNAS_PRINCIPAIS = ['peça', 'rádio', 'carro', 'item', 'nome', 'local', 'data'];
 
 function rotularTabela(tabela) {
     const titulos = [...tabela.querySelectorAll('thead th')].map(th => th.textContent.trim());
@@ -5340,7 +5372,19 @@ function renderizarCustos() {
     const radios = r.radios || {};
     const valorPecas = Number(pecas.valor) || 0;
     const valorRadios = Number(radios.valor) || 0;
-    const total = valorPecas + valorRadios;
+    const fones = r.fones || {};
+    const carrosResumo = r.carros || {};
+    const valorFones = Number(fones.valor) || 0;
+    const valorCarros = Number(carrosResumo.valor) || 0;
+    const total = valorPecas + valorRadios + valorFones + valorCarros;
+
+    definirTexto('custoFones', moeda.format(valorFones));
+    definirTexto('custoFonesInfo', `${numero.format(Number(fones.quantidade) || 0)} fones`
+        + (Number(fones.valor_unitario) > 0 ? ` · ${moeda.format(Number(fones.valor_unitario))} cada` : ' · sem valor por fone'));
+    definirTexto('custoCarros', moeda.format(valorCarros));
+    const mCarro = media(valorCarros, carrosResumo.com_valor);
+    definirTexto('custoCarrosInfo', `${numero.format(Number(carrosResumo.quantidade) || 0)} carros na frota`
+        + (mCarro === null ? '' : ` · média de ${moeda.format(mCarro)}`));
 
     definirTexto('custoTotal', moeda.format(total));
     definirTexto('custoPecas', moeda.format(valorPecas));
@@ -5354,10 +5398,12 @@ function renderizarCustos() {
 
     const produtosSemValor = r.produtos_sem_valor || [];
     const radiosSemValor = (Number(radios.quantidade) || 0) - (Number(radios.com_valor) || 0);
-    const pendentes = produtosSemValor.length + radiosSemValor;
+    const carrosSemValor = (Number(carrosResumo.quantidade) || 0) - (Number(carrosResumo.com_valor) || 0);
+    const pendentes = produtosSemValor.length + radiosSemValor + carrosSemValor;
     definirTexto('custoPendente', numero.format(pendentes));
     definirTexto('custoPendenteInfo', pendentes
-        ? `Sem valor: ${numero.format(produtosSemValor.length)} peça(s) do catálogo e ${numero.format(radiosSemValor)} rádio(s)`
+        ? `Sem valor: ${numero.format(produtosSemValor.length)} peça(s) do catálogo, ${numero.format(radiosSemValor)} rádio(s)`
+          + (carrosSemValor > 0 ? ` e ${numero.format(carrosSemValor)} carro(s)` : '')
         : 'Tudo com valor informado');
     document.getElementById('custoPendenteKpi')?.classList.toggle('alerta', pendentes > 0);
 
@@ -6086,7 +6132,7 @@ function mostrarPreviaFones(lido, linhas, resumo, nomeArquivo) {
    e as últimas movimentações.
 ========================================================= */
 
-const resumoInicio = { pecas: null, radios: null, fones: null, movs: null };
+const resumoInicio = { pecas: null, radios: null, fones: null, carros: null, movs: null };
 
 function abrirInicio() {
     abrirTela('dashboardTela', document.getElementById('menuDashboard'));
@@ -6123,7 +6169,16 @@ async function carregarExtrasInicio() {
         .then(({ data, error }) => { resumoInicio.movs = error ? [] : (data || []); })
         .catch(() => { resumoInicio.movs = []; });
 
-    await Promise.all([radiosPromessa, fonesPromessa, movsPromessa]);
+    const carrosPromessa = buscarTodasLinhas(() => supabaseClient.from('vw_veiculos').select('id,situacao'))
+        .then(lista => {
+            resumoInicio.carros = {
+                frota: lista.filter(c => ['Em uso', 'Em manutenção'].includes(c.situacao)).length,
+                manutencao: lista.filter(c => c.situacao === 'Em manutenção').length
+            };
+        })
+        .catch(() => { resumoInicio.carros = null; });
+
+    await Promise.all([radiosPromessa, fonesPromessa, carrosPromessa, movsPromessa]);
     renderizarInicio();
 }
 
@@ -6168,6 +6223,7 @@ function renderizarNumerosInicio() {
     definirTexto('totalItens', numero.format(pecasNoAcervo));
     definirTexto('totalLocais', numero.format(LOCAIS.length));
     definirTexto('inicioRadios', resumoInicio.radios ? numero.format(resumoInicio.radios.total) : '—');
+    definirTexto('inicioCarros', resumoInicio.carros ? numero.format(resumoInicio.carros.frota) : '—');
     definirTexto('inicioFones', resumoInicio.fones ? numero.format(Number(resumoInicio.fones.com_prestador) || 0) : '—');
 }
 
@@ -6180,6 +6236,7 @@ function alertasInicio() {
     const p = resumoInicio.pecas || {};
     const r = resumoInicio.radios || {};
     const f = resumoInicio.fones || {};
+    const c = resumoInicio.carros || {};
     const n = valor => Number(valor) || 0;
     return [
         { qtd: n(p.retornos_atrasados), texto: q => `${q === 1 ? 'peça com retorno atrasado' : 'peças com retorno atrasado'}`, nivel: 'perigo', icone: 'fa-clock', acao: () => abrirForaDoLugar(true) },
@@ -6188,6 +6245,7 @@ function alertasInicio() {
         { qtd: n(r.aguardando), texto: q => q === 1 ? 'termo de rádio aguardando assinatura' : 'termos de rádio aguardando assinatura', nivel: 'aviso', icone: 'fa-hourglass-half', acao: () => abrirRadiosComTermo('PENDENTE') },
         { qtd: n(p.manutencao), texto: q => q === 1 ? 'peça em manutenção' : 'peças em manutenção', nivel: 'aviso', icone: 'fa-screwdriver-wrench', acao: () => abrirTela('estoqueTela', document.getElementById('menuEstoque')) },
         { qtd: n(r.manutencao), texto: q => q === 1 ? 'rádio em manutenção' : 'rádios em manutenção', nivel: 'aviso', icone: 'fa-walkie-talkie', acao: () => abrirRadiosComStatus('Em manutenção') },
+        { qtd: n(c.manutencao), texto: q => q === 1 ? 'carro em manutenção' : 'carros em manutenção', nivel: 'aviso', icone: 'fa-car', acao: () => abrirCarrosComSituacao('Em manutenção') },
         { qtd: n(p.extraviados), texto: q => q === 1 ? 'peça extraviada' : 'peças extraviadas', nivel: 'perigo', icone: 'fa-triangle-exclamation', acao: () => abrirTela('estoqueTela', document.getElementById('menuEstoque')) },
         { qtd: n(f.extraviados), texto: q => q === 1 ? 'fone extraviado' : 'fones extraviados', nivel: 'perigo', icone: 'fa-headphones', acao: () => abrirFones() }
     ].filter(a => a.qtd > 0);
@@ -6209,6 +6267,12 @@ function abrirRadiosComStatus(status) {
         filtro.value = status;
         filtro.dispatchEvent(new Event('change'));
     }
+}
+
+function abrirCarrosComSituacao(situacao) {
+    abrirCarros();
+    const filtro = document.getElementById('filtroSituacaoCarros');
+    if (filtro) { filtro.value = situacao; renderizarCarros(); }
 }
 
 let acoesAtencaoInicio = [];
@@ -6463,6 +6527,439 @@ function ligarInstalarApp() {
 }
 
 /* =========================================================
+   22 · CARROS DA EMPRESA
+   Marca, modelo, cor, ano, placa, RENAVAM, valor (só a gestão vê)
+   e situação. Cadastro um a um ou por planilha.
+========================================================= */
+
+let carros = [];
+let carrosSelecionados = new Set();
+let carrosPedidosParaBusca = false;
+
+const SITUACOES_CARRO = ['Em uso', 'Em manutenção', 'Vendido', 'Baixado'];
+
+function classeSituacaoCarro(situacao) {
+    return { 'Em uso': 'ativo', 'Em manutenção': 'manutencao', 'Vendido': 'neutro', 'Baixado': 'baixado' }[situacao] || '';
+}
+
+/* ABC1D23 → ABC-1D23 (só para mostrar; o banco guarda sem traço). */
+function formatarPlaca(placa) {
+    const p = String(placa || '').toUpperCase();
+    return /^[A-Z]{3}[0-9]{4}$/.test(p) ? `${p.slice(0, 3)}-${p.slice(3)}` : p;
+}
+
+function nomeCarro(c) {
+    return [c.marca, c.modelo].filter(Boolean).join(' ');
+}
+
+function abrirCarros() {
+    abrirTela('carrosTela', document.getElementById('menuCarros'));
+}
+
+async function carregarCarros() {
+    let lista;
+    try {
+        lista = await buscarTodasLinhas(() => supabaseClient.from('vw_veiculos').select('*').order('marca').order('modelo').order('placa'));
+    } catch (erro) {
+        document.getElementById('listaCarros').innerHTML = `<tr><td colspan="8" class="empty-state">
+            ${/vw_veiculos|does not exist|Could not find/i.test(erro.message || '')
+                ? 'Rode a atualização v19 no Supabase para liberar o cadastro de carros.'
+                : 'Não foi possível carregar os carros: ' + escaparHTML(traduzirErro(erro))}</td></tr>`;
+        return;
+    }
+    carros = lista || [];
+    carrosSelecionados = new Set([...carrosSelecionados].filter(id => carros.some(c => Number(c.id) === id)));
+    popularFiltrosCarros();
+    renderizarCarros();
+}
+
+function popularFiltrosCarros() {
+    const filtro = document.getElementById('filtroMarcaCarros');
+    if (filtro) {
+        const atual = filtro.value;
+        const marcas = [...new Set(carros.map(c => c.marca).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        filtro.innerHTML = '<option value="">Todas as marcas</option>' +
+            marcas.map(m => `<option value="${escaparHTML(m)}">${escaparHTML(m)}</option>`).join('');
+        filtro.value = marcas.includes(atual) ? atual : '';
+    }
+    const marcas = document.getElementById('dlMarcasCarros');
+    if (marcas) {
+        const conhecidas = ['Chevrolet', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jeep', 'Nissan', 'Renault', 'Toyota', 'Volkswagen'];
+        marcas.innerHTML = [...new Set([...carros.map(c => c.marca), ...conhecidas].filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'pt-BR')).map(m => `<option value="${escaparHTML(m)}">`).join('');
+    }
+    const cores = document.getElementById('dlCoresCarros');
+    if (cores) {
+        const conhecidas = ['Branco', 'Preto', 'Prata', 'Cinza', 'Vermelho', 'Azul'];
+        cores.innerHTML = [...new Set([...carros.map(c => c.cor), ...conhecidas].filter(Boolean))]
+            .map(m => `<option value="${escaparHTML(m)}">`).join('');
+    }
+}
+
+function carrosFiltrados() {
+    const busca = normalizarTexto(valorCampo('buscaCarros')).replace(/-/g, '');
+    const marca = valorCampo('filtroMarcaCarros');
+    const situacao = valorCampo('filtroSituacaoCarros');
+    return carros.filter(c =>
+        (!busca || normalizarTexto(`${c.placa} ${c.marca} ${c.modelo} ${c.cor || ''} ${c.ano || ''} ${c.renavam || ''}`).includes(busca)) &&
+        (!marca || c.marca === marca) &&
+        (!situacao || (situacao === 'FROTA' ? ['Em uso', 'Em manutenção'].includes(c.situacao) : c.situacao === situacao)));
+}
+
+function renderizarCarros() {
+    const tbody = document.getElementById('listaCarros');
+    if (!tbody) return;
+    const gestao = podeAdministrar();
+    const naFrota = carros.filter(c => ['Em uso', 'Em manutenção'].includes(c.situacao));
+
+    definirTexto('carrosTotal', numero.format(naFrota.length));
+    definirTexto('carrosEmUso', numero.format(carros.filter(c => c.situacao === 'Em uso').length));
+    definirTexto('carrosManutencao', numero.format(carros.filter(c => c.situacao === 'Em manutenção').length));
+    const valor = naFrota.reduce((t, c) => t + (Number(c.valor_referencia) || 0), 0);
+    definirTexto('carrosValor', valor > 0 ? moeda.format(valor) : '—');
+
+    const lista = carrosFiltrados();
+    definirTexto('carrosListados', numero.format(lista.length));
+    atualizarBarraSelecaoCarros();
+    const todos = document.getElementById('selecionarTodosCarros');
+    if (todos) todos.checked = lista.length > 0 && lista.every(c => carrosSelecionados.has(Number(c.id)));
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-car"></i>
+            ${carros.length ? 'Nenhum carro com esses filtros.' : 'Nenhum carro cadastrado ainda.'}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(c => {
+        const marcado = carrosSelecionados.has(Number(c.id));
+        const classe = classeSituacaoCarro(c.situacao);
+        const detalhes = [c.cor, c.ano].filter(Boolean).map(escaparHTML).join(' · ');
+        return `
+            <tr class="${marcado ? 'linha-selecionada' : ''} ${['Vendido', 'Baixado'].includes(c.situacao) ? 'linha-inativa' : ''} linha-radio"
+                onclick="tocarLinhaCelular(event, () => detalheCarro(${Number(c.id)}))">
+                ${gestao ? `<td class="col-check"><input type="checkbox" aria-label="Selecionar carro" ${marcado ? 'checked' : ''}
+                    onchange="alternarSelecaoCarro(${Number(c.id)}, this.checked)"></td>` : ''}
+                <td class="cel-radio">
+                    ${c.situacao !== 'Em uso' ? `<span class="so-celular termo-curto ${classe}">${escaparHTML(c.situacao)}</span>` : ''}
+                    <strong>${escaparHTML(nomeCarro(c))}</strong>
+                    <small class="so-celular linha-celular"><b class="placa-texto">${escaparHTML(formatarPlaca(c.placa))}</b>${detalhes ? ' · ' + detalhes : ''}</small>
+                    ${c.observacao ? `<small class="celula-sub so-computador">${escaparHTML(c.observacao)}</small>` : ''}
+                </td>
+                <td class="so-computador"><span class="placa">${escaparHTML(formatarPlaca(c.placa))}</span></td>
+                <td class="so-computador">${escaparHTML(c.cor || '—')}</td>
+                <td class="so-computador">${escaparHTML(c.ano || '—')}</td>
+                <td class="so-computador num-texto">${escaparHTML(c.renavam || '—')}</td>
+                <td class="so-computador col-custo num">${c.valor_referencia != null ? moeda.format(Number(c.valor_referencia)) : '<span class="texto-suave">—</span>'}</td>
+                <td class="so-computador"><span class="status-badge ${classe}">${escaparHTML(c.situacao)}</span></td>
+                ${gestao ? `<td class="so-computador">
+                    <div class="acoes-tabela">
+                        <button type="button" class="btn-icon" title="Editar carro" onclick="abrirCarro(${Number(c.id)})"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-icon btn-excluir" title="Excluir carro" onclick="excluirCarros([${Number(c.id)}])"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </td>` : ''}
+            </tr>`;
+    }).join('');
+}
+
+/* Celular: tocar no carro abre o detalhe. */
+function detalheCarro(id) {
+    const c = carros.find(x => Number(x.id) === Number(id));
+    if (!c) return;
+    const acoes = [];
+    if (podeAdministrar()) {
+        acoes.push(`<button type="button" class="btn-primary" onclick="fecharFormulario(); setTimeout(() => abrirCarro(${Number(c.id)}), 40)"><i class="fa-solid fa-pen"></i> Editar</button>`);
+        acoes.push(`<button type="button" class="btn-secondary btn-excluir-texto" onclick="fecharFormulario(); setTimeout(() => excluirCarros([${Number(c.id)}]), 40)"><i class="fa-solid fa-trash-can"></i> Excluir</button>`);
+    }
+    abrirDetalhe({
+        titulo: nomeCarro(c),
+        subtitulo: `Placa ${formatarPlaca(c.placa)}`,
+        linhas: [
+            ['Situação', `<span class="status-badge ${classeSituacaoCarro(c.situacao)}">${escaparHTML(c.situacao)}</span>`, true],
+            ['Cor', c.cor],
+            ['Ano', c.ano],
+            ['RENAVAM', c.renavam],
+            ...(podeAdministrar() ? [['Valor', c.valor_referencia != null ? moeda.format(Number(c.valor_referencia)) : 'Não informado']] : []),
+            ['Observação', c.observacao]
+        ],
+        acoes
+    });
+}
+
+/* ---------------- Cadastro e edição ---------------- */
+
+function camposCarro(c = {}) {
+    return [
+        { id: 'marca', rotulo: 'Marca', valor: c.marca, obrigatorio: true, lista: 'dlMarcasCarros', placeholder: 'Ex.: Toyota' },
+        { id: 'modelo', rotulo: 'Modelo', valor: c.modelo, obrigatorio: true, placeholder: 'Ex.: Corolla XEi 2.0' },
+        { id: 'placa', rotulo: 'Placa', valor: c.placa ? formatarPlaca(c.placa) : '', obrigatorio: true, placeholder: 'ABC-1234 ou ABC1D23', maiusculas: true },
+        { id: 'renavam', rotulo: 'RENAVAM', valor: c.renavam, placeholder: '11 números', inputmode: 'numeric' },
+        { id: 'cor', rotulo: 'Cor', valor: c.cor, lista: 'dlCoresCarros', placeholder: 'Ex.: Prata' },
+        { id: 'ano', rotulo: 'Ano (fabricação/modelo)', valor: c.ano, placeholder: 'Ex.: 2022/2023', inputmode: 'numeric' },
+        ...(podeAdministrar() ? [{ id: 'valor_referencia', rotulo: 'Valor (R$)', tipo: 'number', min: 0, step: '0.01',
+            valor: c.valor_referencia ?? '', placeholder: '0,00', ajuda: 'Valor de referência (ex.: tabela FIPE). Só Gestor e Administrador veem.' }] : []),
+        { id: 'situacao', rotulo: 'Situação', tipo: 'select', valor: c.situacao || 'Em uso',
+          opcoes: SITUACOES_CARRO.map(s => ({ valor: s, texto: s })) },
+        { id: 'observacao', rotulo: 'Observação', tipo: 'textarea', valor: c.observacao, largo: true, placeholder: 'Opcional' }
+    ];
+}
+
+function dadosCarro(v) {
+    const placa = String(v.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa)) throw new Error('Placa inválida. Use o formato ABC-1234 ou ABC1D23.');
+    let renavam = String(v.renavam || '').replace(/\D/g, '');
+    if (renavam.length === 9 || renavam.length === 10) renavam = renavam.padStart(11, '0');
+    if (renavam && renavam.length !== 11) throw new Error('RENAVAM inválido. Ele tem 11 números.');
+    const ano = String(v.ano || '').replace(/\s/g, '').replace('-', '/');
+    if (ano && !/^(19|20)\d{2}(\/(19|20)\d{2})?$/.test(ano)) throw new Error('Ano inválido. Use 2023 ou 2022/2023.');
+    return {
+        marca: tituloSetor(v.marca || ''),
+        modelo: String(v.modelo || '').trim(),
+        placa,
+        renavam: renavam || null,
+        cor: v.cor ? tituloSetor(v.cor) : null,
+        ano: ano || null,
+        situacao: v.situacao || 'Em uso',
+        observacao: v.observacao || null,
+        ...(v.valor_referencia !== undefined ? { valor_referencia: valorEmReais(v.valor_referencia) } : {})
+    };
+}
+
+function erroCarro(erro) {
+    const texto = String(erro?.message || '');
+    if (/ux_veiculos_placa/.test(texto)) return 'Já existe um carro com essa placa.';
+    if (/ux_veiculos_renavam/.test(texto)) return 'Já existe um carro com esse RENAVAM.';
+    return traduzirErro(erro);
+}
+
+function novoCarro() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador cadastra carros.', 'erro');
+    abrirFormulario({
+        titulo: 'Novo carro',
+        textoSalvar: 'Cadastrar carro',
+        campos: camposCarro(),
+        aoSalvar: async valores => {
+            const { error } = await supabaseClient.from('veiculos').insert([dadosCarro(valores)]);
+            if (error) throw new Error(erroCarro(error));
+            await carregarCarros();
+            avisar('Carro cadastrado.');
+        }
+    });
+}
+
+function abrirCarro(id) {
+    if (!podeAdministrar()) return;
+    const c = carros.find(x => Number(x.id) === Number(id));
+    if (!c) return;
+    abrirFormulario({
+        titulo: `Editar ${nomeCarro(c)}`,
+        subtitulo: `Placa ${formatarPlaca(c.placa)}`,
+        textoSalvar: 'Salvar',
+        campos: camposCarro(c),
+        aoSalvar: async valores => {
+            const { error } = await supabaseClient.from('veiculos').update(dadosCarro(valores)).eq('id', Number(id));
+            if (error) throw new Error(erroCarro(error));
+            await carregarCarros();
+            avisar('Carro atualizado.');
+        }
+    });
+}
+
+async function excluirCarros(ids) {
+    if (!podeAdministrar()) return;
+    const lista = carros.filter(c => ids.includes(Number(c.id)));
+    if (!lista.length) return;
+    const texto = lista.length === 1
+        ? `Excluir ${nomeCarro(lista[0])} (placa ${formatarPlaca(lista[0].placa)})?`
+        : `Excluir ${lista.length} carros?`;
+    const ok = await confirmar({
+        titulo: lista.length === 1 ? 'Excluir carro' : 'Excluir carros',
+        mensagem: `${texto} Se o carro foi vendido ou baixado, prefira mudar a situação: assim ele continua no histórico.`,
+        textoConfirmar: 'Excluir', perigo: true
+    });
+    if (!ok) return;
+    const { data, error } = await supabaseClient.rpc('excluir_carros', { p_ids: lista.map(c => Number(c.id)) });
+    if (error) return avisar(traduzirErro(error), 'erro');
+    lista.forEach(c => carrosSelecionados.delete(Number(c.id)));
+    await carregarCarros();
+    avisar(`${data} carro(s) excluído(s).`);
+}
+
+/* ---------------- Seleção ---------------- */
+
+function alternarSelecaoCarro(id, marcado) {
+    if (marcado) carrosSelecionados.add(Number(id));
+    else carrosSelecionados.delete(Number(id));
+    renderizarCarros();
+}
+
+function alternarTodosCarros(marcado) {
+    carrosFiltrados().forEach(c => marcado ? carrosSelecionados.add(Number(c.id)) : carrosSelecionados.delete(Number(c.id)));
+    renderizarCarros();
+}
+
+function atualizarBarraSelecaoCarros() {
+    const barra = document.getElementById('barraSelecaoCarros');
+    if (!barra) return;
+    const qtd = carrosSelecionados.size;
+    barra.hidden = !qtd || !podeAdministrar();
+    definirTexto('carrosSelecionadosQtd', `${qtd} ${qtd === 1 ? 'carro selecionado' : 'carros selecionados'}`);
+}
+
+function limparSelecaoCarros() {
+    carrosSelecionados.clear();
+    renderizarCarros();
+}
+
+function mudarSituacaoSelecionados() {
+    const lista = carros.filter(c => carrosSelecionados.has(Number(c.id)));
+    if (!lista.length) return;
+    abrirFormulario({
+        titulo: `Mudar situação de ${lista.length} carro(s)`,
+        textoSalvar: 'Salvar',
+        campos: [{ id: 'situacao', rotulo: 'Nova situação', tipo: 'select', valor: 'Em uso', opcoes: SITUACOES_CARRO.map(s => ({ valor: s, texto: s })) }],
+        aoSalvar: async ({ situacao }) => {
+            const { error } = await supabaseClient.from('veiculos').update({ situacao }).in('id', lista.map(c => Number(c.id)));
+            if (error) throw new Error(traduzirErro(error));
+            carrosSelecionados.clear();
+            await carregarCarros();
+            avisar('Situação atualizada.');
+        }
+    });
+}
+
+/* ---------------- Importar planilha ---------------- */
+
+const COLUNAS_PLANILHA_CARROS = {
+    placa: ['PLACA', 'PLACAS', 'PLACADOVEICULO'],
+    marca: ['MARCA', 'FABRICANTE', 'MONTADORA'],
+    modelo: ['MODELO', 'VEICULO', 'CARRO', 'MODELOVERSAO'],
+    cor: ['COR'],
+    ano: ['ANO', 'ANOMODELO', 'ANOFABRICACAOMODELO', 'ANOFABMOD', 'ANOFAB', 'FABMOD'],
+    renavam: ['RENAVAM', 'RENAVAN', 'CODIGORENAVAM'],
+    valor: ['VALOR', 'VALORREFERENCIA', 'VALORDEREFERENCIA', 'FIPE', 'VALORFIPE', 'VALORR', 'PRECO'],
+    situacao: ['SITUACAO', 'STATUS'],
+    observacao: ['OBSERVACAO', 'OBS', 'OBSERVACOES']
+};
+
+/* Valor da planilha: número do Excel ou texto "R$ 1.234,56". */
+function valorDaPlanilha(valor) {
+    if (valor === null || valor === undefined || valor === '') return '';
+    if (typeof valor === 'number') return String(Math.round(valor * 100) / 100);
+    const limpo = String(valor).replace(/[R$\s]/g, '');
+    if (!limpo) return '';
+    const numeroTexto = limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo;
+    return Number.isFinite(Number(numeroTexto)) ? numeroTexto : String(valor).trim();
+}
+
+function interpretarPlanilhaCarros(tabela) {
+    const linhas = tabela.linhas || [];
+    const indice = linhas.slice(0, 10).findIndex(l => (l || []).some(c => COLUNAS_PLANILHA_CARROS.placa.includes(chaveColuna(c))));
+    if (indice < 0) throw new Error('Não achei a coluna PLACA na planilha.');
+    const colunas = (linhas[indice] || []).map(celula => {
+        const chave = chaveColuna(celula);
+        return { titulo: String(celula ?? '').trim(), campo: Object.keys(COLUNAS_PLANILHA_CARROS).find(c => COLUNAS_PLANILHA_CARROS[c].includes(chave)) };
+    });
+    const lidos = [];
+    linhas.slice(indice + 1).forEach((linha, i) => {
+        const c = { linha: indice + i + 2 };
+        colunas.forEach((col, j) => {
+            if (!col.campo || c[col.campo]) return;
+            const valor = linha?.[j];
+            if (col.campo === 'valor') c.valor = valorDaPlanilha(valor);
+            else if (col.campo === 'renavam' && typeof valor === 'number') c.renavam = String(Math.round(valor));
+            else if (col.campo === 'ano' && typeof valor === 'number') c.ano = String(Math.round(valor));
+            else c[col.campo] = String(valor ?? '').trim();
+        });
+        if (!Object.entries(c).some(([k, v]) => k !== 'linha' && v)) return;
+        if (c.marca) c.marca = tituloSetor(c.marca);
+        if (c.cor) c.cor = tituloSetor(c.cor);
+        lidos.push(c);
+    });
+    return { carros: lidos, ignoradas: colunas.filter(c => !c.campo && c.titulo).map(c => c.titulo) };
+}
+
+function abrirImportacaoCarros() {
+    if (!podeAdministrar()) return avisar('Somente Gestor ou Administrador importa.', 'erro');
+    abrirFormulario({
+        titulo: 'Importar carros',
+        subtitulo: 'O sistema lê as colunas pelo nome, confere tudo e mostra o resultado antes de gravar.',
+        textoSalvar: 'Ler planilha',
+        campos: [
+            { id: 'arquivo', tipo: 'arquivo', rotulo: 'Planilha (.xlsx ou .csv)', obrigatorio: true, largo: true,
+              accept: '.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv' },
+            { id: 'ajuda', tipo: 'html', html: `<div class="importar-ajuda">
+                <strong>Colunas reconhecidas</strong>
+                <span>PLACA · MARCA · MODELO · COR · ANO · RENAVAM · VALOR · SITUAÇÃO · OBSERVAÇÃO</span>
+                <small>Placa, marca e modelo são obrigatórios. Placa já cadastrada não duplica: os dados preenchidos
+                na planilha atualizam o carro. Sem situação, entra como "Em uso".</small></div>` }
+        ],
+        aoSalvar: async ({ arquivo }) => {
+            if (!arquivo) throw new Error('Escolha a planilha.');
+            const tabela = await lerTabelaPlanilha(arquivo, COLUNAS_PLANILHA_CARROS.placa, 'Não achei a coluna PLACA em nenhuma aba da planilha.');
+            const lido = interpretarPlanilhaCarros(tabela);
+            if (!lido.carros.length) throw new Error('A planilha não tem nenhuma linha preenchida.');
+            const linhas = lido.carros.map(({ linha, ...resto }) => resto);
+            const { data, error } = await supabaseClient.rpc('importar_carros', { p_linhas: linhas, p_gravar: false });
+            if (error) throw new Error(/importar_carros/.test(error.message || '') ? 'Rode a atualização v19 no Supabase.' : traduzirErro(error));
+            setTimeout(() => mostrarPreviaCarros(lido, linhas, data, arquivo.name), 0);
+        }
+    });
+}
+
+function mostrarPreviaCarros(lido, linhas, resumo, nomeArquivo) {
+    const linhaPlanilha = n => lido.carros[n - 1]?.linha ?? n;
+    const erros = resumo.erros || [];
+    const avisos = resumo.avisos || [];
+    const comErro = new Set(erros.map(e => e.linha));
+    const caixa = (n, texto, classe) => `<div class="importar-numero ${classe}"><b>${n}</b><span>${texto}</span></div>`;
+    const tabela = lido.carros.slice(0, 400).map((c, i) => `
+        <tr class="${comErro.has(i + 1) ? 'importar-linha-erro' : ''}">
+            <td>${c.linha}</td><td><b>${escaparHTML(formatarPlaca(String(c.placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '')) || '—')}</b></td>
+            <td>${escaparHTML([c.marca, c.modelo].filter(Boolean).join(' ') || '—')}</td>
+            <td>${escaparHTML(c.cor || '—')}</td><td>${escaparHTML(c.ano || '—')}</td>
+            <td>${escaparHTML(c.renavam || '—')}</td>
+            <td>${c.valor && Number.isFinite(Number(c.valor)) ? moeda.format(Number(c.valor)) : escaparHTML(c.valor || '—')}</td>
+        </tr>`).join('');
+
+    const html = `
+        <div class="importar-previa">
+            <p class="importar-origem"><i class="fa-solid fa-file-excel"></i> ${escaparHTML(nomeArquivo)} · ${lido.carros.length} linha(s)</p>
+            <div class="importar-numeros">
+                ${caixa(resumo.novos || 0, 'carros novos', 'novo')}
+                ${caixa(resumo.atualizados || 0, 'serão atualizados', 'novo')}
+                ${caixa(resumo.iguais || 0, 'já cadastrados', 'igual')}
+                ${caixa(erros.length, erros.length === 1 ? 'linha com problema' : 'linhas com problema', erros.length ? 'erro' : 'igual')}
+            </div>
+            ${erros.length ? `<p class="importar-aviso-erro"><i class="fa-solid fa-triangle-exclamation"></i>
+                Linhas com problema ficam de fora: ${erros.map(e => `linha ${linhaPlanilha(e.linha)} (${escaparHTML(e.erro)})`).join('; ')}.</p>` : ''}
+            ${avisos.length ? `<details class="importar-avisos"><summary><i class="fa-solid fa-circle-info"></i> ${avisos.length} aviso(s)</summary>
+                <ul>${avisos.map(a => `<li>Linha ${linhaPlanilha(a.linha)}: ${escaparHTML(a.aviso)}</li>`).join('')}</ul></details>` : ''}
+            ${lido.ignoradas.length ? `<p class="importar-ignoradas">Colunas ignoradas: ${lido.ignoradas.map(escaparHTML).join(', ')}</p>` : ''}
+            <div class="importar-tabela"><table>
+                <thead><tr><th>Linha</th><th>Placa</th><th>Carro</th><th>Cor</th><th>Ano</th><th>RENAVAM</th><th>Valor</th></tr></thead>
+                <tbody>${tabela}</tbody>
+            </table></div>
+        </div>`;
+
+    const aGravar = (resumo.novos || 0) + (resumo.atualizados || 0);
+    abrirFormulario({
+        titulo: aGravar ? 'Confira antes de gravar' : 'Nada novo para gravar',
+        subtitulo: aGravar ? `${resumo.novos || 0} carro(s) novo(s) e ${resumo.atualizados || 0} atualização(ões).`
+                           : 'Os carros desta planilha já estão cadastrados (ou têm problemas).',
+        textoSalvar: aGravar ? `Gravar ${aGravar} carro(s)` : 'Fechar',
+        largo: true,
+        campos: [{ id: 'previa', tipo: 'html', html }],
+        aoSalvar: async () => {
+            if (!aGravar) return;
+            const { data, error } = await supabaseClient.rpc('importar_carros', { p_linhas: linhas, p_gravar: true });
+            if (error) throw new Error(traduzirErro(error));
+            await carregarCarros();
+            avisar(`Importação concluída: ${data.novos} novo(s), ${data.atualizados} atualizado(s).`);
+        }
+    });
+}
+
+/* =========================================================
    99 · INICIALIZAÇÃO
    Todos os eventos e a partida do sistema ficam aqui
    (antes estavam espalhados em 6 pontos diferentes).
@@ -6534,6 +7031,10 @@ function ligarEventos() {
     /* Fones */
     ligar('buscaFones', 'input', renderizarFones);
     ['filtroSetorFones', 'filtroSituacaoFones', 'filtroTermoFones'].forEach(id => ligar(id, 'change', renderizarFones));
+
+    /* Carros */
+    ligar('buscaCarros', 'input', renderizarCarros);
+    ['filtroMarcaCarros', 'filtroSituacaoCarros'].forEach(id => ligar(id, 'change', renderizarCarros));
 
     /* Consulta pública */
     iniciarConsultaPublica();
