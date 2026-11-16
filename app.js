@@ -6549,7 +6549,34 @@ function formatarPlaca(placa) {
 }
 
 function nomeCarro(c) {
-    return [c.marca, c.modelo].filter(Boolean).join(' ');
+    return [c.marca, modeloBonito(c.modelo)].filter(Boolean).join(' ');
+}
+
+/* "FIORINO 25/25 REFRIGERADA" → "Fiorino 25/25 Refrigerada" (só na tela; XEi, V6, 2.0 ficam como estão). */
+function modeloBonito(modelo) {
+    return String(modelo || '').split(/\s+/).map(p =>
+        /^[A-ZÀ-Ý]{4,}\.?$/.test(p) ? p.charAt(0) + p.slice(1).toLowerCase() : p).join(' ');
+}
+
+const CORES_CARRO = {
+    branc: '#F5F5F2', pret: '#1E1E1E', prat: '#B9BDC3', cinz: '#7D8288', grafit: '#4A4E54',
+    vermelh: '#B3261E', vinho: '#6B1520', azul: '#1F4AA8', verd: '#2E7D32', amarel: '#E2B714',
+    bege: '#D8C3A5', marrom: '#6D4C41', dourad: '#C7932D', laranj: '#E0711D'
+};
+
+function corDoCarro(cor) {
+    const texto = normalizarTexto(cor || '');
+    const chave = Object.keys(CORES_CARRO).find(k => texto.startsWith(k));
+    return chave ? CORES_CARRO[chave] : null;
+}
+
+function amostraCor(cor) {
+    const hex = corDoCarro(cor);
+    return hex ? `<i class="cor-amostra" style="background:${hex}"></i>` : '';
+}
+
+function placaHTML(placa, pequena = false) {
+    return `<span class="placa${pequena ? ' placa-pequena' : ''}"><i>BRASIL</i><b>${escaparHTML(formatarPlaca(placa))}</b></span>`;
 }
 
 function abrirCarros() {
@@ -6617,6 +6644,9 @@ function renderizarCarros() {
     definirTexto('carrosManutencao', numero.format(carros.filter(c => c.situacao === 'Em manutenção').length));
     const valor = naFrota.reduce((t, c) => t + (Number(c.valor_referencia) || 0), 0);
     definirTexto('carrosValor', valor > 0 ? moeda.format(valor) : '—');
+    const comValor = naFrota.filter(c => Number(c.valor_referencia) > 0).length;
+    definirTexto('carrosValorInfo', comValor ? `média de ${moeda.format(valor / comValor)} por carro` : 'informe o valor de cada carro');
+    definirTexto('carrosVendidos', numero.format(carros.filter(c => !['Em uso', 'Em manutenção'].includes(c.situacao)).length));
 
     const lista = carrosFiltrados();
     definirTexto('carrosListados', numero.format(lista.length));
@@ -6633,26 +6663,31 @@ function renderizarCarros() {
     tbody.innerHTML = lista.map(c => {
         const marcado = carrosSelecionados.has(Number(c.id));
         const classe = classeSituacaoCarro(c.situacao);
-        const detalhes = [c.cor, c.ano].filter(Boolean).map(escaparHTML).join(' · ');
+        const sub = [c.marca, c.cor ? `${amostraCor(c.cor)}${escaparHTML(c.cor)}` : '', c.ano ? escaparHTML(c.ano) : '']
+            .filter(Boolean).map((t, i) => i === 0 ? escaparHTML(t) : t).join('<span class="sep">·</span>');
         return `
-            <tr class="${marcado ? 'linha-selecionada' : ''} ${['Vendido', 'Baixado'].includes(c.situacao) ? 'linha-inativa' : ''} linha-radio"
+            <tr class="${marcado ? 'linha-selecionada' : ''} ${['Vendido', 'Baixado'].includes(c.situacao) ? 'linha-inativa' : ''} linha-radio linha-carro"
                 onclick="tocarLinhaCelular(event, () => detalheCarro(${Number(c.id)}))">
                 ${gestao ? `<td class="col-check"><input type="checkbox" aria-label="Selecionar carro" ${marcado ? 'checked' : ''}
                     onchange="alternarSelecaoCarro(${Number(c.id)}, this.checked)"></td>` : ''}
                 <td class="cel-radio">
                     ${c.situacao !== 'Em uso' ? `<span class="so-celular termo-curto ${classe}">${escaparHTML(c.situacao)}</span>` : ''}
-                    <strong>${escaparHTML(nomeCarro(c))}</strong>
-                    <small class="so-celular linha-celular"><b class="placa-texto">${escaparHTML(formatarPlaca(c.placa))}</b>${detalhes ? ' · ' + detalhes : ''}</small>
-                    ${c.observacao ? `<small class="celula-sub so-computador">${escaparHTML(c.observacao)}</small>` : ''}
+                    <div class="carro-ident">
+                        <span class="carro-icone so-computador"><i class="fa-solid ${/daily|van|sprinter|master|ducato/i.test(c.modelo) ? 'fa-van-shuttle' : /fiorino|strada|saveiro|hilux|amarok|ranger|s10|toro|montana|oroch/i.test(c.modelo) ? 'fa-truck-pickup' : 'fa-car-side'}"></i></span>
+                        <div>
+                            <strong>${escaparHTML(modeloBonito(c.modelo))}</strong>
+                            <small class="carro-sub so-computador">${sub}</small>
+                            <small class="so-celular linha-celular">${placaHTML(c.placa, true)} ${[c.marca, c.cor, c.ano].filter(Boolean).map(escaparHTML).join(' · ')}</small>
+                            ${c.observacao ? `<small class="carro-obs so-computador"><i class="fa-regular fa-note-sticky"></i> ${escaparHTML(c.observacao)}</small>` : ''}
+                        </div>
+                    </div>
                 </td>
-                <td class="so-computador"><span class="placa">${escaparHTML(formatarPlaca(c.placa))}</span></td>
-                <td class="so-computador">${escaparHTML(c.cor || '—')}</td>
-                <td class="so-computador">${escaparHTML(c.ano || '—')}</td>
-                <td class="so-computador num-texto">${escaparHTML(c.renavam || '—')}</td>
-                <td class="so-computador col-custo num">${c.valor_referencia != null ? moeda.format(Number(c.valor_referencia)) : '<span class="texto-suave">—</span>'}</td>
+                <td class="so-computador">${placaHTML(c.placa)}</td>
+                <td class="so-computador carro-renavam">${c.renavam ? escaparHTML(c.renavam) : '<span class="texto-suave">Não informado</span>'}</td>
+                <td class="so-computador col-custo num carro-valor">${c.valor_referencia != null ? moeda.format(Number(c.valor_referencia)) : '<span class="texto-suave">—</span>'}</td>
                 <td class="so-computador"><span class="status-badge ${classe}">${escaparHTML(c.situacao)}</span></td>
                 ${gestao ? `<td class="so-computador">
-                    <div class="acoes-tabela">
+                    <div class="acoes-tabela carro-acoes">
                         <button type="button" class="btn-icon" title="Editar carro" onclick="abrirCarro(${Number(c.id)})"><i class="fa-solid fa-pen"></i></button>
                         <button type="button" class="btn-icon btn-excluir" title="Excluir carro" onclick="excluirCarros([${Number(c.id)}])"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -6675,7 +6710,8 @@ function detalheCarro(id) {
         subtitulo: `Placa ${formatarPlaca(c.placa)}`,
         linhas: [
             ['Situação', `<span class="status-badge ${classeSituacaoCarro(c.situacao)}">${escaparHTML(c.situacao)}</span>`, true],
-            ['Cor', c.cor],
+            ['Placa', placaHTML(c.placa), true],
+            ['Cor', c.cor ? `${amostraCor(c.cor)}${escaparHTML(c.cor)}` : '', true],
             ['Ano', c.ano],
             ['RENAVAM', c.renavam],
             ...(podeAdministrar() ? [['Valor', c.valor_referencia != null ? moeda.format(Number(c.valor_referencia)) : 'Não informado']] : []),

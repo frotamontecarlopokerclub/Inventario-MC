@@ -1280,11 +1280,27 @@
                     </div>
                 </div>
 
-                <div class="radios-resumo">
-                    <div><strong id="carrosTotal">0</strong><small>Na frota</small></div>
-                    <div class="ok"><strong id="carrosEmUso">0</strong><small>Em uso</small></div>
-                    <div class="alerta"><strong id="carrosManutencao">0</strong><small>Em manutenção</small></div>
-                    <div class="somente-gestao carros-valor"><strong id="carrosValor">—</strong><small>Valor da frota</small></div>
+                <div class="carros-kpis">
+                    <div class="carros-kpi carros-kpi-valor somente-gestao">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-sack-dollar"></i></span>
+                        <div><strong id="carrosValor">—</strong><small>Valor da frota</small><em id="carrosValorInfo"></em></div>
+                    </div>
+                    <div class="carros-kpi">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-car"></i></span>
+                        <div><strong id="carrosTotal">0</strong><small>Na frota</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-ok">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-key"></i></span>
+                        <div><strong id="carrosEmUso">0</strong><small>Em uso</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-aviso">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+                        <div><strong id="carrosManutencao">0</strong><small>Em manutenção</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-neutro">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-box-archive"></i></span>
+                        <div><strong id="carrosVendidos">0</strong><small>Vendidos ou baixados</small></div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1297,7 +1313,7 @@
                             <option value="">Todas as marcas</option>
                         </select>
                         <select id="filtroSituacaoCarros" aria-label="Filtrar pela situação">
-                            <option value="FROTA">Na frota (em uso e manutenção)</option>
+                            <option value="FROTA">Na frota</option>
                             <option value="Em uso">Em uso</option>
                             <option value="Em manutenção">Em manutenção</option>
                             <option value="Vendido">Vendidos</option>
@@ -1331,8 +1347,6 @@
                                     </th>
                                     <th>Carro</th>
                                     <th>Placa</th>
-                                    <th>Cor</th>
-                                    <th>Ano</th>
                                     <th>RENAVAM</th>
                                     <th class="col-custo num">Valor</th>
                                     <th>Situação</th>

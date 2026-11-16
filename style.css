@@ -7942,37 +7942,330 @@ html body #loginTela .btn-instalar-login {
     }
 }
 .placa {
-    display: inline-block;
-    font-family: "Montserrat", sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.06em;
-    color: #1b1b1b;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    vertical-align: middle;
+    min-width: 96px;
     background: #fff;
-    white-space: nowrap;
-    border: 1.5px solid #2b2b2b;
-    border-top: 4px solid #1f4aa8;
-    border-radius: 5px;
-    padding: 2px 8px 3px;
+    border: 1.5px solid #23262b;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
 }
-.placa-texto {
+.placa b,
+.placa i {
+    display: block;
+    text-align: center;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--mc-tinta);
+    line-height: 1;
 }
-.num-texto {
+.placa i {
+    background: #1f4aa8;
+    color: #fff;
+    font-style: normal;
+    font-size: 6.5px;
+    letter-spacing: 0.18em;
+    padding: 2px 0;
+}
+.placa b {
+    font-family: "Montserrat", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: #1b1b1b;
+    padding: 4px 8px 5px;
+    white-space: nowrap;
+}
+.placa-pequena {
+    min-width: 0;
+    border-width: 1px;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+.placa-pequena i {
+    font-size: 0;
+    padding: 0;
+    height: 3px;
+}
+.placa-pequena b {
+    font-size: 11px;
+    padding: 2px 5px 3px;
+    letter-spacing: 0.05em;
+}
+.carros-kpis {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 18px;
+    grid-template-columns: 1.6fr repeat(4, minmax(0, 1fr));
+}
+body:not(.ve-custos) .carros-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.carros-kpi {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    background: var(--mc-cartao);
+    border: 1px solid var(--mc-linha);
+    border-radius: 16px;
+    box-shadow: var(--mc-sombra);
+}
+.carros-kpi > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.carros-kpi strong {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--mc-tinta);
     font-variant-numeric: tabular-nums;
 }
-.carros-tabela td {
-    vertical-align: middle;
+.carros-kpi small {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mc-texto-2);
+    margin-top: 3px;
 }
-.radios-resumo .carros-valor strong {
-    font-size: 20px;
+.carros-kpi em {
+    font-style: normal;
+    font-size: 12px;
+    color: var(--mc-bege);
+    margin-top: 4px;
+}
+.carros-kpi-icone {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--mc-marsala-suave);
+    color: var(--mc-marsala);
+    font-size: 18px;
+}
+.carros-kpi-ok .carros-kpi-icone {
+    background: var(--mc-ok-fundo);
+    color: var(--mc-ok);
+}
+.carros-kpi-ok strong {
+    color: var(--mc-ok);
+}
+.carros-kpi-aviso .carros-kpi-icone {
+    background: var(--mc-aviso-fundo);
+    color: var(--mc-aviso);
+}
+.carros-kpi-aviso strong {
+    color: var(--mc-aviso);
+}
+.carros-kpi-neutro .carros-kpi-icone {
+    background: var(--mc-suave);
+    color: var(--mc-texto-3);
+}
+.carros-kpi-valor {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    background:
+        var(--mc-diagonais) no-repeat right top/260px auto,
+        var(--mc-degrade);
+    box-shadow: 0 14px 30px rgba(37, 5, 4, 0.18);
+}
+.carros-kpi-valor strong {
+    color: var(--mc-dourado);
+    font-size: 26px;
+    white-space: nowrap;
+}
+.carros-kpi-valor small {
+    color: #fff;
+}
+.carros-kpi-valor .carros-kpi-icone {
+    background: rgba(199, 147, 45, 0.16);
+    color: var(--mc-dourado);
+    border: 1px solid rgba(199, 147, 45, 0.35);
+}
+.carros-tabela {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+html body .carros-tabela thead th {
+    padding: 12px 14px !important;
+    font-size: 12px !important;
+}
+html body .carros-tabela tbody td {
+    padding: 12px 14px !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid var(--mc-linha);
+}
+html body .carros-tabela .col-check input[type="checkbox"],
+html body .carros-tabela thead input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: 0 !important;
+    accent-color: var(--mc-marsala);
+}
+html body .carros-tabela .col-check {
+    width: 44px;
+}
+.carro-ident {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.carro-ident > div {
+    min-width: 0;
+}
+.carro-ident strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--mc-tinta);
+    line-height: 1.25;
+}
+.carro-icone {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 12px;
+    display: grid !important;
+    place-items: center;
+    background: var(--mc-marsala-suave);
+    color: var(--mc-marsala);
+    font-size: 18px;
+}
+.carro-sub {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 2px;
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--mc-texto-2);
+}
+.carro-sub .sep {
+    margin: 0 6px;
+    color: var(--mc-texto-3);
+}
+.carro-obs {
+    display: block;
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--mc-texto-3);
+}
+.cor-amostra {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: -1px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+.carro-renavam,
+.carro-valor {
+    font-variant-numeric: tabular-nums;
+}
+.carro-renavam {
+    color: var(--mc-texto-2);
+    font-size: 13.5px;
+    letter-spacing: 0.02em;
+}
+.carro-valor {
+    font-weight: 700;
+    color: var(--mc-tinta);
+    white-space: nowrap;
+}
+html body .carro-acoes .btn-icon {
+    background: 0 0 !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--mc-texto-3) !important;
+}
+@media (hover: hover) and (min-width: 641px) {
+    html body .carros-tabela tbody tr.linha-carro:hover td {
+        background: #fcfaf8;
+    }
+    html body .carro-acoes .btn-icon:hover {
+        background: var(--mc-marsala-suave) !important;
+        color: var(--mc-marsala) !important;
+    }
+    html body .carro-acoes .btn-excluir:hover {
+        background: var(--mc-perigo-fundo) !important;
+        color: var(--mc-perigo) !important;
+    }
+}
+@media (max-width: 1200px) {
+    .carros-kpis,
+    body:not(.ve-custos) .carros-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .carros-kpi-valor {
+        grid-column: 1/-1;
+    }
 }
 @media (max-width: 640px) {
-    html body .radios-resumo .carros-valor strong {
-        font-size: 13px !important;
-        line-height: 1.6;
-        white-space: nowrap;
+    .carros-kpis,
+    body:not(.ve-custos) .carros-kpis {
+        gap: 6px;
+        margin-bottom: 12px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .carros-kpi {
+        padding: 10px 4px;
+        gap: 0;
+        border-radius: 12px;
+        justify-content: center;
+        text-align: center;
+    }
+    .carros-kpi > div {
+        align-items: center;
+    }
+    .carros-kpi .carros-kpi-icone {
+        display: none;
+    }
+    .carros-kpi strong {
+        font-size: 19px;
+    }
+    .carros-kpi small {
+        font-size: 10.5px;
+        line-height: 1.2;
+    }
+    .carros-kpi-valor {
+        grid-column: 1/-1;
+        justify-content: flex-start;
+        text-align: left;
+        padding: 14px;
+        gap: 12px;
+    }
+    .carros-kpi-valor > div {
+        align-items: flex-start;
+    }
+    .carros-kpi-valor .carros-kpi-icone {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+    .carros-kpi-valor strong {
+        font-size: 21px;
+    }
+    .carros-kpi-valor small {
+        font-size: 12px;
+    }
+    html body .carro-icone,
+    html body .carro-obs,
+    html body .carro-sub {
+        display: none !important;
+    }
+    .carro-ident {
+        display: block;
+    }
+    tr.linha-carro td.cel-radio .linha-celular {
+        display: flex !important;
+        align-items: center;
+        gap: 2px;
+        margin-top: 4px;
     }
 }
