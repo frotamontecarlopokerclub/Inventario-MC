@@ -6977,7 +6977,8 @@ html body .tela .custo-lancar input {
 }
 .btn-filtros,
 .btn-mais,
-.so-celular {
+.so-celular,
+body.login-mode #menuInstalarApp {
     display: none !important;
 }
 .detalhe-lista {
@@ -7314,7 +7315,18 @@ html body .tela .custo-lancar input {
 }
 .inicio-kpi-valor strong {
     color: var(--mc-dourado);
-    font-size: 24px;
+    font-size: 32px;
+    flex: 0 1 auto;
+}
+.inicio-kpi-valor {
+    grid-column: 1/-1;
+    order: -1;
+    flex-direction: row !important;
+    align-items: baseline;
+    gap: 14px !important;
+}
+.inicio-kpi-valor span {
+    flex: 0 0 auto;
 }
 @media (hover: hover) and (min-width: 641px) {
     .inicio-kpi:hover {
@@ -7719,11 +7731,14 @@ body:not(.pode-operar) .so-opera {
     .inicio-kpi span {
         font-size: 12px;
     }
-    .inicio-kpi-valor strong {
-        font-size: 17px;
-        padding-top: 4px;
+    .inicio-kpi-valor {
+        flex-direction: column !important;
+        gap: 2px !important;
     }
-    body:not(.ve-custos) #inicioKpiCarros {
+    .inicio-kpi-valor strong {
+        font-size: 26px;
+    }
+    #inicioKpiCarros {
         grid-column: 1/-1;
     }
     .inicio-atalhos {
@@ -7781,10 +7796,6 @@ body:not(.pode-operar) .so-opera {
 body.pode-instalar:not(.login-mode) #menuInstalarApp {
     display: flex !important;
 }
-#dashboardTela .inicio-instalar[hidden],
-body.login-mode #menuInstalarApp {
-    display: none !important;
-}
 html body #loginTela .btn-instalar-login {
     width: 100%;
     display: flex;
@@ -7814,6 +7825,9 @@ html body #loginTela .btn-instalar-login i {
     border-radius: 16px;
     padding: 12px 12px 12px 14px;
     box-shadow: var(--mc-sombra);
+}
+#dashboardTela .inicio-instalar[hidden] {
+    display: none !important;
 }
 .inicio-instalar img {
     width: 44px;
@@ -8014,7 +8028,6 @@ body:not(.ve-custos) .carros-kpis {
 .carros-kpi > div {
     display: flex;
     flex-direction: column;
-    min-width: 0;
 }
 .carros-kpi strong {
     font-size: 26px;
@@ -8268,4 +8281,22 @@ html body .carro-acoes .btn-icon {
         gap: 2px;
         margin-top: 4px;
     }
+}
+.carros-kpi,
+.carros-kpi > div,
+.custo-kpi,
+.inicio-kpi,
+.radios-resumo > div {
+    min-width: 0;
+}
+html body .numero-ajustavel {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+}
+html body .numero-ajustavel.numero-cortado {
+    text-overflow: ellipsis;
 }

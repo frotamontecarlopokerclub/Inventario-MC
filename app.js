@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 22_carros.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 22_carros.js, 23_ajuste_numeros.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -832,6 +832,7 @@ function abrirTela(idTela, elemento) {
 
     document.getElementById('sidebar')?.classList.remove('open');
     voltarZoomNormal();
+    if (typeof ajustarTodosNumeros === 'function') ajustarTodosNumeros();
     window.scrollTo(0, 0);
 
     AO_ABRIR_TELA[idTela]?.();
@@ -6996,6 +6997,104 @@ function mostrarPreviaCarros(lido, linhas, resumo, nomeArquivo) {
 }
 
 /* =========================================================
+   23 · NÚMEROS SEMPRE DENTRO DO CARD
+   Cada número de resumo (valores em R$, totais…) é medido e, se não
+   couber na largura do card, a letra diminui sozinha até caber —
+   vale para qualquer quantidade de dígitos, no computador e no celular.
+   Se mesmo no tamanho mínimo não couber, mostra "…" e o valor
+   completo aparece ao passar o mouse / segurar o dedo.
+========================================================= */
+
+const SELETOR_NUMEROS = [
+    '.inicio-kpi strong',
+    '.carros-kpi strong',
+    '.custo-kpi strong',
+    '.radios-resumo strong',
+    '[data-ajustar]'
+].join(', ');
+
+const TAMANHO_MINIMO_NUMERO = 11;   // px
+const numerosPendentes = new Set();
+let ajusteAgendado = false;
+
+function ajustarNumero(el) {
+    if (!el.isConnected) return;
+    el.style.removeProperty('font-size');
+    el.classList.remove('numero-cortado');
+    el.removeAttribute('title');
+
+    const largura = el.clientWidth;
+    if (!largura) return;                       // tela escondida: ajusta quando aparecer
+    const precisa = el.scrollWidth;
+    if (precisa <= largura + 1) return;
+
+    const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    let tamanho = Math.max(TAMANHO_MINIMO_NUMERO, Math.floor(base * (largura / precisa) * 0.98 * 10) / 10);
+    el.style.setProperty('font-size', `${tamanho}px`, 'important');
+    // Pequenos acertos (letras não encolhem exatamente na proporção).
+    while (el.scrollWidth > el.clientWidth + 1 && tamanho > TAMANHO_MINIMO_NUMERO) {
+        tamanho = Math.max(TAMANHO_MINIMO_NUMERO, tamanho - 0.5);
+        el.style.setProperty('font-size', `${tamanho}px`, 'important');
+    }
+    if (el.scrollWidth > el.clientWidth + 1) {
+        el.classList.add('numero-cortado');
+        el.title = el.textContent.trim();
+    }
+}
+
+function agendarAjusteNumeros(elementos) {
+    elementos.forEach(el => numerosPendentes.add(el));
+    if (ajusteAgendado) return;
+    ajusteAgendado = true;
+    requestAnimationFrame(() => {
+        ajusteAgendado = false;
+        const lista = [...numerosPendentes];
+        numerosPendentes.clear();
+        lista.forEach(ajustarNumero);
+    });
+}
+
+function ajustarTodosNumeros() {
+    agendarAjusteNumeros(document.querySelectorAll(SELETOR_NUMEROS));
+}
+
+function ligarAjusteNumeros() {
+    const numeros = [...document.querySelectorAll(SELETOR_NUMEROS)];
+    numeros.forEach(el => el.classList.add('numero-ajustavel'));
+
+    // Texto mudou (novo valor) → mede de novo.
+    const aoMudarTexto = new MutationObserver(mudancas => {
+        const alvos = new Set();
+        mudancas.forEach(m => {
+            const el = (m.target.nodeType === 1 ? m.target : m.target.parentElement)?.closest?.('.numero-ajustavel');
+            if (el) alvos.add(el);
+        });
+        agendarAjusteNumeros(alvos);
+    });
+    numeros.forEach(el => aoMudarTexto.observe(el, { childList: true, characterData: true, subtree: true }));
+
+    // Card mudou de largura (girou o celular, abriu a tela, menu lateral…) → mede de novo.
+    if ('ResizeObserver' in window) {
+        const porCard = new Map();
+        numeros.forEach(el => {
+            const card = el.parentElement;
+            if (!porCard.has(card)) porCard.set(card, []);
+            porCard.get(card).push(el);
+        });
+        const aoRedimensionar = new ResizeObserver(entradas => {
+            entradas.forEach(e => agendarAjusteNumeros(porCard.get(e.target) || []));
+        });
+        porCard.forEach((_, card) => aoRedimensionar.observe(card));
+    } else {
+        window.addEventListener('resize', ajustarTodosNumeros);
+    }
+
+    // Fonte carregada depois → larguras mudam.
+    document.fonts?.ready?.then(ajustarTodosNumeros).catch(() => {});
+    ajustarTodosNumeros();
+}
+
+/* =========================================================
    99 · INICIALIZAÇÃO
    Todos os eventos e a partida do sistema ficam aqui
    (antes estavam espalhados em 6 pontos diferentes).
@@ -7011,6 +7110,7 @@ function ligarEventos() {
     ligarMenuMaisCelular();
     ligarFiltrosCelular();
     ligarInstalarApp();
+    ligarAjusteNumeros();
 
     /* Onde está? / Fora do lugar */
     let espera = null;
