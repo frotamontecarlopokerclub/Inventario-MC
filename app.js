@@ -1,7 +1,7 @@
 /* =========================================================
    INVENTÁRIO CENTRAL — GRUPO MONTE CARLO
    Arquivo gerado a partir de src/js (não edite aqui).
-   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 22_carros.js, 23_ajuste_numeros.js, 99_inicio.js
+   Módulos: 00_config.js, 01_util.js, 02_ui.js, 03_auth.js, 04_locais.js, 05_pecas_dashboard.js, 06_catalogo.js, 07_onde_esta.js, 08_cadastro.js, 09_movimentacao.js, 10_inventario.js, 11_historico.js, 12_administracao.js, 13_consulta_publica.js, 14_radios.js, 15_seguranca.js, 16_navegacao.js, 17_importar_radios.js, 18_custos.js, 19_fones.js, 20_inicio.js, 21_instalar_app.js, 22_carros.js, 23_ajuste_numeros.js, 24_acrescentar.js, 99_inicio.js
 ========================================================= */
 
 /* =========================================================
@@ -55,6 +55,7 @@ const PERFIS_GESTAO = ['administrador', 'gestor'];
 
 const ROTULOS_MOVIMENTO = {
     ENTRADA: 'Cadastro',
+    ACRESCIMO: 'Entrada de unidades',
     TRANSFERENCIA: 'Transferência',
     SAIDA_TEMPORARIA: 'Saída temporária',
     REMANEJAMENTO: 'Remanejamento',
@@ -1960,6 +1961,7 @@ function renderizarOndeEsta() {
                     <div class="onde-acoes">
                         ${estaForaDoLugar(item) ? `<button type="button" class="btn-icon btn-devolver" title="Devolver ao local de origem"
                             onclick="devolverPeca(${Number(item.id)})"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                        ${botaoAcrescentar(item)}
                         <button type="button" class="btn-icon" title="Movimentar" onclick="movimentarPeca(${Number(item.id)})">
                             <i class="fa-solid fa-right-left"></i></button>
                     </div>` : ''}
@@ -2381,24 +2383,33 @@ function mostrarDistribuicaoAtual() {
     if (!grupos.length) {
         caixa.hidden = true;
         caixa.innerHTML = '';
+        caixa.dataset.conteudo = '';
         return;
     }
 
     const total = grupos.reduce((soma, item) => soma + quantidadeItem(item), 0);
     caixa.hidden = false;
-    caixa.innerHTML = `
+    // Não redesenha à toa: um redesenho no meio do clique "engolia" o botão Acrescentar.
+    const html = `
         <div class="dist-atual-topo">
             <i class="fa-solid fa-circle-info"></i>
             <div>
                 <strong>"${escaparHTML(produto.nome)}" já tem ${numero.format(total)} peça(s) cadastrada(s).</strong>
-                <span>As quantidades abaixo serão <b>somadas</b> a estas. Para corrigir uma contagem, use Movimentações.</span>
+                <span>Comprou mais? Toque em <b>+ Acrescentar</b> no lugar certo para somar no mesmo cadastro.
+                    Ou distribua abaixo: no mesmo local e setor, a quantidade também é somada.</span>
             </div>
         </div>
         <ul>${grupos
             .sort((a, b) => quantidadeItem(b) - quantidadeItem(a))
             .map(item => `<li><span>${escaparHTML(lugarDoItem(item))}
                 ${estaForaDoLugar(item) ? '<em>fora do lugar</em>' : ''}</span>
-                <strong>${numero.format(quantidadeItem(item))}</strong></li>`).join('')}</ul>`;
+                <strong>${numero.format(quantidadeItem(item))}</strong>
+                ${podeAcrescentar(item) ? `<button type="button" class="btn-secondary btn-small dist-acrescentar" onclick="acrescentarUnidades(${Number(item.id)})">
+                    <i class="fa-solid fa-plus"></i> Acrescentar</button>` : ''}</li>`).join('')}</ul>`;
+    if (caixa.dataset.conteudo !== html) {
+        caixa.dataset.conteudo = html;
+        caixa.innerHTML = html;
+    }
 }
 
 
@@ -2827,12 +2838,17 @@ async function movimentarItem(evento) {
    10 · INVENTÁRIO (tabela completa com o local fixo)
 ========================================================= */
 
+let itensSelecionados = new Set();
+
 function renderizarItens() {
     const tbody = document.getElementById('listaItens');
     if (!tbody) return;
+    itensSelecionados = new Set([...itensSelecionados].filter(id => itens.some(i => Number(i.id) === id)));
+    document.body.classList.toggle('inventario-com-selecao', podeAdministrar());
 
     if (!itens.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${itensCarregados
+        atualizarBarraSelecaoItens();
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${itensCarregados
             ? 'Nenhuma peça cadastrada ainda. Use "Cadastrar peças" para registrar a primeira.'
             : 'Carregando inventário...'}</td></tr>`;
         return;
@@ -2844,7 +2860,10 @@ function renderizarItens() {
         const foto = fotoDoItem(item);
         const fora = estaForaDoLugar(item);
         return `
-            <tr data-subsetor-id="${item.subsetor_id ? Number(item.subsetor_id) : ''}" data-item-id="${Number(item.id)}">
+            <tr data-subsetor-id="${item.subsetor_id ? Number(item.subsetor_id) : ''}" data-item-id="${Number(item.id)}"
+                class="${itensSelecionados.has(Number(item.id)) ? 'linha-selecionada' : ''}">
+                ${gestao ? `<td class="col-check"><input type="checkbox" aria-label="Selecionar peça"
+                    ${itensSelecionados.has(Number(item.id)) ? 'checked' : ''} onchange="alternarSelecaoItem(${Number(item.id)}, this.checked)"></td>` : ''}
                 <td>${foto
                     ? imgMiniatura(foto, { alt: item.nome })
                     : '<div class="sem-foto"><i class="fa-solid fa-image"></i></div>'}</td>
@@ -2862,6 +2881,7 @@ function renderizarItens() {
                 <td><span class="status-badge ${classeStatus(item.status)}">${escaparHTML(item.status || 'Ativo')}</span></td>
                 <td>
                     <div class="acoes-tabela">
+                        ${botaoAcrescentar(item)}
                         ${podeMovimentar() ? `<button type="button" class="btn-icon" title="Movimentar" onclick="movimentarPeca(${Number(item.id)})">
                             <i class="fa-solid fa-right-left"></i></button>` : ''}
                         ${gestao ? `<button type="button" class="btn-icon btn-editar" title="Editar peça no catálogo" onclick="editarItem(${Number(item.id)})">
@@ -2872,6 +2892,89 @@ function renderizarItens() {
                 </td>
             </tr>`;
     }).join('');
+    atualizarBarraSelecaoItens();
+    if (valorCampo('busca') || valorCampo('filtroSubsetor')) filtrarItens();
+}
+
+/* ---------- Seleção e exclusão de várias peças (Gestor/Administrador) ---------- */
+
+function linhasItensVisiveis() {
+    return [...document.querySelectorAll('#listaItens tr[data-item-id]')].filter(l => l.style.display !== 'none');
+}
+
+function alternarSelecaoItem(id, marcado) {
+    if (marcado) itensSelecionados.add(Number(id));
+    else itensSelecionados.delete(Number(id));
+    document.querySelector(`#listaItens tr[data-item-id="${Number(id)}"]`)?.classList.toggle('linha-selecionada', marcado);
+    atualizarBarraSelecaoItens();
+}
+
+function alternarTodosItens(marcado) {
+    linhasItensVisiveis().forEach(linha => {
+        const id = Number(linha.dataset.itemId);
+        if (marcado) itensSelecionados.add(id); else itensSelecionados.delete(id);
+        linha.classList.toggle('linha-selecionada', marcado);
+        const caixa = linha.querySelector('.col-check input');
+        if (caixa) caixa.checked = marcado;
+    });
+    atualizarBarraSelecaoItens();
+}
+
+function limparSelecaoItens() {
+    itensSelecionados.clear();
+    renderizarItens();
+}
+
+function atualizarBarraSelecaoItens() {
+    const barra = document.getElementById('barraSelecaoItens');
+    const qtd = itensSelecionados.size;
+    if (barra) barra.hidden = !qtd || !podeAdministrar();
+    const pecas = itens.filter(i => itensSelecionados.has(Number(i.id))).reduce((t, i) => t + quantidadeItem(i), 0);
+    definirTexto('itensSelecionadosQtd', `${numero.format(qtd)} ${qtd === 1 ? 'registro selecionado' : 'registros selecionados'} · ${numero.format(pecas)} ${pecas === 1 ? 'peça' : 'peças'}`);
+    const todos = document.getElementById('selecionarTodosItens');
+    if (todos) {
+        const visiveis = linhasItensVisiveis();
+        todos.checked = visiveis.length > 0 && visiveis.every(l => itensSelecionados.has(Number(l.dataset.itemId)));
+    }
+}
+
+async function excluirItensSelecionados() {
+    if (!podeAdministrar()) return;
+    const lista = itens.filter(i => itensSelecionados.has(Number(i.id)));
+    if (!lista.length) return;
+    const pecas = lista.reduce((t, i) => t + quantidadeItem(i), 0);
+    const exemplos = lista.slice(0, 5).map(i => `• ${i.nome || 'Peça'} — ${lugarDoItem(i)}`).join('\n');
+    if (!(await confirmar({
+        titulo: `Excluir ${lista.length} ${lista.length === 1 ? 'registro' : 'registros'}?`,
+        mensagem: `${numero.format(pecas)} ${pecas === 1 ? 'peça sai' : 'peças saem'} do inventário.\n\n${exemplos}${lista.length > 5 ? `\n• e mais ${lista.length - 5}…` : ''}\n\n`
+            + 'O histórico de movimentações continua guardado. Esta ação não pode ser desfeita.',
+        textoConfirmar: 'Excluir', perigo: true
+    }))) return;
+
+    try {
+        let total = 0;
+        const ids = lista.map(i => Number(i.id));
+        for (let i = 0; i < ids.length; i += 1000) {
+            const { data, error } = await supabaseClient.rpc('excluir_itens', { p_ids: ids.slice(i, i + 1000) });
+            if (error) throw error;
+            total += Number(data) || 0;
+        }
+        itensSelecionados.clear();
+        avisar(`${numero.format(total)} ${total === 1 ? 'registro excluído' : 'registros excluídos'}.`);
+        await carregarDashboard();
+    } catch (erro) {
+        console.error('ERRO AO EXCLUIR PEÇAS:', erro);
+        avisar('Não foi possível excluir: ' + traduzirErroExclusao(erro), 'erro');
+    }
+}
+
+/* Banco ainda sem a v20: explica o que fazer em vez da mensagem técnica. */
+function traduzirErroExclusao(erro) {
+    const texto = String(erro?.message || '');
+    if (/movimentacoes não podem|histórico vinculado|excluir_itens/i.test(texto)) {
+        return 'rode a atualização v20 no Supabase para liberar a exclusão de peças que já foram movimentadas.';
+    }
+    return traduzirErro(erro);
 }
 
 function exportarExcel() {
@@ -2915,7 +3018,7 @@ function filtrarItens() {
     let visiveis = 0;
 
     document.querySelectorAll('#listaItens tr').forEach(linha => {
-        if (!linha.cells || linha.cells.length < 9) return;
+        if (!linha.dataset.itemId) return;
         const mostrar =
             (!busca || linha.textContent.toLowerCase().includes(busca)) &&
             (!filtroSubsetor || String(linha.dataset.subsetorId || '') === filtroSubsetor);
@@ -2924,6 +3027,7 @@ function filtrarItens() {
     });
 
     definirTexto('estoqueTotal', visiveis);
+    atualizarBarraSelecaoItens();
 }
 
 /* Só Gestor/Administrador (validado também no banco). */
@@ -2935,7 +3039,7 @@ async function excluirItem(id) {
 
     if (!(await confirmar({
         titulo: 'Excluir este registro?',
-        mensagem: `${item.nome || 'Peça'} — ${lugarDoItem(item)}\n\nEsta ação não pode ser desfeita.`,
+        mensagem: `${item.nome || 'Peça'} — ${lugarDoItem(item)}\n\nO histórico de movimentações continua guardado. Esta ação não pode ser desfeita.`,
         textoConfirmar: 'Excluir', perigo: true
     }))) return;
 
@@ -2943,10 +3047,11 @@ async function excluirItem(id) {
         const { error } = await supabaseClient.rpc('excluir_item', { p_item_id: Number(item.id) });
         if (error) throw error;
         avisar('Registro excluído.');
+        itensSelecionados.delete(Number(item.id));
         await carregarDashboard();
     } catch (erro) {
         console.error('ERRO AO EXCLUIR ITEM:', erro);
-        avisar('Não foi possível excluir: ' + traduzirErro(erro), 'erro');
+        avisar('Não foi possível excluir: ' + traduzirErroExclusao(erro), 'erro');
     }
 }
 
@@ -6361,7 +6466,7 @@ function tempoRelativo(data) {
 }
 
 const ICONES_MOVIMENTO = {
-    ENTRADA: 'fa-box-open', TRANSFERENCIA: 'fa-right-left', SAIDA_TEMPORARIA: 'fa-arrow-right-from-bracket',
+    ENTRADA: 'fa-box-open', ACRESCIMO: 'fa-circle-plus', TRANSFERENCIA: 'fa-right-left', SAIDA_TEMPORARIA: 'fa-arrow-right-from-bracket',
     REMANEJAMENTO: 'fa-arrows-rotate', DEVOLUCAO: 'fa-rotate-left', STATUS: 'fa-tag'
 };
 
@@ -7092,6 +7197,97 @@ function ligarAjusteNumeros() {
     // Fonte carregada depois → larguras mudam.
     document.fonts?.ready?.then(ajustarTodosNumeros).catch(() => {});
     ajustarTodosNumeros();
+}
+
+/* =========================================================
+   24 · ACRESCENTAR UNIDADES NO MESMO CADASTRO
+   Comprou mais do mesmo produto: soma no registro que já existe
+   (ex.: 500 → 600) em vez de criar outro cadastro.
+   Pode digitar quantas chegaram (+100) ou o total novo (600).
+========================================================= */
+
+function podeAcrescentar(item) {
+    return podeMovimentar() && item && !item.patrimonio && !['Baixado', 'Extraviado'].includes(item.status);
+}
+
+function botaoAcrescentar(item) {
+    return podeAcrescentar(item)
+        ? `<button type="button" class="btn-icon btn-acrescentar" title="Acrescentar unidades" onclick="acrescentarUnidades(${Number(item.id)})">
+               <i class="fa-solid fa-plus"></i></button>`
+        : '';
+}
+
+function acrescentarUnidades(id) {
+    const item = itens.find(i => Number(i.id) === Number(id));
+    if (!item) return avisar('Peça não encontrada. Atualize a tela.', 'erro');
+    if (!podeMovimentar()) return avisar('Seu perfil não pode acrescentar unidades.', 'erro');
+    if (!podeAcrescentar(item)) return avisar('Este registro não aceita acréscimo (baixado, extraviado ou com patrimônio próprio).', 'erro');
+
+    const atual = quantidadeItem(item);
+    const produto = item.produto_id ? produtos.find(p => Number(p.id) === Number(item.produto_id)) : null;
+    const custo = Number(produto?.custo_unitario) || 0;
+
+    abrirFormulario({
+        titulo: 'Acrescentar unidades',
+        subtitulo: `${item.nome || 'Peça'} — ${lugarDoItem(item)}`,
+        textoSalvar: 'Acrescentar',
+        campos: [
+            { id: 'resumo', tipo: 'html', html: `
+                <div class="acrescentar-hoje">
+                    <span>Hoje este registro tem</span>
+                    <strong>${numero.format(atual)}</strong>
+                    <span>${atual === 1 ? 'unidade' : 'unidades'}</span>
+                </div>
+                ${estaForaDoLugar(item) ? `<p class="acrescentar-aviso"><i class="fa-solid fa-circle-info"></i>
+                    Este grupo está fora do lugar (o local fixo é ${escaparHTML(lugarFixoDoItem(item))}). As unidades novas entram junto com ele.</p>` : ''}` },
+            { id: 'quantidade', rotulo: 'Quantas chegaram?', tipo: 'number', min: 1, obrigatorio: true, placeholder: 'Ex.: 100', inputmode: 'numeric' },
+            { id: 'total', rotulo: 'Ou o total novo', tipo: 'number', min: atual + 1, placeholder: `Ex.: ${numero.format(atual + 100)}`, inputmode: 'numeric',
+              ajuda: 'Preencha um dos dois — o outro se ajusta sozinho.' },
+            { id: 'previa', tipo: 'html', html: `<div id="acrescentarPrevia" class="acrescentar-previa" hidden></div>` },
+            { id: 'observacao', rotulo: 'Observação (opcional)', tipo: 'textarea', largo: true, placeholder: 'Ex.: Nota fiscal 1234 — compra de novembro' }
+        ],
+        aoSalvar: async valores => {
+            const qtd = Math.round(Number(valores.quantidade) || 0);
+            if (qtd < 1) throw new Error('Informe quantas unidades chegaram (pelo menos 1).');
+            const { data, error } = await supabaseClient.rpc('acrescentar_unidades', {
+                p_item_id: Number(item.id), p_quantidade: qtd, p_observacao: valores.observacao || null
+            });
+            if (error) {
+                if (/acrescentar_unidades/.test(error.message || '')) throw new Error('Rode a atualização v21 no Supabase para liberar esta função.');
+                throw new Error(traduzirErro(error));
+            }
+            avisar(`${item.nome || 'Peça'}: ${numero.format(data.antes)} → ${numero.format(data.depois)} unidades.`);
+            await carregarDashboard();
+        }
+    });
+
+    // Liga "quantas chegaram" ⇄ "total novo" e mostra o resultado.
+    setTimeout(() => {
+        const campoQtd = document.getElementById('mcCampo_quantidade');
+        const campoTotal = document.getElementById('mcCampo_total');
+        const previa = document.getElementById('acrescentarPrevia');
+        if (!campoQtd || !campoTotal || !previa) return;
+
+        const mostrar = () => {
+            const qtd = Math.round(Number(campoQtd.value) || 0);
+            if (qtd < 1) { previa.hidden = true; return; }
+            previa.hidden = false;
+            previa.innerHTML = `<span>${numero.format(atual)}</span><i class="fa-solid fa-arrow-right"></i>
+                <strong>${numero.format(atual + qtd)}</strong><em>unidades (+${numero.format(qtd)})</em>
+                ${custo > 0 && podeAdministrar() ? `<small>Valor de referência das novas: ${moeda.format(qtd * custo)}</small>` : ''}`;
+        };
+        campoQtd.addEventListener('input', () => {
+            const qtd = Math.round(Number(campoQtd.value) || 0);
+            campoTotal.value = qtd > 0 ? String(atual + qtd) : '';
+            mostrar();
+        });
+        campoTotal.addEventListener('input', () => {
+            const total = Math.round(Number(campoTotal.value) || 0);
+            campoQtd.value = total > atual ? String(total - atual) : '';
+            mostrar();
+        });
+        campoQtd.focus();
+    }, 30);
 }
 
 /* =========================================================

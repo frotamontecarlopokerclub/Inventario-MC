@@ -8300,3 +8300,98 @@ html body .numero-ajustavel {
 html body .numero-ajustavel.numero-cortado {
     text-overflow: ellipsis;
 }
+html body .mc-confirmar .mc-modal-corpo {
+    display: block !important;
+}
+html body .mc-confirmar .mc-confirmar-texto {
+    width: 100%;
+    max-width: none;
+    grid-column: 1/-1;
+}
+html body .mc-confirmar .btn-perigo {
+    background: var(--mc-perigo) !important;
+    border-color: var(--mc-perigo) !important;
+    color: #fff !important;
+}
+.acrescentar-hoje {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--mc-suave);
+    border: 1px solid var(--mc-linha);
+    color: var(--mc-texto-2);
+    font-size: 14px;
+}
+.acrescentar-hoje strong {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--mc-tinta);
+    font-variant-numeric: tabular-nums;
+}
+.acrescentar-aviso {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--mc-aviso-fundo);
+    color: var(--mc-aviso);
+    font-size: 13px;
+}
+.acrescentar-previa {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--mc-ok-fundo);
+    color: var(--mc-ok);
+    font-variant-numeric: tabular-nums;
+}
+.acrescentar-previa[hidden] {
+    display: none !important;
+}
+.acrescentar-previa span {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--mc-texto-2);
+}
+.acrescentar-previa strong {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--mc-ok);
+}
+.acrescentar-previa em {
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 600;
+}
+.acrescentar-previa small {
+    flex-basis: 100%;
+    font-size: 12.5px;
+    color: var(--mc-texto-2);
+}
+html body .btn-icon.btn-acrescentar {
+    color: var(--mc-ok) !important;
+}
+@media (hover: hover) and (min-width: 641px) {
+    html body .btn-icon.btn-acrescentar:hover {
+        background: var(--mc-ok-fundo) !important;
+        border-color: var(--mc-ok) !important;
+    }
+}
+html body .dist-atual li {
+    align-items: center;
+    gap: 10px;
+}
+html body .dist-atual li .dist-acrescentar {
+    flex: 0 0 auto;
+    padding: 4px 10px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    font-size: 12px !important;
+    color: var(--mc-ok) !important;
+    border-color: var(--mc-ok) !important;
+}

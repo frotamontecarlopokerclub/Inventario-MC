@@ -990,10 +990,21 @@
                         </div>
                     </div>
 
+                    <div id="barraSelecaoItens" class="barra-selecao" hidden>
+                        <span id="itensSelecionadosQtd"></span>
+                        <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="excluirItensSelecionados()">
+                            <i class="fa-solid fa-trash-can"></i> Excluir selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoItens()">Limpar seleção</button>
+                    </div>
+
                     <div class="table-area">
-                        <table class="inventory-table">
+                        <table class="inventory-table tabela-inventario">
                             <thead>
                                 <tr>
+                                    <th class="col-check somente-gestao">
+                                        <input type="checkbox" id="selecionarTodosItens" aria-label="Selecionar todas as peças listadas" onchange="alternarTodosItens(this.checked)" />
+                                    </th>
                                     <th>Foto</th>
                                     <th>Peça</th>
                                     <th>Categoria</th>
