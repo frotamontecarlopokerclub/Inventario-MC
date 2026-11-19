@@ -1,43 +1,1755 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Facilities MC · Ordens de Serviço</title>
-<meta name="description" content="Ordens de serviço de logística e manutenção do Grupo Monte Carlo.">
-<meta name="theme-color" content="#250504">
-<meta name="robots" content="noindex,nofollow">
-<link rel="manifest" href="manifest.webmanifest?v=46">
-<link rel="icon" type="image/png" sizes="48x48" href="icone-48.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icone-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icone-apple.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Facilities MC">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="styles.css?v=46">
-</head>
-<body>
-<header class="top">
-  <svg class="diag" viewBox="0 0 520 100" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
-    <line x1="170" y1="0" x2="520" y2="270" stroke="#C7932D" stroke-opacity=".14" stroke-width="1.2"/>
-    <line x1="280" y1="0" x2="520" y2="186" stroke="#C7932D" stroke-opacity=".14" stroke-width="1.2"/>
-  </svg>
-  <div class="top-in gut">
-    <a href="#" aria-label="Início"><img class="logo" alt="Monte Carlo" src="assets/logo-assinatura.svg"></a>
-    <div class="area-sw" id="areaSw" role="group" aria-label="Área"></div>
-    <nav class="nav" aria-label="Principal" id="topnav"></nav>
-  </div>
-</header>
+    <head>
+        <meta charset="UTF-8" />
 
-<main class="gut" id="app"><div class="empty"><h3>Carregando…</h3><p>Abrindo o sistema de Facilities.</p></div></main>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<nav class="bnav" aria-label="Navegação" id="bnav"></nav>
-<div id="layer"></div><div id="sheetL"></div>
+        <title>Inventário Central Grupo Monte Carlo</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="config.js?v=46"></script>
-<script src="app.js?v=46"></script>
-</body>
+        <link rel="icon" type="image/png" href="favicon-monte-carlo.png" />
+
+        <!-- Ícone e nome na tela inicial do celular -->
+        <link rel="manifest" href="manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="Inventário" />
+        <meta name="application-name" content="Inventário" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="theme-color" content="#420804" />
+
+        <link rel="preload" href="montserrat-600.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="montserrat-800.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="style.css" />
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    </head>
+
+    <body class="login-mode">
+        <!-- =====================================================
+     OVERLAY MOBILE
+===================================================== -->
+
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <!-- =====================================================
+     BOTÃO MENU MOBILE
+===================================================== -->
+
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" type="button" aria-label="Abrir menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+        <aside class="sidebar" id="sidebar">
+            <!-- LOGO -->
+
+            <div class="sidebar-logo">
+                <div class="logo-imagem">
+                    <img src="marca-mc-dourado.svg" alt="Monte Carlo" width="40" height="40" />
+                </div>
+
+                <div class="logo-texto">
+                    <strong>Inventário Central</strong>
+                </div>
+            </div>
+
+            <!-- MENU -->
+
+            <nav class="sidebar-menu" aria-label="Menu principal">
+                <ul>
+                    <li class="menu-grupo" aria-hidden="true">Dia a dia</li>
+                    <li id="menuDashboard" class="menu-item" style="display: none" onclick="abrirInicio()">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Início</span>
+                    </li>
+                    <li id="menuOndeEsta" class="menu-item" style="display: none" onclick="abrirOndeEsta()">
+                        <i class="fa-solid fa-magnifying-glass-location"></i>
+                        <span>Onde está?</span>
+                    </li>
+                    <li id="menuMovimentacao" class="menu-item" style="display: none" onclick="abrirMoverPecas()">
+                        <i class="fa-solid fa-right-left"></i>
+                        <span>Mover peças</span>
+                    </li>
+                    <li id="menuForaLugar" class="menu-item" style="display: none" onclick="abrirForaDoLugar()">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                        <span>Fora do lugar</span>
+                        <b id="badgeForaLugar" class="menu-badge" hidden>0</b>
+                    </li>
+                    <li id="menuCadastro" class="menu-item" style="display: none" onclick="abrirTela('cadastroTela', this)">
+                        <i class="fa-solid fa-box-open"></i>
+                        <span>Cadastrar peças</span>
+                    </li>
+                    <li id="menuRadios" class="menu-item" style="display: none" onclick="abrirRadios()">
+                        <i class="fa-solid fa-walkie-talkie"></i>
+                        <span>Rádios HT</span>
+                    </li>
+                    <li id="menuFones" class="menu-item" style="display: none" onclick="abrirFones()">
+                        <i class="fa-solid fa-headphones"></i>
+                        <span>Fones HT</span>
+                    </li>
+                    <li id="menuCarros" class="menu-item" style="display: none" onclick="abrirCarros()">
+                        <i class="fa-solid fa-car"></i>
+                        <span>Carros</span>
+                    </li>
+
+                    <li class="menu-grupo" aria-hidden="true">Consultas</li>
+                    <li id="menuEstoque" class="menu-item" style="display: none" onclick="abrirTela('estoqueTela', this)">
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Inventário completo</span>
+                    </li>
+                    <li id="menuProdutos" class="menu-item" style="display: none" onclick="abrirTela('produtosTela', this)">
+                        <i class="fa-solid fa-couch"></i>
+                        <span>Catálogo de peças</span>
+                    </li>
+                    <li id="menuHistorico" class="menu-item" style="display: none" onclick="abrirTela('historicoTela', this)">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Histórico</span>
+                    </li>
+                    <li id="menuCustos" class="menu-item" style="display: none" onclick="abrirCustos()">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                        <span>Custos</span>
+                    </li>
+
+                    <li class="menu-grupo" aria-hidden="true">Gestão</li>
+                    <li id="menuAdministracao" class="menu-item" style="display: none" onclick="abrirAdministracao()">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Administração</span>
+                        <b id="badgePedidosAcesso" class="menu-badge" hidden title="Pedidos de acesso aguardando">0</b>
+                    </li>
+
+                    <li class="menu-separador" aria-hidden="true"></li>
+                    <li id="menuInstalarApp" class="menu-item menu-instalar so-instalar" onclick="instalarApp()">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Instalar app</span>
+                    </li>
+                    <li id="menuMinhaSenha" class="menu-item" style="display: none" onclick="trocarMinhaSenha()">
+                        <i class="fa-solid fa-key"></i>
+                        <span>Minha senha</span>
+                    </li>
+                    <li id="menuLogout" class="menu-item" style="display: none" onclick="logout()">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Sair</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- USUÁRIO -->
+
+            <div id="usuarioSidebar" class="usuario-sidebar" style="display: none">
+                <div class="usuario-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+
+                <div class="usuario-info">
+                    <strong id="usuarioNomeSidebar"> Usuário </strong>
+
+                    <span id="usuarioPerfilSidebar"> - </span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- =====================================================
+     MAIN
+===================================================== -->
+
+        <main class="main">
+            <!-- =================================================
+         HEADER
+    ================================================== -->
+
+            <header class="main-header">
+                <div class="header-titulo">
+                    <h1>Inventário Central</h1>
+                </div>
+
+                <div class="busca-geral" role="search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        id="buscaGeral"
+                        placeholder="Procurar peça, local ou rádio..."
+                        autocomplete="off"
+                        aria-label="Procurar em todo o sistema"
+                    />
+                    <div id="resultadosBuscaGeral" class="busca-geral-resultados" hidden></div>
+                </div>
+
+                <div id="headerUsuario" class="header-usuario" style="display: none">
+                    <div class="header-usuario-info">
+                        <strong id="headerUsuarioNome"> Usuário </strong>
+
+                        <span id="headerUsuarioPerfil"> - </span>
+                    </div>
+
+                    <div class="header-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- =================================================
+         LOGIN
+    ================================================== -->
+
+            <section id="loginTela" class="tela activeTela">
+                <div class="login-container">
+                    <div class="login-card">
+                        <!-- LOGO -->
+
+                        <div class="login-logo">
+                            <img src="marca-assinatura-dourada.svg" alt="Monte Carlo Poker Club" class="login-assinatura" width="206" height="100" />
+                        </div>
+
+                        <div class="login-titulo">
+                            <h2>Inventário Central</h2>
+
+                            <p>Mobiliário, decoração e rádios do Grupo em um só lugar.</p>
+                        </div>
+
+                        <!-- FORM LOGIN -->
+
+                        <form id="loginForm" novalidate onsubmit="login(event); return false;">
+                            <div class="input-group">
+                                <label for="email">
+                                    <i class="fa-solid fa-envelope"></i>
+
+                                    E-mail
+                                </label>
+
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-envelope"></i>
+
+                                    <input type="email" id="email" placeholder="Digite seu e-mail" autocomplete="username" required />
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="password">
+                                    <i class="fa-solid fa-lock"></i>
+
+                                    Senha
+                                </label>
+
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-lock"></i>
+
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        placeholder="Digite sua senha"
+                                        autocomplete="current-password"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnLogin" class="btn-primary btn-login">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+
+                                Entrar no Sistema
+                            </button>
+
+                            <button type="button" class="btn-secondary btn-consulta-publica" onclick="abrirConsultaPublica()">
+                                <i class="fa-solid fa-eye"></i>
+
+                                Consultar Inventário
+                            </button>
+
+                            <p id="loginErro" class="login-erro" role="alert" hidden></p>
+
+                            <div class="login-links">
+                                <button type="button" class="link-esqueci-senha" id="btnCriarConta" onclick="criarMinhaConta()">
+                                    <i class="fa-solid fa-user-plus"></i> Criar minha conta
+                                </button>
+                                <button type="button" class="link-esqueci-senha" onclick="esqueciSenha()">Esqueci minha senha</button>
+                            </div>
+
+                            <button type="button" class="btn-instalar-login so-instalar" onclick="instalarApp()">
+                                <i class="fa-solid fa-mobile-screen-button"></i> Instalar o app no celular
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+     CONSULTA PÚBLICA DE INVENTÁRIO
+================================================== -->
+
+            <section id="consultaPublicaTela" class="tela consulta-publica-tela">
+                <div class="consulta-publica-container">
+                    <!-- =================================================
+             CABEÇALHO
+        ================================================== -->
+
+                    <div class="consulta-publica-header">
+                        <div class="consulta-publica-marca">
+                            <div class="consulta-publica-logo">
+                                <img src="marca-mc-dourado.svg" alt="Monte Carlo" width="44" height="44" />
+                            </div>
+
+                            <div>
+                                <h1>Consulta de Inventário</h1>
+
+                                <p>Consulte os itens ativos, suas quantidades e localizações.</p>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-secondary consulta-voltar" onclick="voltarParaLogin()">
+                            <i class="fa-solid fa-arrow-left"></i>
+
+                            Voltar
+                        </button>
+                    </div>
+
+                    <!-- =================================================
+             BARRA DE FILTROS
+        ================================================== -->
+
+                    <div class="consulta-publica-toolbar">
+                        <!-- PESQUISA -->
+
+                        <div class="consulta-publica-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input type="search" id="buscaPublica" placeholder="Pesquisar item, categoria ou local..." autocomplete="off" />
+                        </div>
+
+                        <!-- LOCAL -->
+
+                        <select id="filtroLocalPublico" aria-label="Filtrar por local">
+                            <option value="">Todos os locais</option>
+                        </select>
+
+                        <!-- CATEGORIA -->
+
+                        <select id="filtroCategoriaPublico" aria-label="Filtrar por categoria">
+                            <option value="">Todas as categorias</option>
+                        </select>
+
+                        <!-- ORDENAÇÃO -->
+
+                        <select id="ordenacaoPublica" aria-label="Ordenar inventário">
+                            <option value="nome-asc">Nome: A–Z</option>
+
+                            <option value="nome-desc">Nome: Z–A</option>
+
+                            <option value="quantidade-desc">Maior quantidade</option>
+
+                            <option value="quantidade-asc">Menor quantidade</option>
+
+                            <option value="local-asc">Local: A–Z</option>
+                        </select>
+
+                        <!-- LIMPAR -->
+
+                        <button type="button" class="btn-secondary" onclick="limparFiltrosConsultaPublica()">
+                            <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                            Limpar
+                        </button>
+
+                        <!-- ATUALIZAR -->
+
+                        <button type="button" id="btnAtualizarConsulta" class="btn-primary" onclick="atualizarConsultaPublica()">
+                            <i class="fa-solid fa-rotate"></i>
+
+                            Atualizar
+                        </button>
+                    </div>
+
+                    <!-- =================================================
+             CONTROLES DE VISUALIZAÇÃO
+        ================================================== -->
+
+                    <div class="consulta-controles">
+                        <div class="consulta-controles-esquerda">
+                            <span class="consulta-label-visualizacao"> Visualização </span>
+
+                            <div class="consulta-view-buttons">
+                                <button
+                                    type="button"
+                                    id="btnViewGrid"
+                                    data-view="grid"
+                                    class="consulta-view-btn active"
+                                    title="Visualização em grade"
+                                    aria-label="Visualização em grade"
+                                >
+                                    <i class="fa-solid fa-grip"></i>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    id="btnViewList"
+                                    data-view="list"
+                                    class="consulta-view-btn"
+                                    title="Visualização em lista"
+                                    aria-label="Visualização em lista"
+                                >
+                                    <i class="fa-solid fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="consulta-dica">
+                            <i class="fa-solid fa-circle-info"></i>
+
+                            Clique na foto para ampliar.
+                        </div>
+                    </div>
+
+                    <!-- =================================================
+             RESUMO
+        ================================================== -->
+
+                    <div class="consulta-publica-resumo">
+                        <div class="consulta-resumo-titulo">
+                            <span>Itens disponíveis</span>
+
+                            <strong id="contadorConsultaPublica"> 0 </strong>
+                        </div>
+
+                        <div class="consulta-publica-resumo-info">
+                            <i class="fa-solid fa-circle-info"></i>
+
+                            Somente itens ativos são exibidos.
+                        </div>
+                    </div>
+
+                    <!-- =================================================
+             LISTA DE ITENS
+        ================================================== -->
+
+                    <div id="listaConsultaPublica" class="consulta-publica-grid"></div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         ONDE ESTÁ?
+    ================================================== -->
+
+            <section id="ondeEstaTela" class="tela">
+                <div class="onde-hero">
+                    <h2>Onde está?</h2>
+                    <p>Digite o nome da peça, a categoria ou um local. Ex.: "vaso azul", "quadro", "CASA 2".</p>
+
+                    <div class="onde-busca">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                            type="search"
+                            id="buscaOndeEsta"
+                            placeholder="O que você está procurando?"
+                            autocomplete="off"
+                            aria-label="Buscar peça"
+                        />
+                    </div>
+
+                    <div class="onde-filtros">
+                        <select id="filtroLocalOndeEsta" aria-label="Filtrar por local">
+                            <option value="">Todos os locais</option>
+                        </select>
+                        <label class="mc-check">
+                            <input type="checkbox" id="filtroSomenteFora" />
+                            <span>Só peças fora do lugar</span>
+                        </label>
+                        <span id="contadorOndeEsta" class="onde-contador"></span>
+                    </div>
+                </div>
+
+                <div id="resultadosOndeEsta" class="onde-resultados"></div>
+            </section>
+
+            <!-- =================================================
+         FORA DO LUGAR
+    ================================================== -->
+
+            <section id="foraLugarTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Fora do lugar</h2>
+                        <p>Peças que saíram do seu local fixo e ainda não voltaram. Devolva com um clique quando retornarem.</p>
+                    </div>
+                    <div class="estoque-info">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                        <span>Peças fora:</span>
+                        <strong id="totalForaLugar">0</strong>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaForaLugar" placeholder="Buscar peça ou local..." autocomplete="off" />
+                        </div>
+                        <select id="filtroOrigemFora" aria-label="Filtrar por local de origem">
+                            <option value="">Todas as origens</option>
+                        </select>
+                        <label class="mc-check">
+                            <input type="checkbox" id="filtroAtrasados" />
+                            <span>Só retornos atrasados</span>
+                        </label>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table fora-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Peça</th>
+                                    <th class="num">Qtde</th>
+                                    <th>Está em</th>
+                                    <th>Deveria estar em</th>
+                                    <th>Fora desde</th>
+                                    <th>Retorno previsto</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaForaLugar"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         DASHBOARD
+    ================================================== -->
+
+            <section id="dashboardTela" class="tela inicio-tela">
+                <div class="inicio-hero">
+                    <div class="inicio-saudacao">
+                        <h2><span id="inicioCumprimento">Olá</span><span id="inicioNome" class="inicio-nome"></span></h2>
+                        <p id="inicioData"></p>
+                    </div>
+
+                    <div class="inicio-kpis">
+                        <button type="button" class="inicio-kpi" onclick="abrirTela('estoqueTela', document.getElementById('menuEstoque'))">
+                            <strong id="totalItens">—</strong>
+                            <span>peças no acervo</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirOndeEsta()">
+                            <strong id="totalLocais">—</strong>
+                            <span>locais</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirRadios()">
+                            <strong id="inicioRadios">—</strong>
+                            <span>rádios HT</span>
+                        </button>
+                        <button type="button" class="inicio-kpi" onclick="abrirFones()">
+                            <strong id="inicioFones">—</strong>
+                            <span>fones com prestadores</span>
+                        </button>
+                        <button type="button" id="inicioKpiCarros" class="inicio-kpi" onclick="abrirCarros()">
+                            <strong id="inicioCarros">—</strong>
+                            <span>carros na frota</span>
+                        </button>
+                        <button type="button" class="inicio-kpi inicio-kpi-valor somente-gestao" onclick="abrirCustos()">
+                            <strong id="dashValorPatrimonio">—</strong>
+                            <span>valor de referência do acervo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="avisoInstalarApp" class="inicio-instalar" hidden>
+                    <img src="apple-touch-icon.png" alt="" width="44" height="44" />
+                    <div>
+                        <strong>Instale o app no celular</strong>
+                        <span>Abra o Inventário direto pelo ícone, em tela cheia.</span>
+                    </div>
+                    <button type="button" class="inicio-instalar-btn" onclick="instalarApp()">Instalar</button>
+                    <button type="button" class="inicio-instalar-fechar" onclick="fecharAvisoInstalar()" aria-label="Não mostrar mais"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <nav class="inicio-atalhos" aria-label="Atalhos">
+                    <button type="button" onclick="abrirOndeEsta()"><i class="fa-solid fa-magnifying-glass-location"></i><span>Procurar peça</span></button>
+                    <button type="button" class="so-opera" onclick="abrirMoverPecas()"><i class="fa-solid fa-right-left"></i><span>Mover peças</span></button>
+                    <button type="button" class="so-opera" onclick="abrirTela('cadastroTela', document.getElementById('menuCadastro'))"><i class="fa-solid fa-box-open"></i><span>Cadastrar</span></button>
+                    <button type="button" onclick="abrirRadios()"><i class="fa-solid fa-walkie-talkie"></i><span>Rádios HT</span></button>
+                    <button type="button" onclick="abrirFones()"><i class="fa-solid fa-headphones"></i><span>Fones HT</span></button>
+                </nav>
+
+                <div class="inicio-grade">
+                    <div id="dashExtra" class="card inicio-card inicio-atencao">
+                        <h3>Precisa de atenção</h3>
+                        <ul id="inicioAtencao" class="inicio-alertas">
+                            <li class="inicio-carregando">Carregando…</li>
+                        </ul>
+                        <span id="dashForaLugar" hidden></span>
+                        <span id="dashAtrasados" hidden></span>
+                    </div>
+
+                    <div class="card inicio-card inicio-situacao">
+                        <h3>Situação das peças</h3>
+                        <div id="inicioBarraSituacao" class="inicio-barra-situacao" role="img" aria-label="Situação das peças"></div>
+                        <ul class="inicio-legenda">
+                            <li><i class="ponto ponto-ativo"></i><span>Ativas</span><strong id="dashAtivo">0</strong></li>
+                            <li><i class="ponto ponto-manutencao"></i><span>Em manutenção</span><strong id="dashManutencao">0</strong></li>
+                            <li><i class="ponto ponto-baixado"></i><span>Baixadas</span><strong id="dashBaixado">0</strong></li>
+                            <li><i class="ponto ponto-extraviado"></i><span>Extraviadas</span><strong id="dashExtraviado">0</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="card inicio-card inicio-locais">
+                        <div class="inicio-card-topo">
+                            <h3>Peças por local</h3>
+                            <button type="button" class="inicio-link" onclick="abrirOndeEsta()">Ver tudo</button>
+                        </div>
+                        <ul id="inicioLocais" class="inicio-barras"></ul>
+                    </div>
+
+                    <div class="card inicio-card inicio-movs so-opera">
+                        <div class="inicio-card-topo">
+                            <h3>Últimas movimentações</h3>
+                            <button type="button" class="inicio-link" onclick="abrirTela('historicoTela', document.getElementById('menuHistorico'))">Histórico</button>
+                        </div>
+                        <ul id="inicioMovs" class="inicio-movs-lista">
+                            <li class="inicio-carregando">Carregando…</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <details class="card inicio-detalhe dashboard-table">
+                    <summary>
+                        <span>Quantidade por item e local</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </summary>
+
+                    <div class="dashboard-filtros">
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filtroDashboard" placeholder="Pesquisar item ou local..." onkeyup="filtrarDashboard()" />
+                        </div>
+                        <select id="filtroLocalDashboard" onchange="atualizarSubsetoresDashboardPorLocal()">
+                            <option value="">Todos os Locais</option>
+                        </select>
+                        <select id="filtroSubsetorDashboard" onchange="filtrarDashboard()">
+                            <option value="">Todos os setores</option>
+                        </select>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr><th>Item</th><th>Local</th><th>Setor</th><th>Quantidade</th></tr>
+                            </thead>
+                            <tbody id="dashboardLocais"></tbody>
+                        </table>
+                    </div>
+                </details>
+
+                <span id="totalMov" hidden></span>
+                <span id="totalBaixados" hidden></span>
+            </section>
+
+            <!-- =================================================
+         CADASTRO
+    ================================================== -->
+
+            <section id="cadastroTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Cadastrar peças</h2>
+
+                        <p>Informe a peça e distribua a quantidade pelos locais e setores. Esse será o local fixo de cada grupo.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <form id="cadastroForm" onsubmit="salvarItem(event); return false;">
+                        <!-- NOME / TIPO -->
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-box"></i>
+
+                                Informações da peça
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="nome"> Nome da peça </label>
+
+                                    <input type="text" id="nome" placeholder="Ex.: Mesa de jantar oval" required />
+                                    <small id="dicaProdutoCadastro" class="mc-dica"></small>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="tipoItem"> Tipo / Categoria </label>
+
+                                    <input type="text" id="tipoItem" placeholder="Ex.: Mesas, Quadros, Vasos" />
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="descricao"> Descrição </label>
+
+                                <textarea id="descricao" placeholder="Descrição complementar do item..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- ONDE FICAM AS PEÇAS (DISTRIBUIÇÃO POR LOCAL / SETOR) -->
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-map-location-dot"></i>
+
+                                Onde ficam as peças
+                            </div>
+
+                            <div id="distribuicaoAtual" class="dist-atual" hidden></div>
+
+                            <div class="dist-cabecalho" aria-hidden="true">
+                                <span>Local</span>
+                                <span>Setor</span>
+                                <span>Onde fica</span>
+                                <span>Quantidade</span>
+                                <span></span>
+                            </div>
+                            <datalist id="sugestoesOndeFicaCad"></datalist>
+
+                            <div id="linhasDistribuicao" class="dist-linhas"></div>
+
+                            <button type="button" class="btn-secondary btn-small dist-adicionar" onclick="adicionarLinhaDistribuicao()">
+                                <i class="fa-solid fa-plus"></i>
+                                Adicionar outro local
+                            </button>
+
+                            <div class="dist-rodape">
+                                <div class="input-group dist-esperado">
+                                    <label for="totalEsperado">Quantidade total da peça (opcional)</label>
+                                    <input type="number" id="totalEsperado" min="1" step="1" placeholder="Ex.: 100" />
+                                    <small>Se informar, o sistema confere se a distribuição fecha com o total.</small>
+                                </div>
+
+                                <div class="dist-total">
+                                    <strong id="totalDistribuido">0</strong>
+                                    <small>Total distribuído</small>
+                                    <span id="statusDistribuicao" class="dist-status"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STATUS -->
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-circle-check"></i>
+
+                                Status
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="status"> Status (vale para todas as linhas) </label>
+
+                                    <select id="status">
+                                        <option value="Ativo">Ativo</option>
+
+                                        <option value="Em manutenção">Em manutenção</option>
+
+                                        <option value="Baixado">Baixado</option>
+
+                                        <option value="Extraviado">Extraviado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FOTO -->
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fa-solid fa-camera"></i>
+
+                                Foto
+                            </div>
+
+                            <div class="input-group">
+                                <label for="foto"> Imagem do Item </label>
+
+                                <input type="file" id="foto" accept="image/*" />
+                            </div>
+                        </div>
+
+                        <!-- AÇÕES -->
+
+                        <div class="form-actions">
+                            <button type="reset" class="btn-secondary" onclick="limparFormulario()">
+                                <i class="fa-solid fa-rotate-left"></i>
+
+                                Limpar
+                            </button>
+
+                            <button type="submit" id="btnSalvarItem" class="btn-primary">
+                                <i class="fa-solid fa-floppy-disk"></i>
+
+                                Salvar Cadastro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- =================================================
+         MOVIMENTAÇÃO
+    ================================================== -->
+
+            <section id="movimentacaoTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Mover peças</h2>
+                        <p>Leve peças de um lugar para outro em 3 passos.</p>
+                    </div>
+                </div>
+
+                <div class="card mov-assistente">
+                    <ol class="mov-passos" aria-label="Passos">
+                        <li data-passo="1" class="atual"><b>1</b><span>Qual peça?</span></li>
+                        <li data-passo="2"><b>2</b><span>Para onde?</span></li>
+                        <li data-passo="3"><b>3</b><span>Quantas?</span></li>
+                    </ol>
+
+                    <!-- PASSO 1 -->
+                    <div class="mov-etapa" data-etapa="1">
+                        <h3 class="mov-pergunta">Qual peça vai sair do lugar?</h3>
+                        <div class="mov-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search" id="buscaPecaMov" placeholder="Digite o nome da peça ou o local..." autocomplete="off" />
+                        </div>
+                        <div id="listaPecasMov" class="mov-lista-pecas"></div>
+                        <select id="itemMov" hidden aria-hidden="true" tabindex="-1">
+                            <option value="">Selecione a peça</option>
+                        </select>
+                    </div>
+
+                    <!-- PASSO 2 -->
+                    <div class="mov-etapa" data-etapa="2" hidden>
+                        <div class="mov-escolhida" id="movPecaEscolhida"></div>
+                        <input type="hidden" id="origemNome" />
+
+                        <h3 class="mov-pergunta">Para onde ela vai?</h3>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="destino">Local</label>
+                                <select id="destino" required>
+                                    <option value="">Selecione o local</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="destinoSubsetor">Setor (se souber)</label>
+                                <select id="destinoSubsetor">
+                                    <option value="">Sem setor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="destinoOndeFica">Onde fica <small>(opcional)</small></label>
+                            <input
+                                type="text"
+                                id="destinoOndeFica"
+                                list="sugestoesOndeFicaMov"
+                                maxlength="80"
+                                autocomplete="off"
+                                placeholder="Ex.: 3º andar, sala do financeiro, Casa 3"
+                            />
+                            <datalist id="sugestoesOndeFicaMov"></datalist>
+                            <small>Um detalhe para achar a peça lá dentro: andar, sala, casa…</small>
+                        </div>
+
+                        <h3 class="mov-pergunta">Ela vai voltar para o lugar dela depois?</h3>
+                        <div class="controle-grid mov-tipo">
+                            <label class="controle-option">
+                                <input type="radio" name="tipoMovimentacao" value="temporaria" checked />
+                                <div>
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    <strong>Sim, vai voltar</strong>
+                                    <span>Evento, empréstimo ou conserto. Ela continua sendo do lugar de origem e aparece em "Fora do lugar".</span>
+                                </div>
+                            </label>
+                            <label class="controle-option">
+                                <input type="radio" name="tipoMovimentacao" value="definitiva" />
+                                <div>
+                                    <i class="fa-solid fa-house-circle-check"></i>
+                                    <strong>Não, vai ficar lá</strong>
+                                    <span>Mudança de lugar. O novo local passa a ser o lugar fixo da peça.</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="grid-2 mov-retorno">
+                            <div class="input-group" id="grupoRetornoPrevisto">
+                                <label for="retornoPrevisto">Volta até quando? (opcional)</label>
+                                <input type="date" id="retornoPrevisto" />
+                                <small>Depois desta data, a peça aparece como "retorno atrasado".</small>
+                            </div>
+                        </div>
+                        <p id="infoOrigemFixa" class="mov-info-origem"></p>
+                    </div>
+
+                    <!-- PASSO 3 -->
+                    <div class="mov-etapa" data-etapa="3" hidden>
+                        <h3 class="mov-pergunta">Quantas peças vão?</h3>
+                        <div class="mov-quantidade">
+                            <button type="button" class="mov-qtd-btn" onclick="ajustarQuantidadeMov(-1)" aria-label="Menos uma">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <input type="number" id="quantidadeMov" min="1" value="1" inputmode="numeric" aria-label="Quantidade" />
+                            <button type="button" class="mov-qtd-btn" onclick="ajustarQuantidadeMov(1)" aria-label="Mais uma">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        <small id="ajudaQuantidadeMov" class="mov-ajuda-qtd"></small>
+
+                        <div id="movResumo" class="mov-resumo"></div>
+
+                        <details class="mov-mais">
+                            <summary><i class="fa-solid fa-sliders"></i> Mais opções (observação, estado da peça)</summary>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="statusMov">Estado da peça</label>
+                                    <select id="statusMov">
+                                        <option value="">Manter como está</option>
+                                        <option value="Ativo">Ativo</option>
+                                        <option value="Em manutenção">Em manutenção</option>
+                                        <option value="Baixado">Baixado</option>
+                                        <option value="Extraviado">Extraviado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="observacaoMov">Observação</label>
+                                <textarea id="observacaoMov" placeholder="Ex.: levada para o evento de sábado"></textarea>
+                            </div>
+                        </details>
+                    </div>
+
+                    <p id="movErro" class="mov-erro" hidden></p>
+
+                    <div class="form-actions mov-acoes">
+                        <button type="button" class="btn-secondary" id="btnMovVoltar" onclick="voltarPassoMov()" hidden>
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Voltar
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnMovRecomecar" onclick="limparFormularioMovimentacao()">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Recomeçar
+                        </button>
+                        <button type="button" class="btn-primary" id="btnMovAvancar" onclick="avancarPassoMov()">
+                            Continuar
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         ESTOQUE
+    ================================================== -->
+
+            <section id="estoqueTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Inventário completo</h2>
+
+                        <p>Todas as peças, onde estão e qual é o local fixo de cada grupo.</p>
+                    </div>
+
+                    <button type="button" class="btn-primary" onclick="exportarExcel()">
+                        <i class="fa-solid fa-file-export"></i>
+
+                        Exportar
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input type="text" id="busca" placeholder="Buscar peça, categoria ou local..." onkeyup="filtrarItens()" />
+                        </div>
+
+                        <div class="input-wrapper estoque-filtro-subsetor">
+                            <i class="fa-solid fa-sitemap"></i>
+
+                            <select id="filtroSubsetor" onchange="filtrarItens()" aria-label="Filtrar por setor">
+                                <option value="">Todos os setores</option>
+                            </select>
+                        </div>
+
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+
+                            <span> Total: </span>
+
+                            <strong id="estoqueTotal"> 0 </strong>
+                        </div>
+                    </div>
+
+                    <div id="barraSelecaoItens" class="barra-selecao" hidden>
+                        <span id="itensSelecionadosQtd"></span>
+                        <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="excluirItensSelecionados()">
+                            <i class="fa-solid fa-trash-can"></i> Excluir selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoItens()">Limpar seleção</button>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table tabela-inventario">
+                            <thead>
+                                <tr>
+                                    <th class="col-check somente-gestao">
+                                        <input type="checkbox" id="selecionarTodosItens" aria-label="Selecionar todas as peças listadas" onchange="alternarTodosItens(this.checked)" />
+                                    </th>
+                                    <th>Foto</th>
+                                    <th>Peça</th>
+                                    <th>Categoria</th>
+                                    <th class="num">Qtde</th>
+                                    <th>Local</th>
+                                    <th>Setor</th>
+                                    <th>Local fixo</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="listaItens"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         CATÁLOGO DE PEÇAS
+    ================================================== -->
+
+            <section id="produtosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Catálogo de peças</h2>
+                        <p>
+                            Cada peça cadastrada uma única vez: nome, categoria, descrição e foto. A quantidade e os locais vêm do
+                            inventário.
+                        </p>
+                    </div>
+
+                    <button type="button" class="btn-primary somente-gestao" onclick="novoProduto()">
+                        <i class="fa-solid fa-plus"></i>
+                        Nova peça
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaProduto" placeholder="Buscar peça, categoria ou descrição..." autocomplete="off" />
+                        </div>
+
+                        <select id="filtroCategoriaProduto" aria-label="Filtrar por categoria">
+                            <option value="">Todas as categorias</option>
+                        </select>
+
+                        <label class="mc-check">
+                            <input type="checkbox" id="filtroProdutosInativos" />
+                            <span>Mostrar inativas</span>
+                        </label>
+
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-couch"></i>
+                            <span>Peças:</span>
+                            <strong id="produtosTotal">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table produtos-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Peça</th>
+                                    <th>Categoria</th>
+                                    <th class="num">Quantidade</th>
+                                    <th class="num">Locais</th>
+                                    <th class="num col-custo">Valor ref.</th>
+                                    <th>Situação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="listaProdutos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         RÁDIOS HT
+    ================================================== -->
+
+            <section id="radiosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Rádios HT</h2>
+                        <p>Cada rádio com setor, responsável e termo de responsabilidade, assinado online ou em papel.</p>
+                    </div>
+                    <div class="radios-botoes somente-gestao">
+                        <button type="button" class="btn-secondary" onclick="abrirImportacaoRadios()">
+                            <i class="fa-solid fa-file-import"></i> Importar planilha
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="editarModelosRadio()">
+                            <i class="fa-solid fa-tags"></i> Modelos de rádio
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="editarModeloTermo()">
+                            <i class="fa-solid fa-file-lines"></i> Modelo do termo
+                        </button>
+                        <button type="button" class="btn-primary" onclick="novoRadio()"><i class="fa-solid fa-plus"></i> Novo rádio</button>
+                    </div>
+                </div>
+
+                <div class="radios-resumo">
+                    <div><strong id="radiosTotal">0</strong><small>Rádios</small></div>
+                    <div class="ok"><strong id="radiosAssinados">0</strong><small>Termo assinado</small></div>
+                    <div class="pendente"><strong id="radiosPendentes">0</strong><small>Aguardando assinatura</small></div>
+                    <div class="falta"><strong id="radiosSemTermo">0</strong><small>Sem termo</small></div>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input
+                                type="text"
+                                id="buscaRadio"
+                                placeholder="Buscar série, identificação, responsável ou setor..."
+                                autocomplete="off"
+                            />
+                        </div>
+                        <select id="filtroSetorRadio" aria-label="Filtrar por setor">
+                            <option value="">Todos os setores</option>
+                        </select>
+                        <select id="filtroSituacaoRadio" aria-label="Filtrar pela situação do termo">
+                            <option value="">Todas as situações do termo</option>
+                            <option value="ASSINADO">Assinado</option>
+                            <option value="PENDENTE">Aguardando assinatura</option>
+                            <option value="EXPIRADO">Link expirado</option>
+                            <option value="SEM_TERMO">Sem termo</option>
+                            <option value="SEM_RESPONSAVEL">Sem responsável</option>
+                        </select>
+                        <select id="filtroStatusRadio" aria-label="Filtrar por status">
+                            <option value="">Todos os status</option>
+                            <option>Ativo</option>
+                            <option>Reserva</option>
+                            <option>Em manutenção</option>
+                            <option>Extraviado</option>
+                            <option>Baixado</option>
+                        </select>
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-walkie-talkie"></i>
+                            <span>Listados:</span>
+                            <strong id="radiosListados">0</strong>
+                        </div>
+                    </div>
+
+                    <div id="barraSelecaoRadios" class="barra-selecao" hidden>
+                        <span id="radiosSelecionadosQtd"></span>
+                        <button type="button" class="btn-primary btn-small" onclick="gerarTermoSelecionados()">
+                            <i class="fa-solid fa-file-signature"></i> Gerar termo para os selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="anexarTermoPapelSelecionados()">
+                            <i class="fa-solid fa-file-arrow-up"></i> Anexar termo em papel
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="editarRadiosSelecionados()">
+                            <i class="fa-solid fa-pen"></i> Editar selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="excluirRadiosSelecionados()">
+                            <i class="fa-solid fa-trash-can"></i> Excluir selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoRadios()">Limpar seleção</button>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table radios-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-check somente-gestao">
+                                        <input
+                                            type="checkbox"
+                                            id="selecionarTodosRadios"
+                                            aria-label="Selecionar todos"
+                                            onchange="alternarTodosRadios(this.checked)"
+                                        />
+                                    </th>
+                                    <th>Rádio</th>
+                                    <th>Setor</th>
+                                    <th>Responsável</th>
+                                    <th>Status</th>
+                                    <th>Termo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaRadios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+                 FONES DOS RÁDIOS HT
+            ================================================== -->
+            <section id="fonesTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Fones HT</h2>
+                        <p>Fones de ouvido dos rádios: estoque e cautela de cada prestador, com termo assinado online ou em papel.</p>
+                    </div>
+                    <div class="radios-botoes somente-gestao">
+                        <button type="button" class="btn-secondary" onclick="abrirImportacaoFones()">
+                            <i class="fa-solid fa-file-import"></i> Importar planilha
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="ajustarEstoqueFones()">
+                            <i class="fa-solid fa-boxes-stacked"></i> Estoque
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="editarModeloTermo('termo_fone_modelo')">
+                            <i class="fa-solid fa-file-lines"></i> Modelo do termo
+                        </button>
+                        <button type="button" class="btn-primary" onclick="novaEntregaFone()"><i class="fa-solid fa-plus"></i> Nova entrega</button>
+                    </div>
+                </div>
+
+                <div class="radios-resumo">
+                    <div><strong id="fonesTotal">0</strong><small>Fones no total</small></div>
+                    <div class="ok"><strong id="fonesComPrestador">0</strong><small>Com prestadores</small></div>
+                    <div id="fonesDisponiveisCaixa"><strong id="fonesDisponiveis">0</strong><small>Disponíveis no estoque</small></div>
+                    <div class="falta"><strong id="fonesSemTermo">0</strong><small>Sem termo assinado</small></div>
+                </div>
+                <p id="fonesModelo" class="fones-modelo"></p>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaFones" placeholder="Buscar prestador, CPF ou setor..." autocomplete="off" />
+                        </div>
+                        <select id="filtroSetorFones" aria-label="Filtrar por setor">
+                            <option value="">Todos os setores</option>
+                        </select>
+                        <select id="filtroSituacaoFones" aria-label="Filtrar pela situação">
+                            <option value="COM_PRESTADOR">Com o prestador</option>
+                            <option value="DEVOLVIDO">Devolvidos</option>
+                            <option value="EXTRAVIADO">Extraviados</option>
+                            <option value="">Todas as situações</option>
+                        </select>
+                        <select id="filtroTermoFones" aria-label="Filtrar pela situação do termo">
+                            <option value="">Todas as situações do termo</option>
+                            <option value="ASSINADO">Assinado</option>
+                            <option value="PENDENTE">Aguardando assinatura</option>
+                            <option value="SEM_TERMO">Sem termo</option>
+                        </select>
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-headphones"></i>
+                            <span>Listados:</span>
+                            <strong id="fonesListados">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table fones-tabela">
+                            <thead>
+                                <tr>
+                                    <th>Prestador</th>
+                                    <th>Setor</th>
+                                    <th class="num">Qtd</th>
+                                    <th>Entregue em</th>
+                                    <th>Situação</th>
+                                    <th>Termo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaFones"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <datalist id="dlSetoresFones"></datalist>
+            </section>
+
+            <section id="carrosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Carros</h2>
+                        <p>Carros da empresa: placa, RENAVAM, ano, cor, valor e situação de cada um.</p>
+                    </div>
+                    <div class="radios-botoes somente-gestao">
+                        <button type="button" class="btn-secondary" onclick="abrirImportacaoCarros()">
+                            <i class="fa-solid fa-file-import"></i> Importar planilha
+                        </button>
+                        <button type="button" class="btn-primary" onclick="novoCarro()"><i class="fa-solid fa-plus"></i> Novo carro</button>
+                    </div>
+                </div>
+
+                <div class="carros-kpis">
+                    <div class="carros-kpi carros-kpi-valor somente-gestao">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-sack-dollar"></i></span>
+                        <div><strong id="carrosValor">—</strong><small>Valor da frota</small><em id="carrosValorInfo"></em></div>
+                    </div>
+                    <div class="carros-kpi">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-car"></i></span>
+                        <div><strong id="carrosTotal">0</strong><small>Na frota</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-ok">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-key"></i></span>
+                        <div><strong id="carrosEmUso">0</strong><small>Em uso</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-aviso">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+                        <div><strong id="carrosManutencao">0</strong><small>Em manutenção</small></div>
+                    </div>
+                    <div class="carros-kpi carros-kpi-neutro">
+                        <span class="carros-kpi-icone"><i class="fa-solid fa-box-archive"></i></span>
+                        <div><strong id="carrosVendidos">0</strong><small>Vendidos ou baixados</small></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="estoque-toolbar produtos-toolbar">
+                        <div class="input-wrapper estoque-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="buscaCarros" placeholder="Buscar placa, modelo, cor ou RENAVAM..." autocomplete="off" />
+                        </div>
+                        <select id="filtroMarcaCarros" aria-label="Filtrar por marca">
+                            <option value="">Todas as marcas</option>
+                        </select>
+                        <select id="filtroSituacaoCarros" aria-label="Filtrar pela situação">
+                            <option value="FROTA">Na frota</option>
+                            <option value="Em uso">Em uso</option>
+                            <option value="Em manutenção">Em manutenção</option>
+                            <option value="Vendido">Vendidos</option>
+                            <option value="Baixado">Baixados</option>
+                            <option value="">Todas as situações</option>
+                        </select>
+                        <div class="estoque-info">
+                            <i class="fa-solid fa-car"></i>
+                            <span>Listados:</span>
+                            <strong id="carrosListados">0</strong>
+                        </div>
+                    </div>
+
+                    <div id="barraSelecaoCarros" class="barra-selecao" hidden>
+                        <span id="carrosSelecionadosQtd"></span>
+                        <button type="button" class="btn-secondary btn-small" onclick="mudarSituacaoSelecionados()">
+                            <i class="fa-solid fa-pen"></i> Mudar situação
+                        </button>
+                        <button type="button" class="btn-secondary btn-small btn-excluir-texto" onclick="excluirCarros([...carrosSelecionados])">
+                            <i class="fa-solid fa-trash-can"></i> Excluir selecionados
+                        </button>
+                        <button type="button" class="btn-secondary btn-small" onclick="limparSelecaoCarros()">Limpar seleção</button>
+                    </div>
+
+                    <div class="table-area">
+                        <table class="inventory-table carros-tabela">
+                            <thead>
+                                <tr>
+                                    <th class="col-check somente-gestao">
+                                        <input type="checkbox" id="selecionarTodosCarros" aria-label="Selecionar todos" onchange="alternarTodosCarros(this.checked)" />
+                                    </th>
+                                    <th>Carro</th>
+                                    <th>Placa</th>
+                                    <th>RENAVAM</th>
+                                    <th class="col-custo num">Valor</th>
+                                    <th>Situação</th>
+                                    <th class="somente-gestao">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaCarros"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <datalist id="dlMarcasCarros"></datalist>
+                <datalist id="dlCoresCarros"></datalist>
+            </section>
+
+
+            <!-- =================================================
+         HISTÓRICO
+    ================================================== -->
+
+            <section id="historicoTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Histórico</h2>
+
+                        <p>Consulte as movimentações realizadas no inventário.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-area">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+
+                                    <th>Peça</th>
+
+                                    <th>Origem</th>
+
+                                    <th>Destino</th>
+
+                                    <th>Quantidade</th>
+
+                                    <th>Observação</th>
+
+                                    <th>Usuário</th>
+
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="historico"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- =================================================
+                 CUSTOS (Gestor/Administrador)
+            ================================================== -->
+            <section id="custosTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Custos</h2>
+                        <p>Valor de referência do que está no acervo: peças, rádios, fones e carros. Itens baixados, extraviados ou vendidos não entram.</p>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="carregarCustos()">
+                        <i class="fa-solid fa-rotate"></i> Atualizar
+                    </button>
+                </div>
+
+                <div class="custos-kpis">
+                    <div class="custo-kpi destaque">
+                        <strong id="custoTotal">—</strong>
+                        <span>Valor total do acervo</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoPecas">—</strong>
+                        <span id="custoPecasInfo">Peças</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoRadios">—</strong>
+                        <span id="custoRadiosInfo">Rádios</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoFones">—</strong>
+                        <span id="custoFonesInfo">Fones</span>
+                    </div>
+                    <div class="custo-kpi">
+                        <strong id="custoCarros">—</strong>
+                        <span id="custoCarrosInfo">Carros</span>
+                    </div>
+                    <div class="custo-kpi" id="custoPendenteKpi">
+                        <strong id="custoPendente">—</strong>
+                        <span id="custoPendenteInfo">Sem valor informado</span>
+                    </div>
+                </div>
+
+                <div class="card custos-card">
+                    <div class="form-section-title"><i class="fa-solid fa-layer-group"></i> Por categoria</div>
+                    <div class="table-area">
+                        <table class="inventory-table custos-tabela">
+                            <thead>
+                                <tr><th>Categoria</th><th class="num">Peças</th><th class="num">Valor total</th><th class="num">Média por peça</th><th>Participação</th></tr>
+                            </thead>
+                            <tbody id="custosCategoria"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="custos-duas">
+                    <div class="card custos-card">
+                        <div class="form-section-title"><i class="fa-solid fa-location-dot"></i> Por local</div>
+                        <div class="table-area">
+                            <table class="inventory-table custos-tabela">
+                                <thead>
+                                    <tr><th>Local</th><th class="num">Peças</th><th class="num">Valor total</th><th class="num">Média por peça</th><th>Participação</th></tr>
+                                </thead>
+                                <tbody id="custosLocal"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card custos-card">
+                        <div class="form-section-title"><i class="fa-solid fa-walkie-talkie"></i> Rádios por setor</div>
+                        <div class="table-area">
+                            <table class="inventory-table custos-tabela">
+                                <thead>
+                                    <tr><th>Setor</th><th class="num">Rádios</th><th class="num">Valor total</th><th class="num">Média por rádio</th><th>Participação</th></tr>
+                                </thead>
+                                <tbody id="custosRadios"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card custos-card" id="custosPendentesCard">
+                    <div class="form-section-title"><i class="fa-solid fa-pen-to-square"></i> Falta informar o valor</div>
+                    <p class="custos-ajuda">Digite o valor de referência por peça e clique em salvar. Ele vale para todas as unidades daquela peça, em todos os locais.</p>
+                    <div id="custosRadiosPendentes" class="custos-radios-pendentes" hidden></div>
+                    <div class="table-area">
+                        <table class="inventory-table custos-tabela">
+                            <thead>
+                                <tr><th>Peça</th><th>Categoria</th><th class="num">No acervo</th><th>Valor por peça (R$)</th></tr>
+                            </thead>
+                            <tbody id="custosSemValor"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================
+         ADMINISTRAÇÃO — USUÁRIOS / SUBSETORES / AUDITORIA
+    ================================================== -->
+            <section id="administracaoTela" class="tela">
+                <div class="page-title">
+                    <div>
+                        <h2>Administração</h2>
+                        <p>Gerencie usuários, locais, setores e acompanhe a rastreabilidade das ações.</p>
+                    </div>
+                </div>
+
+                <div id="cardPedidosAcesso" class="card card-pedidos-acesso" hidden>
+                    <div class="form-section-title">
+                        <i class="fa-solid fa-user-clock"></i> Pedidos de acesso
+                        <b id="contadorPedidosAcesso" class="menu-badge">0</b>
+                    </div>
+                    <p class="pedidos-ajuda">Pessoas que criaram a conta na tela de login. Confira se conhece a pessoa, escolha o perfil e libere.</p>
+                    <div class="table-area">
+                        <table class="inventory-table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Pedido em</th>
+                                    <th>Perfil</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaPedidosAcesso"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-grid">
+                    <div class="card">
+                        <div class="form-section-title"><i class="fa-solid fa-user-plus"></i> Criar usuário</div>
+                        <div class="grid-2 admin-form-grid">
+                            <div class="input-group">
+                                <label for="novoUsuarioNome">Nome</label
+                                ><input id="novoUsuarioNome" type="text" placeholder="Nome completo" />
+                            </div>
+                            <div class="input-group">
+                                <label for="novoUsuarioEmail">E-mail</label
+                                ><input id="novoUsuarioEmail" type="email" placeholder="usuario@empresa.com" />
+                            </div>
+                            <div class="input-group">
+                                <label for="novoUsuarioSenha">Senha inicial</label
+                                ><input id="novoUsuarioSenha" type="password" minlength="10" placeholder="Mínimo 10 caracteres, com letras e números" />
+                            </div>
+                            <div class="input-group">
+                                <label for="novoUsuarioPerfil">Perfil</label>
+                                <select id="novoUsuarioPerfil">
+                                    <option value="consulta">Consulta</option>
+                                    <option value="operacional">Operacional</option>
+                                    <option value="gestor">Gestor</option>
+                                    <option value="administrador">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="criarUsuario()">
+                                <i class="fa-solid fa-user-plus"></i> Criar usuário
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="form-section-title"><i class="fa-solid fa-users"></i> Usuários cadastrados</div>
+                        <div class="table-area">
+                            <table class="inventory-table admin-table tabela-usuarios">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>E-mail</th>
+                                        <th>Perfil</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaUsuariosAdmin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="form-section-title"><i class="fa-solid fa-sitemap"></i> Criar setor</div>
+                        <div class="grid-2 admin-form-grid">
+                            <div class="input-group">
+                                <label for="adminSubsetorLocal">Local</label
+                                ><select id="adminSubsetorLocal">
+                                    <option value="">Selecione o local</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="adminSubsetorNome">Nome do subsetor</label
+                                ><input id="adminSubsetorNome" type="text" placeholder="Ex.: RH" />
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="criarSubsetor()">
+                                <i class="fa-solid fa-plus"></i> Criar setor
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="form-section-title"><i class="fa-solid fa-list-check"></i> Setores ativos</div>
+                        <div class="table-area">
+                            <table class="inventory-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Local</th>
+                                        <th>Setor</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaSubsetoresAdmin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="form-section-title admin-card-titulo">
+                            <span><i class="fa-solid fa-location-dot"></i> Locais</span>
+                            <button type="button" class="btn-primary btn-small" onclick="novoLocal()">
+                                <i class="fa-solid fa-plus"></i> Novo local
+                            </button>
+                        </div>
+                        <div class="table-area">
+                            <table class="inventory-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Local</th>
+                                        <th>Unidades</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaLocaisAdmin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card admin-card-wide">
+                        <div class="form-section-title"><i class="fa-solid fa-screwdriver-wrench"></i> Ferramentas</div>
+                        <div class="admin-ferramenta">
+                            <div>
+                                <strong>Miniaturas das fotos</strong>
+                                <p>Cria versões leves das fotos já cadastradas, para as listas carregarem mais rápido no celular.
+                                   As fotos novas já ganham miniatura automaticamente.</p>
+                                <small id="statusMiniaturas"></small>
+                            </div>
+                            <button type="button" id="btnGerarMiniaturas" class="btn-secondary" onclick="gerarMiniaturasAntigas()">
+                                <i class="fa-solid fa-images"></i> Gerar miniaturas
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card admin-card-wide">
+                        <div class="form-section-title"><i class="fa-solid fa-lock"></i> Segurança</div>
+                        <div class="admin-ferramenta">
+                            <div>
+                                <strong>Integridade do histórico</strong>
+                                <p>Confere se algum registro da auditoria ou termo assinado foi alterado ou apagado
+                                   direto no banco. Cada registro carrega um código ligado ao anterior: qualquer
+                                   mudança quebra a corrente e aparece aqui.</p>
+                                <div id="statusIntegridade" class="integridade-status"></div>
+                            </div>
+                            <button type="button" id="btnVerificarIntegridade" class="btn-secondary" onclick="verificarIntegridade()">
+                                <i class="fa-solid fa-shield-halved"></i> Verificar agora
+                            </button>
+                        </div>
+                        <div class="admin-ferramenta admin-ferramenta-separada">
+                            <div>
+                                <strong>Cópia de segurança</strong>
+                                <p>Baixa um arquivo com todos os dados do sistema (peças, locais, setores, histórico,
+                                   auditoria, rádios e termos). O plano gratuito do Supabase não guarda cópias:
+                                   baixe uma por semana e guarde fora do computador.</p>
+                                <small id="statusCopia"></small>
+                            </div>
+                            <button type="button" id="btnCopiaSeguranca" class="btn-secondary" onclick="baixarCopiaSeguranca()">
+                                <i class="fa-solid fa-download"></i> Baixar cópia
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card admin-card-wide">
+                        <div class="form-section-title"><i class="fa-solid fa-shield-halved"></i> Auditoria de ações</div>
+                        <div class="table-area">
+                            <table class="inventory-table admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Usuário</th>
+                                        <th>Ação</th>
+                                        <th>Descrição</th>
+                                        <th>Detalhes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaAuditoria"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- =====================================================
+     MODAL FOTO
+===================================================== -->
+
+        <div id="modalFoto" class="visor-foto" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+            <div class="visor-topo">
+                <span id="visorLegenda" class="visor-legenda"></span>
+                <div class="visor-botoes">
+                    <button type="button" id="visorZoom" class="visor-botao" onclick="alternarZoomFoto()" aria-label="Aproximar" title="Aproximar">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    </button>
+                    <button type="button" class="visor-botao" onclick="fecharModalFoto()" aria-label="Fechar" title="Fechar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="visorPalco" class="visor-palco">
+                <img id="imagemModal" src="" alt="Foto ampliada" draggable="false" />
+            </div>
+            <p id="visorDica" class="visor-dica">Toque na foto para aproximar</p>
+        </div>
+
+        <!-- =====================================================
+     SUPABASE
+===================================================== -->
+
+        <script src="supabase.js"></script>
+
+        <!-- =====================================================
+     APP
+===================================================== -->
+
+        <script src="app.js"></script>
+    </body>
 </html>
