@@ -94,7 +94,7 @@ function fromDb(r){const o={};for(const k in r)o[camel(k)]=r[k];return o}
 function toDb(o){const r={};for(const k in o){let v=o[k];if(v===undefined)continue;if(/Id$/.test(k)&&v==="")v=null;r[snake(k)]=v}return r}
 const novoId=()=>(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));
 const PAPEL_ROLE={logistica:"log",setor:"sol",leitura:"ver",campo:"campo",tv:"tv",oficina:"oficina"};
-const VERSAO=44;console.info("Facilities MC · versão "+VERSAO);
+const VERSAO=45;console.info("Facilities MC · versão "+VERSAO);
 const DOMINIO_USUARIOS=(CFG.dominioUsuarios||"campo.facilities-mc.com").toLowerCase();
 const paraEmail=v=>{v=String(v||"").trim().toLowerCase();return v.includes("@")?v:v+"@"+DOMINIO_USUARIOS};
 const usuarioDe=em=>{em=String(em||"");return em.toLowerCase().endsWith("@"+DOMINIO_USUARIOS)?em.split("@")[0]:""};
@@ -565,6 +565,7 @@ function renderPainel(){
     <div class="field"><label for="fLoc">Unidade (origem ou destino)</label><select id="fLoc">${opts(ativos(S.locais),S.f.local,"Todas as unidades")}</select></div>
   </div>`;
   if(L){app.innerHTML=h+L;bindPainel();return}
+  h+=diaQuadroHTML(S.os.filter(o=>(!S.f.setor||o.setorId===S.f.setor)&&(!S.f.local||o.origemId===S.f.local||o.destinoId===S.f.local)),S.pdia||hojeK(),false,"#ordens");
 
   h+=`<div class="kpis">
     ${kpi("OS no período",val.length,"",canc?canc+" cancelada"+(canc>1?"s":""):"Sem cancelamentos")}
@@ -674,6 +675,7 @@ function bindPainel(){
   $("#fSet").onchange=e=>{S.f.setor=e.target.value;sv();renderPainel()};
   $("#fLoc").onchange=e=>{S.f.local=e.target.value;sv();renderPainel()};
   const ex=$("#exp"); if(ex){ ex.onclick=()=>exportCSV(); }
+  bindDiaQuadro(renderPainel,(k,c)=>{Object.assign(S.lf,{dia:k,dcat:c,q:"",setor:S.f.setor||"",local:S.f.local||""})});bindOpen();
 }
 async function exportCSV(listArg,suf){
   const list=Array.isArray(listArg)?listArg:S.os.filter(inPainel);
@@ -687,13 +689,74 @@ async function exportCSV(listArg,suf){
   a.href=url;a.download="logistica-os-"+(suf||dayKey(new Date()))+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
+/* =====================================================================
+   ORDENS DO DIA · o que estava a fazer, em execução, feito e cancelado
+   num dia escolhido (logística, manutenção e frota)
+   ===================================================================== */
+const hojeK=()=>dayKey(new Date());
+const dK=iso=>iso?dayKey(iso):"";
+const DIA_CATS=[["tudo","Tudo do dia"],["fazer","A fazer"],["exec","Em execução"],["feita","Feitas"],["canc","Canceladas"]];
+// k = "AAAA-MM-DD". Devolve "fazer" | "exec" | "feita" | "canc" | null
+function diaCat(x,k,man){
+  const st=x.status,hoje=hojeK();
+  if(st==="cancelada")return dK(x.canceladoEm||x.atualizadoEm)===k?"canc":null;
+  const ini=dK(x.iniciadoEm),fim=st==="concluida"?dK(x.concluidoEm):"";
+  if(fim&&fim===k)return "feita";
+  if(fim&&fim<k)return null;
+  const rodando=man?["em_execucao","aguardando"].includes(st):st==="em_rota";
+  if(ini&&ini<=k)return k<=hoje?"exec":null;
+  if(!ini&&rodando&&k===hoje)return "exec";
+  if(k>hoje)return dK(x.agendadoPara)===k?"fazer":null;
+  const pediu=dK(man?x.criadoEm:(x.solicitadoEm||x.criadoEm));
+  if(dK(x.agendadoPara)===k||(pediu===k&&(!x.agendadoPara||dK(x.agendadoPara)<=k)))return "fazer";
+  // hoje também aparecem as pendentes de dias anteriores que ainda não começaram
+  if(k===hoje&&!fim&&!rodando){
+    if(man)return st==="aberto"||(st==="agendada"&&(!x.agendadoPara||dK(x.agendadoPara)<=k))||(MABERTOS.includes(st)&&isFinite(prazoM(x))&&dayKey(new Date(prazoM(x)))<=k)?"fazer":null;
+    return st==="registrada"||(st==="agendada"&&(!x.agendadoPara||dK(x.agendadoPara)<k))?"fazer":null}
+  return null}
+function diaNome(k){const [Y,M,D]=k.split("-").map(Number);const d=new Date(Y,M-1,D);const h=hojeK(),on=dayKey(new Date(Date.now()-DIA_MS)),am=dayKey(new Date(Date.now()+DIA_MS));
+  const sem=d.toLocaleDateString("pt-BR",{weekday:"long"});return (k===h?"Hoje":k===on?"Ontem":k===am?"Amanhã":sem.charAt(0).toUpperCase()+sem.slice(1))+", "+d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}
+const diaMais=(k,n)=>{const [Y,M,D]=k.split("-").map(Number);return dayKey(new Date(Y,M-1,D+n,12))};
+// barra de escolha do dia (listas): Todos os dias · Hoje · Ontem · data
+function diaBarHTML(p,dia){return `<div class="diab" role="group" aria-label="Dia"><span class="diab-l">Dia</span>
+  <button type="button" class="chip" data-${p}dia="" aria-pressed="${!dia}">Todos os dias</button>
+  <button type="button" class="chip" data-${p}dia="${hojeK()}" aria-pressed="${dia===hojeK()}">Hoje</button>
+  <button type="button" class="chip" data-${p}dia="${diaMais(hojeK(),-1)}" aria-pressed="${dia===diaMais(hojeK(),-1)}">Ontem</button>
+  <span class="diab-d"><button type="button" class="diab-n" data-${p}dia="${dia?diaMais(dia,-1):diaMais(hojeK(),-1)}" aria-label="Dia anterior">‹</button><input type="date" id="${p}DiaIn" value="${esc(dia||"")}" aria-label="Escolher o dia"><button type="button" class="diab-n" data-${p}dia="${dia?diaMais(dia,1):hojeK()}" aria-label="Dia seguinte">›</button></span>
+  ${dia?`<span class="diab-t">${esc(diaNome(dia))}</span>`:""}</div>`}
+function bindDiaBar(p,set){$$(`[data-${p}dia]`).forEach(b=>b.onclick=()=>set(b.dataset[p+"dia"]));const i=$("#"+p+"DiaIn");if(i)i.onchange=()=>set(i.value||"")}
+function diaSegsHTML(p,L,k,cat,man){const c={tudo:0,fazer:0,exec:0,feita:0,canc:0};L.forEach(x=>{const d=diaCat(x,k,man);if(d){c[d]++;c.tudo++}});
+  return `<div class="seg" role="group" aria-label="Situação no dia">${DIA_CATS.map(([v,l])=>`<button type="button" data-${p}dcat="${v}" aria-pressed="${(cat||"tudo")===v}">${l}<span class="c num">${c[v]}</span></button>`).join("")}</div>`}
+const DIA_ORD={exec:0,fazer:1,feita:2,canc:3};
+function ordenaDia(L,k,man){return L.slice().sort((a,b)=>DIA_ORD[diaCat(a,k,man)]-DIA_ORD[diaCat(b,k,man)]||(T(a.concluidoEm||a.iniciadoEm||a.agendadoPara||a.criadoEm)||0)-(T(b.concluidoEm||b.iniciadoEm||b.agendadoPara||b.criadoEm)||0))}
+// quadro "Ordens do dia" nos painéis
+function diaQuadroHTML(L,k,man,verHref){
+  const g={fazer:[],exec:[],feita:[],canc:[]};L.forEach(x=>{const d=diaCat(x,k,man);if(d)g[d].push(x)});
+  Object.keys(g).forEach(c=>g[c]=ordenaDia(g[c],k,man));
+  const hora=(x,c)=>c==="feita"?"Feita "+fHora(x.concluidoEm):c==="exec"?(x.iniciadoEm?"Desde "+(dK(x.iniciadoEm)===k?fHora(x.iniciadoEm):fDH(x.iniciadoEm)):"Em andamento"):c==="canc"?"Cancelada":x.agendadoPara&&dK(x.agendadoPara)===k?"Às "+fHora(x.agendadoPara):x.agendadoPara&&dK(x.agendadoPara)<k?"Era "+fDH(x.agendadoPara):"Sem horário";
+  const late=x=>man?mAtrasada(x):atrasada(x);
+  const linha=(x,c)=>`<button type="button" class="dia-r${c==="fazer"&&late(x)?" atr":""}" ${man?"data-mopen":"data-open"}="${esc(x.id)}"><span class="dia-c num">${esc(man?codM(x):codigo(x))}</span><span class="dia-x"><b>${esc(man?tituloM(x):rotaTxt(x))}</b><small>${esc(man?ondeM(x):itensResumo(x))}</small></span><span class="dia-h"><b class="num">${esc(hora(x,c))}</b><small>${esc(man?(x.status==="aberto"?"Aguardando triagem":executorTxt(x)):(nomeEquipe(x.equipeIds)||"Sem equipe"))}</small>${c==="fazer"&&late(x)?`<i>Atrasada</i>`:c==="exec"&&x.status==="aguardando"?`<i class="w">Pausada</i>`:""}</span></button>`;
+  const col=(c,t,cls)=>`<div class="dia-col ${cls}"><h3>${t}<span class="num">${g[c].length}</span></h3>${g[c].length?g[c].slice(0,8).map(x=>linha(x,c)).join("")+(g[c].length>8?`<a class="dia-mais" href="${verHref}" data-diacat="${c}">Ver as ${g[c].length}</a>`:""):`<p class="dia-v">${{fazer:"Nada a fazer",exec:"Nada em execução",feita:"Nada feito ainda"}[c]}</p>`}</div>`;
+  const tot=g.fazer.length+g.exec.length+g.feita.length;
+  return `<section class="card dia-q"><div class="card-h"><h2>Ordens do dia</h2><span class="sub">${plural(tot,"ordem","ordens")}${g.canc.length?" · "+plural(g.canc.length,"cancelada"):""}</span></div><div class="card-b">
+    <div class="dia-nav"><button type="button" class="btn sm" data-pdia="${diaMais(k,-1)}" aria-label="Dia anterior">‹</button><input type="date" id="pDiaIn" value="${esc(k)}" aria-label="Escolher o dia"><button type="button" class="btn sm" data-pdia="${diaMais(k,1)}" aria-label="Dia seguinte">›</button>${k!==hojeK()?`<button type="button" class="btn sm" data-pdia="${hojeK()}">Hoje</button>`:""}<b class="dia-nm">${esc(diaNome(k))}</b><a class="btn sm ghost" href="${verHref}" data-diacat="tudo">Ver na lista</a></div>
+    <div class="dia-cols">${col("fazer",k<hojeK()?"Programadas":"A fazer","fz")}${col("exec","Em execução","ex")}${col("feita","Feitas","ft")}</div></div></section>`}
+// liga o quadro do painel: troca de dia e "ver na lista"
+function bindDiaQuadro(redraw,abrirLista){
+  $$("[data-pdia]").forEach(b=>b.onclick=()=>{S.pdia=b.dataset.pdia;redraw()});
+  const i=$("#pDiaIn");if(i)i.onchange=()=>{S.pdia=i.value||hojeK();redraw()};
+  $$("[data-diacat]").forEach(a=>a.addEventListener("click",()=>abrirLista(S.pdia||hojeK(),a.dataset.diacat)));
+}
+
 /* ---------- ORDENS ---------- */
 function filtraLista(){
   const f=S.lf,q=f.q.trim().toLowerCase();
   return S.os.filter(o=>{
+    if(f.dia){const c=diaCat(o,f.dia,false);if(!c||(f.dcat&&f.dcat!=="tudo"&&c!==f.dcat))return false}
+    else{
     if(f.status==="abertas"&&!ABERTOS.includes(o.status))return false;
     if(f.status==="atrasadas"&&!atrasada(o))return false;
-    if(["em_rota","concluida","cancelada","registrada","agendada"].includes(f.status)&&o.status!==f.status)return false;
+    if(["em_rota","concluida","cancelada","registrada","agendada"].includes(f.status)&&o.status!==f.status)return false;}
     if(f.setor&&o.setorId!==f.setor)return false;
     if(f.tipo&&o.tipo!==f.tipo)return false;
     if(f.local&&o.origemId!==f.local&&o.destinoId!==f.local)return false;
@@ -717,7 +780,8 @@ function renderOrdens(){
   const segs=[["abertas","Em aberto"],["atrasadas","Atrasadas"],["registrada","Registradas"],["agendada","Agendadas"],["em_rota","Em rota"],["concluida","Concluídas"],["cancelada","Canceladas"],["todas","Todas"]];
   const cnt=k=>k==="todas"?S.os.length:k==="abertas"?S.os.filter(o=>ABERTOS.includes(o.status)).length:k==="atrasadas"?S.os.filter(atrasada).length:S.os.filter(o=>o.status===k).length;
   let h=`<div class="head"><div><h1>Ordens de <em>serviço</em></h1><p>Todas as movimentações registradas pela logística, da solicitação à entrega com foto.</p></div>${isLog()?`<div class="act"><a class="btn pri" href="#nova">Nova OS</a></div>`:""}</div>${banner()}
-  <div class="seg" role="group" aria-label="Situação">${segs.map(([k,l])=>`<button type="button" data-seg="${k}" aria-pressed="${f.status===k}">${l}<span class="c num">${S.loaded.os||S.demo?cnt(k):""}</span></button>`).join("")}</div>
+  ${diaBarHTML("l",f.dia)}
+  ${f.dia?diaSegsHTML("l",S.os,f.dia,f.dcat,false):`<div class="seg" role="group" aria-label="Situação">${segs.map(([k,l])=>`<button type="button" data-seg="${k}" aria-pressed="${f.status===k}">${l}<span class="c num">${S.loaded.os||S.demo?cnt(k):""}</span></button>`).join("")}</div>`}
   <div class="filters">
     <div class="field grow"><label for="lq">Buscar</label><input type="search" id="lq" placeholder="Número, solicitante, item, local, equipe…" value="${esc(f.q)}"></div>
     <details class="fx" id="fx"${f.more||window.innerWidth>760?" open":""}><summary class="btn sm">Filtros${(f.setor||f.local||f.tipo)?" ativos":""}</summary><div class="fx-in">
@@ -727,14 +791,16 @@ function renderOrdens(){
   </div></details></div>`;
   if(L){app.innerHTML=h+L;bindOrdens();return}
   let list=filtraLista();
-  if(["abertas","atrasadas","registrada","agendada","em_rota"].includes(f.status)) list.sort((a,b)=>(T(a.agendadoPara)||9e15)-(T(b.agendadoPara)||9e15));
+  if(f.dia) list=ordenaDia(list,f.dia,false);
+  else if(["abertas","atrasadas","registrada","agendada","em_rota"].includes(f.status)) list.sort((a,b)=>(T(a.agendadoPara)||9e15)-(T(b.agendadoPara)||9e15));
   if(!S.os.length) h+=`<div class="empty"><h3>Nenhuma OS registrada ainda</h3><p>Cada pedido que chegar à logística, por WhatsApp, telefone ou pessoalmente, vira uma OS aqui.${isLog()?' <a href="#nova">Registrar a primeira</a>.':""}</p></div>`;
-  else if(!list.length) h+=`<div class="empty"><h3>Nenhuma OS com esses filtros</h3><p>Ajuste a situação, o setor ou a busca.</p></div>`;
+  else if(!list.length) h+=`<div class="empty"><h3>Nenhuma OS com esses filtros</h3><p>${f.dia?"Nada nesta situação em "+esc(diaNome(f.dia).toLowerCase())+". Escolha outro dia ou Todos os dias.":"Ajuste a situação, o setor ou a busca."}</p></div>`;
   else h+=`<div class="list">${list.slice(0,300).map(rowHTML).join("")}</div>${list.length>300?`<p style="color:var(--mute);margin-top:10px">Mostrando 300 de ${list.length}. Use a busca ou os filtros para refinar.</p>`:""}`;
   app.innerHTML=h;bindOrdens();
 }
 function bindOrdens(){
   $$("[data-seg]").forEach(b=>b.onclick=()=>{S.lf.status=b.dataset.seg;renderOrdens()});
+  bindDiaBar("l",v=>{S.lf.dia=v;if(!v)S.lf.dcat="tudo";renderOrdens()});$$("[data-ldcat]").forEach(b=>b.onclick=()=>{S.lf.dcat=b.dataset.ldcat;renderOrdens()});
   let tm;$("#lq").oninput=e=>{clearTimeout(tm);const v=e.target.value;tm=setTimeout(()=>{S.lf.q=v;renderOrdens()},220)};
   $("#fx").ontoggle=e=>{S.lf.more=e.target.open};
   $("#lSet").onchange=e=>{S.lf.setor=e.target.value;renderOrdens()};
@@ -1897,10 +1963,12 @@ const executorOk=X=>X.executor==="terceiro"?!!X.prestadorId:true;
 function filtraM(){
   const f=S.mlf,q=f.q.trim().toLowerCase();
   return manInfra().filter(m=>{
+    if(f.dia){const c=diaCat(m,f.dia,true);if(!c||(f.dcat&&f.dcat!=="tudo"&&c!==f.dcat))return false}
+    else{
     if(f.status==="novos"&&m.status!=="aberto")return false;
     if(f.status==="abertas"&&!MABERTOS.includes(m.status))return false;
     if(f.status==="atrasadas"&&!mAtrasada(m))return false;
-    if(["agendada","em_execucao","aguardando","concluida","cancelada"].includes(f.status)&&m.status!==f.status)return false;
+    if(["agendada","em_execucao","aguardando","concluida","cancelada"].includes(f.status)&&m.status!==f.status)return false;}
     if(f.local&&m.localId!==f.local)return false;
     if(f.cat&&m.categoria!==f.cat)return false;
     if(f.tipo&&m.tipo!==f.tipo)return false;
@@ -1924,7 +1992,8 @@ function renderMOrdens(){
   const L=manInfra(),nFr=S.manutencoes.length-L.length;
   const cnt=k=>k==="todas"?L.length:k==="novos"?L.filter(m=>m.status==="aberto").length:k==="abertas"?L.filter(m=>MABERTOS.includes(m.status)).length:k==="atrasadas"?L.filter(mAtrasada).length:L.filter(m=>m.status===k).length;
   let h=`<div class="head"><div><h1>Chamados e <em>OS</em></h1><p>Chamados abertos pelos setores e ordens de manutenção corretiva e preventiva, da triagem à conclusão com foto.</p></div>${isMan()?`<div class="act"><a class="btn pri" href="#m-nova">Nova OS de manutenção</a></div>`:""}</div>${banner()}${avisoSQL()}
-  <div class="seg" role="group" aria-label="Situação">${segs.map(([k,l])=>`<button type="button" data-mseg="${k}" aria-pressed="${f.status===k}">${l}<span class="c num">${cnt(k)}</span></button>`).join("")}</div>
+  ${diaBarHTML("m",f.dia)}
+  ${f.dia?diaSegsHTML("m",L,f.dia,f.dcat,true):`<div class="seg" role="group" aria-label="Situação">${segs.map(([k,l])=>`<button type="button" data-mseg="${k}" aria-pressed="${f.status===k}">${l}<span class="c num">${cnt(k)}</span></button>`).join("")}</div>`}
   <div class="filters">
     <div class="field grow"><label for="mq">Buscar</label><input type="search" id="mq" placeholder="Número, problema, local, equipamento, técnico…" value="${esc(f.q)}"></div>
     <details class="fx" id="mfx"${f.more||window.innerWidth>760?" open":""}><summary class="btn sm">Filtros${(f.local||f.cat||f.tipo)?" ativos":""}</summary><div class="fx-in">
@@ -1934,16 +2003,18 @@ function renderMOrdens(){
   </div></details></div>`;
   if(!S.demo&&!S.loaded.manutencoes&&!faltaMan()){app.innerHTML=h+`<div class="empty"><h3>Carregando manutenções…</h3></div>`;bindMOrdens();return}
   let list=filtraM();
-  if(f.status!=="concluida"&&f.status!=="cancelada"&&f.status!=="todas") list.sort((a,b)=>({urgente:0,alta:1,normal:2,baixa:3}[a.prioridade]-{urgente:0,alta:1,normal:2,baixa:3}[b.prioridade])||prazoM(a)-prazoM(b));
+  if(f.dia) list=ordenaDia(list,f.dia,true);
+  else if(f.status!=="concluida"&&f.status!=="cancelada"&&f.status!=="todas") list.sort((a,b)=>({urgente:0,alta:1,normal:2,baixa:3}[a.prioridade]-{urgente:0,alta:1,normal:2,baixa:3}[b.prioridade])||prazoM(a)-prazoM(b));
   else list.sort((a,b)=>T(b.criadoEm)-T(a.criadoEm));
   if(nFr&&isFrota()) h+=`<p class="hint" style="margin:0 0 12px">${plural(nFr,"OS de veículo fica","OS de veículo ficam")} em <a href="#f-os">Frota › OS da frota</a>.</p>`;
   if(!L.length) h+=`<div class="empty"><h3>Nenhuma manutenção registrada ainda</h3><p>Os chamados dos setores aparecem aqui assim que são abertos.${isMan()?' Você também pode <a href="#m-nova">registrar uma OS</a> ou criar um <a href="#m-prev">plano preventivo</a>.':""}</p></div>`;
-  else if(!list.length) h+=`<div class="empty"><h3>Nada com esses filtros</h3><p>${f.status==="novos"?"Nenhum chamado esperando triagem.":"Ajuste a situação, o local ou a busca."}</p></div>`;
+  else if(!list.length) h+=`<div class="empty"><h3>Nada com esses filtros</h3><p>${f.dia?"Nada nesta situação em "+esc(diaNome(f.dia).toLowerCase())+". Escolha outro dia ou Todos os dias.":f.status==="novos"?"Nenhum chamado esperando triagem.":"Ajuste a situação, o local ou a busca."}</p></div>`;
   else h+=`<div class="list">${list.slice(0,300).map(mRowHTML).join("")}</div>`;
   app.innerHTML=h;bindMOrdens();
 }
 function bindMOrdens(){
   $$("[data-mseg]").forEach(b=>b.onclick=()=>{S.mlf.status=b.dataset.mseg;renderMOrdens()});
+  bindDiaBar("m",v=>{S.mlf.dia=v;if(!v)S.mlf.dcat="tudo";renderMOrdens()});$$("[data-mdcat]").forEach(b=>b.onclick=()=>{S.mlf.dcat=b.dataset.mdcat;renderMOrdens()});
   let tm;$("#mq").oninput=e=>{clearTimeout(tm);const v=e.target.value;tm=setTimeout(()=>{S.mlf.q=v;renderMOrdens()},220)};
   $("#mfx").ontoggle=e=>{S.mlf.more=e.target.open};
   $("#mLocF").onchange=e=>{S.mlf.local=e.target.value;renderMOrdens()};
@@ -2501,6 +2572,7 @@ function renderMPainel(){
   <div class="filters"><div class="field"><label for="mfPer">Período</label><select id="mfPer">${optsS(perOpts,S.mf.periodo)}</select></div>
     <div class="field"><label for="mfLoc">Local</label><select id="mfLoc">${opts(ativos(S.locais).filter(l=>l.tipo!=="Fornecedor"),S.mf.local,"Todos")}</select></div>
     <div class="field"><label for="mfCat">Categoria</label><select id="mfCat"><option value="">Todas</option>${optsS(MCATS,S.mf.cat)}</select></div></div>
+  ${diaQuadroHTML(manInfra().filter(m=>(!S.mf.local||m.localId===S.mf.local)&&(!S.mf.cat||m.categoria===S.mf.cat)),S.pdia||hojeK(),true,"#m-ordens")}
   <div class="kpis">
     ${kpi("Chamados no período",val.length,"",prev.length?prev.length+" preventiva"+(prev.length>1?"s":"")+" ("+prevPct+"%)":"Nenhuma preventiva")}
     ${kpi("Aguardando triagem",novos.length,"","Chamados novos agora",novos.length?"alert":"")}
@@ -2538,6 +2610,7 @@ function bindMPainel(){
   const sv=()=>{try{localStorage.setItem("mc-man-f",JSON.stringify(S.mf))}catch(e){}};
   $("#mfPer").onchange=e=>{S.mf.periodo=e.target.value;sv();renderMPainel()};$("#mfLoc").onchange=e=>{S.mf.local=e.target.value;sv();renderMPainel()};$("#mfCat").onchange=e=>{S.mf.cat=e.target.value;sv();renderMPainel()};
   $("#mExp").onclick=()=>exportCSVM(manInfra().filter(inMPainel));
+  bindDiaQuadro(renderMPainel,(k,c)=>{Object.assign(S.mlf,{dia:k,dcat:c,q:"",local:S.mf.local||"",cat:S.mf.cat||""})});bindMOpen();
 }
 function exportCSVM(list){
   const cols=["OS","Situação","Atraso","Tipo","Categoria","Prioridade","Problema","Local","Onde","Setor","Equipamento","Patrimônio","Quem pediu","WhatsApp","Aberto em","Triagem em","Programado para","Prazo","Iniciado em","Concluído em","Atendimento (min)","Solução (min)","Executor","Técnicos / prestador","Aguardando","Diagnóstico","O que foi feito","Custo total (R$)","Itens de custo","Recebido por","Fotos"];
@@ -3768,8 +3841,9 @@ const manInfra=()=>S.manutencoes.filter(m=>!ehFrotaM(m));
 const osFrota=()=>S.manutencoes.filter(ehFrotaM);
 const F_OS_ST=[["abertas","Em aberto"],["aberto","Novas"],["agendada","Agendadas"],["em_execucao","Em execução"],["aguardando","Aguardando"],["concluida","Concluídas"],["cancelada","Canceladas"],["todas","Todas"]];
 function renderFOs(){
-  const st=S.fost||"abertas",vf=S.fveic||"";
-  const L=osFrota().filter(m=>(!vf||m.veiculoId===vf)&&(st==="todas"||(st==="abertas"?MABERTOS.includes(m.status):m.status===st))).sort((a,b)=>
+  const st=S.fost||"abertas",vf=S.fveic||"",fd=S.fdia||"",fc=S.fdcat||"tudo";
+  const L0=osFrota().filter(m=>(!vf||m.veiculoId===vf)&&(fd?(c=>c&&(fc==="tudo"||c===fc))(diaCat(m,fd,true)):(st==="todas"||(st==="abertas"?MABERTOS.includes(m.status):m.status===st))));
+  const L=fd?ordenaDia(L0,fd,true):L0.sort((a,b)=>
     (MABERTOS.includes(a.status)?0:1)-(MABERTOS.includes(b.status)?0:1)||(({urgente:0,alta:1,normal:2,baixa:3})[a.prioridade||"normal"]-({urgente:0,alta:1,normal:2,baixa:3})[b.prioridade||"normal"])||T(b.criadoEm)-T(a.criadoEm));
   const ab=osFrota().filter(m=>MABERTOS.includes(m.status)),atr=ab.filter(mAtrasada),nov=ab.filter(m=>m.status==="aberto");
   const mes=dayKey(new Date()).slice(0,7),concMes=osFrota().filter(m=>m.status==="concluida"&&String(m.concluidoEm||"").slice(0,7)===mes);
@@ -3784,11 +3858,13 @@ function renderFOs(){
       <div class="field" style="margin-top:10px"><label for="fonTit" class="req">O que precisa ser feito</label><input type="text" id="fonTit" maxlength="160" placeholder="Ex.: Trocar pastilhas de freio" value="${esc(F.tit||"")}"></div>
       <div class="field" style="margin-top:10px"><label for="fonD">Detalhes</label><textarea id="fonD" rows="3" placeholder="Opcional: sintomas, barulho, onde está o veículo, oficina sugerida…">${esc(F.d||"")}</textarea></div>
       <p class="err" id="fonErr" role="alert"></p><div class="actions"><button class="btn pri" type="button" id="fonOk">${F.id?"Salvar":"Abrir OS"}</button><button class="btn ghost" type="button" id="fonX">Cancelar</button></div></div></section>`;
-  h+=`<div class="filters"><div class="field"><label for="fosS">Situação</label><select id="fosS">${optsS(F_OS_ST,st)}</select></div>
+  h+=diaBarHTML("f",fd)+(fd?diaSegsHTML("f",osFrota().filter(m=>!vf||m.veiculoId===vf),fd,fc,true):"");
+  h+=`<div class="filters">${fd?"":`<div class="field"><label for="fosS">Situação</label><select id="fosS">${optsS(F_OS_ST,st)}</select></div>`}
     <div class="field"><label for="ffV">Veículo</label><select id="ffV"><option value="">Todos os veículos</option>${vs.map(v=>`<option value="${esc(v.id)}"${vf===v.id?" selected":""}>${esc(nomeV(v))}</option>`).join("")}</select></div></div>`;
-  h+=L.length?`<div class="list">${L.map(mRowHTML).join("")}</div>`:`<div class="empty"><h3>Nenhuma OS ${st==="abertas"?"em aberto":"nesta situação"}</h3><p>${st==="abertas"?"Tudo em dia com os veículos.":"Mude a situação ou o veículo."}</p></div>`;
+  h+=L.length?`<div class="list">${L.map(mRowHTML).join("")}</div>`:`<div class="empty"><h3>Nenhuma OS ${fd?"neste dia":st==="abertas"?"em aberto":"nesta situação"}</h3><p>${fd?"Escolha outro dia ou Todos os dias.":st==="abertas"?"Tudo em dia com os veículos.":"Mude a situação ou o veículo."}</p></div>`;
   app.innerHTML=h;bindMOpen(app);
-  $("#fosS").onchange=e=>{S.fost=e.target.value;renderFOs()};
+  const fss=$("#fosS");if(fss)fss.onchange=e=>{S.fost=e.target.value;renderFOs()};
+  bindDiaBar("f",v=>{S.fdia=v;if(!v)S.fdcat="tudo";renderFOs()});$$("[data-fdcat]").forEach(b=>b.onclick=()=>{S.fdcat=b.dataset.fdcat;renderFOs()});
   $("#ffV").onchange=e=>{S.fveic=e.target.value||null;renderFOs()};
   const nb=$("#fonB");if(nb)nb.onclick=()=>{S.fon=S.fon?null:{v:S.fveic||""};renderFOs();const t=$("#fonV");if(t)t.focus()};
   if(F){const lerF=()=>({v:$("#fonV").value,t:$("#fonT").value,p:$("#fonP").value,tit:$("#fonTit").value.trim(),d:$("#fonD").value.trim()});

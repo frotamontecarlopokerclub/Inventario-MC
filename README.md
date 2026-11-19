@@ -505,3 +505,8 @@ Cabeçalho em degradê marsala com a assinatura dourada, indicador "Ao vivo", in
 - **Nova OS no caminho:** o motorista cria a OS sozinho quando pedem outro serviço no trajeto: de onde e para onde (unidade cadastrada ou endereço escrito), o que levar, carga, quem pediu e telefone. Em rota, a OS já entra na rota e no mesmo veículo; sem rota, fica nas missões dele.
 - **Coordenação:** essas OS aparecem com o selo **"Criada no campo"**. Na OS, confira e toque em **Marcar como revisada**.
 - **TV da manutenção estilo painel de aeroporto:** quadro escuro com as colunas Prioridade, OS, Serviço, Local, Responsável, Prazo e Situação. As atrasadas ficam no topo e piscam; a lista vira de página sozinha a cada 12 segundos. Ao lado, as finalizadas das últimas 24 h; embaixo, um letreiro com o que está acontecendo agora.
+
+## Atualização 45 · Ordens do dia
+Não precisa rodar nada no Supabase.
+- **Painel da logística e Painel da manutenção:** novo quadro **Ordens do dia** no topo, em três colunas: **A fazer** (programadas ou pedidas no dia e, hoje, também as pendentes que ficaram de dias anteriores), **Em execução** e **Feitas**. Use ‹ e › para ir de um dia para outro, escolha a data no calendário ou toque em **Hoje**. Toque numa OS para abrir; **Ver na lista** abre a lista já filtrada naquele dia.
+- **Ordens (logística), Chamados e OS (manutenção) e OS da frota:** nova linha **Dia** com Todos os dias · Hoje · Ontem · calendário. Com um dia escolhido, as abas viram Tudo do dia · A fazer · Em execução · Feitas · Canceladas, com a contagem de cada uma.
