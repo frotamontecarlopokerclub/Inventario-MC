@@ -30,6 +30,8 @@ Não há instalação nem programação. São três contas gratuitas e cerca de 
 | `supabase/10_custos_gestao.sql` | Custos (km, hora da equipe, extras), orçamento por unidade e painel de Gestão |
 | `supabase/11_reposicao_pendencias.sql` | Valor de reposição e vida útil dos equipamentos (consertar ou trocar) |
 | `supabase/12_equipe_campo.sql` | Acesso da equipe de campo (usuário e senha, só as próprias missões) |
+| `supabase/13_setores_sem_andar.sql` | Junta os setores que só mudavam de andar (Jogo 2, 3, 4… → Jogo) e cria o "Juntar com…" |
+| `supabase/14_locais_setores_oficiais.sql` | Deixa locais e setores exatamente como a lista oficial (pode ser rodado sem o 13) |
 | `assets/qrcode.js` | Gerador das etiquetas com QR Code dos equipamentos |
 | `supabase/functions/enviar-whatsapp/index.ts` | Função do servidor que envia o WhatsApp automático |
 | `WHATSAPP-AUTOMATICO.md` | Passo a passo da Meta e do Supabase para o envio automático (opcional) |
@@ -54,7 +56,7 @@ Entrar no Supabase e na Vercel com o GitHub deixa tudo ligado com um único logi
 3. No menu da esquerda, abra **SQL Editor** e clique em **New query**.
 4. Abra o arquivo `supabase/01_estrutura.sql` no Bloco de Notas, copie tudo, cole no editor e clique em **Run**. Deve aparecer *Success. No rows returned*.
 5. Abra outra *New query*, faça o mesmo com `supabase/02_cadastros.sql` e clique em **Run**.
-6. Repita com `supabase/03_novidades.sql`, depois `supabase/04_km_whatsapp.sql` `supabase/05_solicitantes_whatsapp_auto.sql` `supabase/06_locais_permissoes.sql`, `supabase/07_setores_por_local.sql`, `supabase/08_manutencao.sql`, `supabase/09_acesso_por_area.sql`, `supabase/10_custos_gestao.sql`, `supabase/11_reposicao_pendencias.sql` e por fim `supabase/12_equipe_campo.sql`.
+6. Repita com `supabase/03_novidades.sql`, depois `supabase/04_km_whatsapp.sql` `supabase/05_solicitantes_whatsapp_auto.sql` `supabase/06_locais_permissoes.sql`, `supabase/07_setores_por_local.sql`, `supabase/08_manutencao.sql`, `supabase/09_acesso_por_area.sql`, `supabase/10_custos_gestao.sql`, `supabase/11_reposicao_pendencias.sql`, `supabase/12_equipe_campo.sql` e por fim `supabase/14_locais_setores_oficiais.sql` (o 13 é opcional: o 14 já faz o trabalho dele).
 7. Confira em **Table Editor**: devem aparecer as tabelas `os`, `pedidos`, `locais` e as outras, com os seus locais e setores já preenchidos.
 
 ## Etapa 3 · Ajustar o login no Supabase
@@ -290,3 +292,209 @@ Em **Cadastros → Usuários**, os acessos ficaram com nomes que dizem o que cad
 - **Solicitante**, **Somente leitura** e **Bloqueado** continuam iguais.
 
 Quem já estava como "Facilities · equipe" continua com o mesmo acesso, agora chamado Gestão. Mude para *Equipe de campo* quem deve só executar.
+
+## Atualização 15.2 · Tela de usuários reorganizada
+
+Em **Cadastros → Usuários**, cada pessoa agora tem um cartão, e os cartões ficam agrupados por tipo de acesso: *Aguardando liberação* (em destaque no topo), *Equipe de campo*, *Gestão*, *Solicitantes*, *Somente leitura* e *Bloqueados*. Cada cartão mostra só os campos daquele acesso:
+- **Equipe de campo:** quem é a pessoa no cadastro da equipe.
+- **Gestão:** a área (logística, manutenção ou as duas).
+- **Solicitante:** o setor e a permissão de cadastrar fornecedor.
+
+A explicação dos tipos de acesso fica em *Entenda os tipos de acesso*, e com mais de 6 contas aparece uma busca por nome.
+
+## Atualização 16 · Cadastrar na hora, dentro da OS
+
+Ao criar uma OS, no passo a passo ou no formulário completo, dá para cadastrar o que faltar sem sair da tela. O item cadastrado já fica escolhido na OS:
+- **Local:** no campo de busca do local, o primeiro botão da lista é *+ Cadastrar novo local* (nome, tipo, endereço e contato).
+- **Setor:** *+ Cadastrar setor*, com o nome e a unidade. Na manutenção, a unidade já vem marcada pelo local escolhido.
+- **Pessoa da equipe** (motorista, ajudante, técnico): *+ Cadastrar pessoa na equipe*, com nome, função e telefone. Aparece no passo *Quem vai?* da logística, em *Quem vai fazer?* da manutenção e na triagem.
+- **Veículo:** *+ Cadastrar veículo*, com nome, placa e tipo.
+- **Prestador terceirizado:** *+ Cadastrar prestador terceirizado*, com empresa, especialidade, telefone e contato.
+- **Solicitante:** basta digitar o nome e o WhatsApp de alguém novo. O sistema avisa *Solicitante novo* e cadastra ao criar a OS. A manutenção ganhou o passo *Quem pediu?* (opcional).
+
+Se o nome já existir, o sistema usa o cadastro que já existe em vez de duplicar. Os dados completos (custo por hora, custo por km, CNPJ…) continuam em Cadastros.
+
+**Como instalar:** no GitHub, envie `app.js`, `styles.css` e `README.md`. Não há nada para rodar no Supabase.
+
+## Atualização 17 · Setores sem andar
+
+**Um setor por local, sem andar:** *Jogo · M.C.*, *Bar · M.G.*, *Cozinha · M.C.*… O andar, a sala ou a mesa vão no campo **Observação** da OS (por exemplo: "3º andar, mesa de Omaha 5"), que sugere Térreo, 1º a 4º andar, Arena, Área VIP, Doca…
+
+**O script 13 faz a conversão sozinho**, local por local:
+- **M.C.:** Jogo (2, 3, 4 e Arena) → *Jogo*; Bar 2, 3, 4 e Arena → *Bar*; Caixa 2, 3, 4 e Arena → *Caixa*; Cozinha 1º a 4º → *Cozinha*; Decoração e Eventos (todos os andares) → *Decoração e Eventos*; Estacionamento (2) e (3) → *Estacionamento*; Estacionamento (Frota) → *Frota*; Sala de Segurança e Alojamento Segurança → *Segurança*; Estoque Central M.C. → *Estoque*; Recepção Arena → *Recepção*.
+- **M.G.:** Jogo (1 Andar) e (Vip) → *Jogo*; Bar, Caixa e Cozinha (1 Andar e Vip) → *Bar*, *Caixa* e *Cozinha*; Cozinha (Funcionários) e Refeitório (Funcionários) → *Refeitório*.
+- **Prédio Cardoso:** 2 Andar, 3 Andar e Térreo → *Administrativo*; Cozinha (2, 3 e Térreo) → *Cozinha*.
+- Resultado: de 72 para 43 setores. As OS, pedidos, chamados, equipamentos, usuários, solicitantes e rotas fixas antigos passam para o setor novo, sem perder histórico.
+
+**Juntar com…:** em **Cadastros → Setores** e **Cadastros → Locais**, a coordenação pode juntar um cadastro repetido com o certo. Tudo o que estava ligado ao repetido passa para o certo, e o repetido é apagado. Setores só se juntam com setores do mesmo local. A lista de locais aparece separada em Unidades e escritórios, Centros de distribuição, Residências e Fornecedores.
+
+**Cadastro rápido de setor:** recusa nomes com andar ("Jogo 3º andar") e lembra que o andar vai na observação.
+
+**Como instalar:** no Supabase, rode `supabase/13_setores_sem_andar.sql`. No GitHub, envie `app.js`, `styles.css`, `README.md` e o `.sql` dentro da pasta `supabase`.
+
+## Atualização 18 · Locais e setores oficiais
+
+O script `14_locais_setores_oficiais.sql` deixa o cadastro exatamente assim:
+
+| Local | Setores |
+|---|---|
+| Monte Carlo Poker Club (M.C.) | Jogo, A&B, Recepção, T.I., Administrativo, Financeiro, Manutenção, Segurança, Bombeiros, RH, Operações e Logística, Compras, Uniforme, Portaria, Estoque, Limpeza, Estacionamento, Eventos e Decoração, Controle de Acesso |
+| Mirage (M.G.) | Os mesmos 19 e mais Marketing |
+| Restaurante Doryo | Os mesmos 19 |
+| Escritório Central | Os mesmos 19 |
+| Escritório Guararapes, Casas do Chefe, Casas de Funcionários, Flats do Chefe | Sem setores |
+| Depósitos: CD 1, CD 2, Prédio da Cardoso, Depósito Descarte, Depósito Manutenção | Sem setores |
+
+O andar, a sala ou a mesa vão no campo **Observação** da OS.
+
+**O que acontece com o que já existe**
+- Locais com nome antigo são renomeados: *Residência da chefia* vira **Casas do Chefe**, *Residência de funcionário* vira **Casas de Funcionários** e *Prédio Cardoso de Melo* vira **Prédio da Cardoso**. Os que faltam são criados, sem endereço: preencha em Cadastros → Locais. Fornecedores não mudam.
+- Os setores antigos passam para os oficiais do mesmo local, levando as OS, pedidos, chamados, equipamentos, usuários e rotas fixas:
+  - Bar, Cozinha, Confeitaria e Refeitório → **A&B**;
+  - Caixa → **Jogo**;
+  - Valet e Garagem → **Estacionamento**;
+  - Brigada → **Bombeiros**;
+  - Frota → **Operações e Logística**;
+  - Mídia e Som → **T.I.**;
+  - Recursos Humanos → **RH**;
+  - Sala de Uniformes → **Uniforme**;
+  - Decoração e Eventos → **Eventos e Decoração**;
+  - os andares (Jogo 2, 3, 4, Arena…) viram um só.
+- *Disponível* e os setores do Prédio da Cardoso e do CD 1 deixam de existir. As OS ligadas a eles ficam sem setor, mas mantêm o local.
+- Setores criados por vocês que não estão na lista oficial são desativados: somem das listas e ficam no histórico.
+
+**Como instalar**
+1. No Supabase, no projeto do Facilities e com o tradutor desligado, rode `supabase/14_locais_setores_oficiais.sql`. Não dá para desfazer a junção dos setores.
+2. No GitHub, envie o pacote completo, **menos o `config.js`**.
+3. Em **Cadastros**, o selo deve mostrar **Versão 18**.
+
+## Atualização 19 · Só os locais oficiais
+- Rode `supabase/15_locais_somente_oficiais.sql` **depois do 14**. Ele junta "Residência 1/2/3… da chefia" em **Casas do Chefe**, as de funcionário em **Casas de Funcionários**, "Estoque Central M.C." no **Monte Carlo** (setor Estoque) e desativa qualquer outro local que não seja oficial nem fornecedor.
+- Os endereços das casas ficam todos juntos no endereço do local.
+- Em Cadastros → Setores, a lista agora vem separada por local.
+
+## Atualização 20 · Celular
+- Campos com letra de 16px no celular: o iPhone não dá mais zoom sozinho ao tocar num campo.
+- Telas mais compactas no celular (títulos, cartões, indicadores e listas).
+- O número da versão aparece também na tela de login.
+- `vercel.json` faz o navegador sempre buscar a versão nova; os arquivos são carregados com `?v=20`.
+- No site publicado, se a configuração não carregar, aparece "Não foi possível conectar" em vez do modo demonstração.
+
+## Atualização 21 · Frota
+- Rode `supabase/17_frota.sql` (depois do 16).
+- Novo menu **Frota** na logística: situação de cada veículo, alertas de conferência, troca de óleo e revisão.
+- Cadastro completo do veículo: marca, modelo, cor, ano, combustível, RENAVAM, chassi, uso (logística, traslado, escolta, particular do chefe), km inicial, intervalos de óleo e revisão (km e, se quiser, meses) e documento em PDF ou foto (arquivo privado).
+- Conferência semanal (prazo ajustável na tela Frota): óleo, água, vidros, travas, fechaduras, estepe, pneus e km. Item ruim abre na hora uma OS de manutenção (categoria Veículos, prioridade alta).
+- O km do veículo se atualiza pela conferência, pelos serviços lançados e pelo km final das rotas.
+- A equipe de campo vê no topo de "Minhas missões" os veículos que precisam de conferência.
+- O Painel da logística mostra o quadro "Frota · atenção" com o que está vencido ou perto de vencer.
+
+## Atualização 22 · Lavagem e higienização
+- Rode `supabase/18_lavagem.sql` (depois do 17).
+- Cada veículo tem o prazo de lavagem (padrão 7 dias) e de higienização interna (padrão 30 dias), em Frota → Editar cadastro.
+- Lançamento em Frota → "Registrar lavagem" (ou pelo botão "Lavagem" de cada veículo): lavagem externa, lavagem completa (vale como lavagem e higienização), higienização interna ou com ozônio/ar; data, valor, local, km e foto opcionais.
+- A equipe de campo vê no celular os veículos com lavagem pendente e pode registrar.
+- O painel e a frota mostram a limpeza atrasada, vencendo ou sem registro; o valor entra no total de serviços do veículo.
+
+## Atualização 23 · Frota como área própria
+- Rode `supabase/19_area_frota.sql` (depois do 18).
+- No topo, o seletor tem três áreas: **Logística · Manutenção · Frota**.
+- Menu da Frota: Painel (pendências, OS abertas dos veículos, custo por veículo e por tipo, km nas rotas, últimos registros), Veículos, Conferências, Lavagens, Serviços e custos (com exportação CSV) e Cadastros.
+- Novo acesso "Só frota" em Cadastros → Usuários. "Logística e frota" (antigo "Só logística") continua vendo a frota. "Todas as áreas" vê tudo.
+- O quadro da frota saiu do Painel da logística. O número no botão Frota mostra os itens vencidos ou atrasados.
+
+## Atualização 24 · Tipos de veículo
+- Tipos: Carro, Utilitário, Van, Caminhão 3/4, Caminhão toco, Moto, SUV, Caminhonete e Outro.
+
+## Atualização 25 · Ícone do app
+- Novo ícone para a tela do celular: emblema MC, FACILITIES e Logística · Frota · Manutenção (arquivos assets/icone-app-*.png).
+
+## Atualização 26 · Abertura mais confiável no celular
+- Se o celular abrir o app antes de a internet conectar, aparece "Sem conexão" e o sistema entra sozinho quando a conexão volta (antes caía no login).
+- Se o login voltar sozinho em segundo plano, a tela de login sai sozinha.
+- Carregamento com limite de tempo: se travar, aparece o aviso de conexão lenta ou a tela "Não foi possível abrir" com o detalhe do erro e o botão Recarregar.
+- Ao voltar de outro app, o iPhone não mostra mais uma tela antiga congelada.
+
+## Atualização 27 · Diagnóstico
+- Abra o endereço com ?diag=1 no fim (ou toque em "diagnóstico" na tela de login) para ver a versão, a sessão salva, o que carregou e os últimos erros. Tem o botão "Apagar login salvo e recarregar".
+
+## Atualização 28 · Diagnóstico passo a passo
+- Depois de abrir uma vez com ?diag=1, aparece o botão "Diagnóstico" em todas as telas, com cada passo da abertura e da abertura anterior. "Desligar diagnóstico" remove o botão.
+
+## Atualização 29 · Correção da tela misturada no celular
+- Causa: ao mudar o tamanho da tela (o iPhone faz isso ao recarregar, rolar e abrir o teclado), o sistema redesenhava o painel mesmo sem ninguém conectado, por cima da tela de login.
+- Agora só redesenha quando a largura muda (girar o celular) e nunca sem login.
+
+## Atualização 30 · OS de veículo só na Frota
+- Rode `supabase/20_os_da_frota.sql` (depois do 19).
+- Nova página "OS da frota" na área Frota: lista, nova OS, triagem, agendamento, equipe/terceiro, custos e conclusão (a mesma gaveta da manutenção).
+- A área Manutenção (infraestrutura) não mostra mais OS de veículo; a equipe "Só manutenção" não vê nem altera essas OS.
+- Conferência com item ruim e alertas de óleo/revisão abrem OS da frota.
+
+## Atualização 31 · Equipe = funcionários com login · "Estou ciente"
+- Rode `supabase/21_equipe_ciencia.sql` (depois do 20).
+- Ao liberar alguém como Equipe de campo, não precisa escolher a pessoa: o sistema usa a ficha dele, uma ficha sem login com o mesmo nome, ou cria a ficha sozinho (com a função escolhida).
+- Na OS, a equipe é escolhida entre todos os funcionários; quem ainda não tem login aparece marcado "sem acesso ao app".
+- No celular, a OS nova aparece como "Nova · confirme". A pessoa toca em "Estou ciente da missão" e só então aparece o botão para iniciar (o banco também exige).
+- Na OS, a coordenação vê quem já está ciente e quem falta. Quem sai da escala perde a ciência.
+
+## Atualização 32 · Demandas emergenciais
+- Rode `supabase/22_emergencias.sql` (depois do 21).
+- Celular da equipe: a tela inicial mostra só as missões, com um menu "Demanda emergencial" e "Veículos" (disponíveis e em uso; sem o carro particular do chefe).
+- Quem executa registra a emergência (logística, manutenção ou frota, conforme o acesso): quem pediu, por que é emergência, "vou fazer agora" ou "já fiz". A OS nasce no nome dela, ciente.
+- Painéis da logística, manutenção e frota: quadro de emergências (quantidade, % das OS, fora do horário, quem pediu, quem registrou) e avaliação: emergência de verdade / dava para programar / não era emergência.
+
+## Atualização 33 · Falar em vez de escrever
+- Na demanda emergencial, cada campo de texto tem o botão "Falar": a pessoa fala e o texto aparece escrito (soma ao que já estava). Onde o navegador não tem esse recurso, aparece a dica de usar o microfone do teclado do celular.
+
+## Atualização 34 · Microfone em todo o sistema
+- Todo campo de texto (Logística, Manutenção e Frota) tem o microfone: nos formulários, um ícone dentro do campo; nas telas do celular da equipe, o botão "Falar". Ficam sem microfone: placa, chassi, RENAVAM, telefone, e-mail, senha, números, valores e buscas.
+
+## Atualização 35 · Correção dos erros do console
+- Ícones do app agora ficam na raiz do site (icone-*.png), junto do app.js.
+- Rode `supabase/23_completar_banco.sql`: cria o que faltava (solicitantes, telefone dos usuários, aviso por WhatsApp) e mostra a conferência de tudo o que o sistema usa.
+
+## Atualização 36 · Lançamento mais simples
+OS de logística em 4 telas e de manutenção em 3. O microfone escuta uma frase e para sozinho (no máximo 20 segundos).
+
+## Atualização 37 · Controle de Eficiência
+**Rodar no Supabase:** `supabase/24_eficiencia.sql` (uma vez). No fim aparece uma conferência com 6 itens "OK".
+- **Veículo:** km por litro vazio/leve e com carga pesada, custo da troca de óleo e filtro, custo e duração dos pneus (Frota → Veículos → Editar cadastro).
+- **Combustível** (menu da Frota): lançar por quinzena os litros, o valor pago e o km do painel. O sistema mostra km/l real, % do esperado e R$ por km.
+- **OS de logística:** carga leve ou pesada.
+- **OS da frota feita por prestador:** ao programar, nasce sozinha a OS de logística "Levar veículo à oficina"; ao concluir, a OS "Buscar veículo na oficina". Na conclusão há o campo "Valor pago pelo serviço".
+- **Controle de Eficiência** (menu de todas as áreas): ranking de consumo dos veículos e ranking dos funcionários (missões, tempo médio, missão mais longa). A coordenação geral vê também o custo de cada missão (equipe + combustível + óleo + pneus + extras) e cadastra os salários. Os salários ficam protegidos no banco: só quem tem acesso a todas as áreas vê.
+
+## Atualização 38 · Lista da Manutenção
+Os números das abas de Chamados e OS passam a contar só o que aparece na lista; OS de veículo ficam em Frota › OS da frota.
+
+## Atualização 39 · TV e celular da manutenção
+**Rodar no Supabase:** `supabase/25_painel_manutencao.sql` (uma vez). No fim aparecem 5 itens "OK".
+- **Dois logins novos** (Cadastros › Usuários › Acesso):
+  - **TV da manutenção · só mostra:** abre direto o painel da TV com as OS a fazer (por prioridade), em execução (com quem está fazendo) e finalizadas nas últimas 24 h. Passou do prazo, pisca em vermelho. Não altera nada.
+  - **Celular da manutenção · equipe:** o celular do setor. A equipe toca na OS, escolhe quem vai fazer (especialistas aparecem primeiro), inicia, pausa e finaliza dizendo o que foi feito (foto opcional).
+- **Prazos pela prioridade**, contados da abertura: urgente 2 h · alta até 23h59 do mesmo dia · média até 23h59 do 2º dia seguinte · baixa até 23h59 do 3º dia seguinte.
+- **Especialidades** de cada pessoa (Cadastros › Equipe › Editar), podendo marcar várias.
+- Ao criar a OS, o gestor define a prioridade; a equipe não precisa ser escolhida (fica "Equipe da manutenção").
+- O gestor vê a mesma tela da TV no menu **Painel TV**.
+
+## Atualização 40 · Atualização automática
+As telas se atualizam sozinhas: na hora pelo tempo real do Supabase e, como reserva, a cada 30 segundos. Ao desbloquear o celular ou voltar para a aba, a tela também se atualiza. Quando entra OS ou pedido novo, aparece um aviso. O que está sendo digitado num formulário não é apagado.
+
+## Atualização 41 · Novo visual da TV da manutenção
+Cabeçalho em degradê marsala com a assinatura dourada, indicador "Ao vivo", indicadores no topo (a fazer, em execução, atrasadas, finalizadas e % no prazo), cartões com barra de prazo, iniciais de quem está fazendo e alerta piscando em vermelho no que passou do prazo.
+
+## Atualização 42 · Rotas da logística
+**Rodar no Supabase:** `supabase/26_rotas.sql` (uma vez). No fim aparecem 5 itens "OK".
+- **No celular do motorista**, a rota tem 4 passos: **Saí com o veículo** (checklist rápido de 6 itens + km), **Começar a rota** (marca as OS que vão juntas + km), **Terminei a rota** (km) e **Devolvi o veículo** (km; a hora é registrada sozinha). Dá para incluir outra OS no meio do caminho. Item ruim no checklist abre OS da frota sozinho.
+- Cada OS continua com as suas paradas, fotos e assinatura, sem pedir km.
+- **Custo:** o percurso da rota (km e horas da saída à devolução, combustível, óleo, pneus e equipe) é um só e é dividido entre as OS pela distância de cada uma. Assim o custo do dia não soma o mesmo percurso duas vezes.
+- **Cadastros › Distâncias:** km entre as unidades, usado na divisão. Sem a distância, divide pelo número de paradas.
+- **Menu Rotas** (Logística): as rotas de cada dia, com os horários, os km, as OS de cada rota, a parte de cada uma e o custo do dia.
+
+## Atualização 43 · Fotos mais leves
+**Rodar no Supabase:** `supabase/27_fotos_leves.sql` (uma vez). No fim aparecem 3 itens "OK".
+- Fotos novas guardadas em 1024 px e qualidade reduzida: cerca de 100 KB cada (antes passavam de 400 KB). No máximo 3 por etapa.
+- Foto só é obrigatória quando há problema: avaria ou falta relatada na entrega, item ruim no checklist de saída da rota ou no checklist da manutenção. Nos demais casos é opcional.
+- Comprovante da entrega final: nome e assinatura de quem recebeu (ou uma foto, se não der para assinar).
+- Cadastros › Regras › **Fotos antigas** (coordenação geral): apaga as fotos das OS encerradas há mais de 6 meses, mantendo histórico, textos e assinaturas.

@@ -1,17 +1,34 @@
 {
-  "name": "Inventário Central",
-  "short_name": "Inventário",
-  "description": "Inventário Central do Grupo Monte Carlo",
+  "name": "Facilities MC · Logística, Frota e Manutenção",
+  "short_name": "Facilities MC",
+  "description": "Ordens de serviço de logística, frota e manutenção do Grupo Monte Carlo.",
   "lang": "pt-BR",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#250504",
-  "theme_color": "#420804",
+  "background_color": "#0F0706",
+  "theme_color": "#250504",
   "icons": [
-    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icone-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icone-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    },
+    {
+      "src": "icone-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
