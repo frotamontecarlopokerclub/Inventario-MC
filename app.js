@@ -94,7 +94,7 @@ function fromDb(r){const o={};for(const k in r)o[camel(k)]=r[k];return o}
 function toDb(o){const r={};for(const k in o){let v=o[k];if(v===undefined)continue;if(/Id$/.test(k)&&v==="")v=null;r[snake(k)]=v}return r}
 const novoId=()=>(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)));
 const PAPEL_ROLE={logistica:"log",setor:"sol",leitura:"ver",campo:"campo",tv:"tv",oficina:"oficina"};
-const VERSAO=45;console.info("Facilities MC · versão "+VERSAO);
+const VERSAO=46;console.info("Facilities MC · versão "+VERSAO);
 const DOMINIO_USUARIOS=(CFG.dominioUsuarios||"campo.facilities-mc.com").toLowerCase();
 const paraEmail=v=>{v=String(v||"").trim().toLowerCase();return v.includes("@")?v:v+"@"+DOMINIO_USUARIOS};
 const usuarioDe=em=>{em=String(em||"");return em.toLowerCase().endsWith("@"+DOMINIO_USUARIOS)?em.split("@")[0]:""};
@@ -4465,7 +4465,7 @@ function renderMTv(){
     <img class="tv-logo" src="assets/logo-assinatura.svg" alt="Monte Carlo">
     <span class="tv-sep" aria-hidden="true"></span>
     <div class="tv-tit"><h1>Central de <em>Manutenção</em></h1><p>${esc((t=>t.charAt(0).toUpperCase()+t.slice(1))(agora.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})))}</p></div>
-    <div class="tv-live"><i aria-hidden="true"></i><span>Ao vivo</span><small>atualizado ${esc(fHora(atual.toISOString()))}</small></div>
+    <div class="tv-live"><span><i aria-hidden="true"></i>Ao vivo</span><small>atualizado ${esc(fHora(atual.toISOString()))}</small></div>
     <div class="tv-clock num" id="tvClock">${fHora(agora.toISOString())}<small>${String(agora.getSeconds()).padStart(2,"0")}</small></div>
     ${S.role!=="tv"?`<a class="tv-x" href="#m-ordens">Sair da TV</a>`:""}
   </header>

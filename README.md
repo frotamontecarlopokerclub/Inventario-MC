@@ -510,3 +510,6 @@ Cabeçalho em degradê marsala com a assinatura dourada, indicador "Ao vivo", in
 Não precisa rodar nada no Supabase.
 - **Painel da logística e Painel da manutenção:** novo quadro **Ordens do dia** no topo, em três colunas: **A fazer** (programadas ou pedidas no dia e, hoje, também as pendentes que ficaram de dias anteriores), **Em execução** e **Feitas**. Use ‹ e › para ir de um dia para outro, escolha a data no calendário ou toque em **Hoje**. Toque numa OS para abrir; **Ver na lista** abre a lista já filtrada naquele dia.
 - **Ordens (logística), Chamados e OS (manutenção) e OS da frota:** nova linha **Dia** com Todos os dias · Hoje · Ontem · calendário. Com um dia escolhido, as abas viram Tudo do dia · A fazer · Em execução · Feitas · Canceladas, com a contagem de cada uma.
+
+## Atualização 46 · TV mais sóbria
+Não precisa rodar nada no Supabase. A TV da manutenção ficou só com as cores do Monte Carlo (preto, marsala, dourado e bege), sem selos coloridos. O vermelho aparece apenas no que está atrasado, com um aviso discreto. Dentro do sistema (menu Painel TV), o quadro fica mais compacto para caber na tela do computador.
