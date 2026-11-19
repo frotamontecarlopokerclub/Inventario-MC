@@ -498,3 +498,10 @@ Cabeçalho em degradê marsala com a assinatura dourada, indicador "Ao vivo", in
 - Foto só é obrigatória quando há problema: avaria ou falta relatada na entrega, item ruim no checklist de saída da rota ou no checklist da manutenção. Nos demais casos é opcional.
 - Comprovante da entrega final: nome e assinatura de quem recebeu (ou uma foto, se não der para assinar).
 - Cadastros › Regras › **Fotos antigas** (coordenação geral): apaga as fotos das OS encerradas há mais de 6 meses, mantendo histórico, textos e assinaturas.
+
+## Atualização 44 · Horário informado, OS no caminho e TV estilo aeroporto
+**Rodar no Supabase:** `supabase/28_campo_autonomo.sql` (uma vez). No fim aparecem 4 itens "OK".
+- **Horário informado à mão:** se o celular descarregou ou ficou sem internet, a equipe toca em **"Aconteceu em outro horário?"** e informa dia e hora. Vale na saída do veículo, no início e no fim da rota, na devolução, em cada retirada e entrega, no início e no fim da manutenção (app de campo e celular da manutenção). O sistema não aceita horário no futuro, com mais de 7 dias ou antes da etapa anterior. O histórico marca "horário informado".
+- **Nova OS no caminho:** o motorista cria a OS sozinho quando pedem outro serviço no trajeto: de onde e para onde (unidade cadastrada ou endereço escrito), o que levar, carga, quem pediu e telefone. Em rota, a OS já entra na rota e no mesmo veículo; sem rota, fica nas missões dele.
+- **Coordenação:** essas OS aparecem com o selo **"Criada no campo"**. Na OS, confira e toque em **Marcar como revisada**.
+- **TV da manutenção estilo painel de aeroporto:** quadro escuro com as colunas Prioridade, OS, Serviço, Local, Responsável, Prazo e Situação. As atrasadas ficam no topo e piscam; a lista vira de página sozinha a cada 12 segundos. Ao lado, as finalizadas das últimas 24 h; embaixo, um letreiro com o que está acontecendo agora.
